@@ -1,0 +1,68 @@
+---
+/**
+ * Codes.astro — block `cases_codes` (hàng "mã xuất khẩu" đã được chứng nhận).
+ *
+ * ĐƯỢC ĐĂNG KÝ Ở ĐÂU
+ *   `src/components/CasesBlocks.astro` -> `cases_codes: Codes`. Trang chủ đặt block này ngay
+ *   dưới hero (anchor `markets`); đây là dải nhỏ liệt kê các mã nhà máy xuất khẩu (vd "DL 113").
+ *
+ * DỮ LIỆU (props `value`, schema trong `scripts/build-seed.mjs`; sửa trong admin):
+ *   - headline  (string, tuỳ chọn)  tiêu đề nhỏ phía trên dải mã
+ *   - codes     (repeater, 1..12)   [{ code }]  mỗi phần tử là một mã dạng chuỗi
+ *   - anchor_id (string)            id của section
+ *   Block này KHÔNG đọc collection nào (mã nhập thẳng trong block, khác với `cases_plants`
+ *   đọc collection `plants`), và không cần locale vì không có link/chuỗi giao diện:
+ *   tiêu đề và mã đều là dữ liệu CMS đã theo ngôn ngữ của entry trang.
+ */
+
+import { type BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+
+// Thu hẹp union về đúng block `cases_codes`.
+type CodesBlock = Extract<PageContentBlock, { _type: "cases_codes" }>;
+type Props = BlockComponentProps<CodesBlock>;
+
+const { value } = Astro.props;
+---
+
+{/*
+	Section nền slate-50 sáng với viền dưới sky-100 để tách khỏi phần phía dưới; các ô mã thì
+	tối (sky-900) cho nổi bật, tương phản với hero tối phía trên. `id` rỗng → `undefined`.
+*/}
+<section id={value.anchor_id || undefined} class="border-b border-sky-100 bg-slate-50 py-12">
+	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+		{/* Tiêu đề tuỳ chọn: chữ nhỏ in hoa giãn chữ rộng + gạch ngắn trang trí; `reveal` = hiện dần khi cuộn. */}
+		{
+			value.headline && (
+				<div class="reveal mb-10 text-center">
+					<h2 class="mb-3 text-sm font-black tracking-[0.25em] text-slate-500 uppercase">
+						{value.headline}
+					</h2>
+					<div class="mx-auto h-0.5 w-16 rounded bg-sky-400/40" />
+				</div>
+			)
+		}
+		{/*
+			Danh sách ngữ nghĩa (ul/li): 2 cột mobile, 3 cột md, 6 cột lg (khớp tối đa 6 mã một hàng;
+			schema cho phép đến 12 nên sẽ xuống dòng). Mỗi mã là một "huy hiệu" tối: `cursor-default`
+			vì ô không bấm được, hover chỉ đổi sắc nền (hover:bg-sky-800) và phóng nhẹ icon
+			(group-hover) như phản hồi thị giác.
+		*/}
+		<ul class="reveal grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+			{
+				value.codes.map((item) => (
+					<li class="group flex cursor-default items-center justify-center rounded-xl border border-sky-700/50 bg-sky-900 px-4 py-5 shadow-lg shadow-black/20 backdrop-blur-md transition-colors hover:bg-sky-800">
+						{/* Icon "verified" của Material Symbols (font icon → aria-hidden để không đọc tên icon). */}
+						<span
+							class="material-symbols-outlined mr-2 text-xl text-white transition-transform group-hover:scale-110"
+							aria-hidden="true"
+						>
+							verified
+						</span>
+						<span class="text-xl font-bold tracking-wide text-white">{item.code}</span>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>

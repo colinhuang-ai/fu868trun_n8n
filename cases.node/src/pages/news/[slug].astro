@@ -1,0 +1,27 @@
+---
+/**
+ * Route: GET /news/{slug}  (một bài viết tiếng Anh trong collection `posts`).
+ *
+ * Luồng dữ liệu: loadArticle(Astro, slug, "en") (src/utils/news.ts) đọc bài
+ * qua getEmDashEntry("posts", slug, { locale: "en" }), tính SEO và các URL
+ * cho nút EN | VI, rồi trả về props cho <NewsArticle>. Trả null nếu không
+ * có bài => rewrite sang trang 404.
+ *
+ * Route tĩnh /news (news/index.astro) thắng route động này nên danh sách
+ * không bao giờ bị hiểu là một slug. Bản tiếng Việt: src/pages/vi/news/[slug].astro
+ * (EN/VI tách file, xem src/pages/index.astro). Không có getStaticPaths vì
+ * output là "server".
+ */
+import { decodeSlug } from "emdash";
+import NewsArticle from "../../components/news/NewsArticle.astro";
+import { loadArticle } from "../../utils/news";
+
+// Giải mã slug bị percent-encode (undefined nếu hỏng); loadArticle trả null cho undefined.
+const result = await loadArticle(Astro, decodeSlug(Astro.params.slug), "en");
+// Không có bài: rewrite (giữ URL) tới /404, trang đó tự đặt status 404 (tránh soft 404).
+if (!result) return Astro.rewrite("/404");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - result = { post, title, description, image, canonical, robots, alternates }: NewsArticle tách `post` ra, phần còn lại là meta cho Base.
+---
+
+<NewsArticle {...result} />

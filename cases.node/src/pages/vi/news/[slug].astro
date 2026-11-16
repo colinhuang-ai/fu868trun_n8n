@@ -1,0 +1,21 @@
+---
+/**
+ * Route: GET /vi/news/{slug}  (một bài viết tiếng Việt trong collection `posts`).
+ *
+ * Bản "vi" của src/pages/news/[slug].astro (xem giải thích đầy đủ ở đó): cùng
+ * luồng loadArticle -> NewsArticle, khác locale "vi", import thêm một cấp "../"
+ * và 404 rewrite tới "/vi/404" để thông báo bằng tiếng Việt.
+ */
+import { decodeSlug } from "emdash";
+import NewsArticle from "../../../components/news/NewsArticle.astro";
+import { loadArticle } from "../../../utils/news";
+
+// Slug bài viết có thể bị percent-encode; decodeSlug giải mã (undefined nếu hỏng).
+const result = await loadArticle(Astro, decodeSlug(Astro.params.slug), "vi");
+// Không có bài (kể cả sau fallback sang "en"): rewrite tới /vi/404, status 404 do trang đó đặt.
+if (!result) return Astro.rewrite("/vi/404");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - Rải props { post, title, description, image, canonical, robots, alternates } vào NewsArticle.
+---
+
+<NewsArticle {...result} />

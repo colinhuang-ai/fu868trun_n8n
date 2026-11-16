@@ -1,0 +1,71 @@
+---
+/**
+ * PageView: phần thân của một trang CMS (collection `pages`), bên trong
+ * <Base> do PageShell cung cấp.
+ *
+ * Mỗi trang có field `content` là danh sách block (Portable Text mở rộng) với
+ * các block type `cases_*` (hero, features, catalog, cta...). CasesBlocks.astro
+ * ánh xạ từng block type sang một component trong src/components/blocks/.
+ * Ba trường hợp hiển thị:
+ *   1. Có block, có hero  -> chỉ render block (hero tự mang <h1>).
+ *   2. Có block, không hero -> thêm <header><h1> bằng page.data.title rồi block.
+ *   3. Không có block     -> tiêu đề + (nếu đang đăng nhập) gợi ý và nút sửa trang.
+ */
+import type { ContentEntry } from "emdash";
+import type { Page } from "../../emdash-env";
+import CasesBlocks from "./CasesBlocks.astro";
+import { toLocale, useTranslations } from "../i18n/ui";
+
+interface Props {
+	page: ContentEntry<Page>;
+}
+
+const { page } = Astro.props;
+// Astro.currentLocale là string | undefined; toLocale thu hẹp về "en" | "vi"
+// (mọi giá trị khác "vi" => "en") để useTranslations luôn có từ điển hợp lệ.
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+// `content` có thể null/undefined khi trang mới tạo chưa có block => dùng mảng rỗng.
+const blocks = page.data.content ?? [];
+// Nếu đã có block hero thì không in thêm <h1> riêng (tránh hai <h1> trên một trang).
+const hasHero = blocks.some((block) => block._type === "cases_hero");
+---
+
+{/* Nhánh 1+2 (có ít nhất một block) ở nhánh "?"; nhánh 3 (trang rỗng, vừa tạo chưa có block) ở nhánh ":" bên dưới, không phải 404 vì trang vẫn tồn tại. */}
+{
+	blocks.length > 0 ? (
+		<>
+			{/* Không có hero: tự dựng tiêu đề trang từ page.data.title. */}
+			{!hasHero && (
+				<header class="mx-auto max-w-7xl px-4 py-14 sm:px-8">
+					{/* {...page.edit.title}: spread các thuộc tính data-* của EmDash để sửa trực tiếp trên trang; ngoài chế độ edit proxy là no-op nên không sinh thuộc tính nào. */}
+					<h1 class="font-jakarta text-4xl font-black text-white" {...page.edit.title}>
+						{page.data.title}
+					</h1>
+				</header>
+			)}
+			{/* Bao các block bằng div mang thuộc tính edit của field `content`. */}
+			<div {...page.edit.content}>
+				{/* Duyệt từng block và chọn component theo _type (xem CasesBlocks.astro). */}
+				<CasesBlocks value={blocks} />
+			</div>
+		</>
+	) : (
+		<section class="mx-auto max-w-3xl px-4 py-24 text-center text-white">
+			<h1 class="font-jakarta text-4xl font-black">{page.data.title}</h1>
+			{/* Chỉ người đã đăng nhập admin thấy hướng dẫn và nút sửa, khách không thấy. */}
+			{Astro.locals.user && (
+				<>
+					<p class="mt-4 text-sky-100/70">{t("page.empty")}</p>
+					{/* page.data.id là ULID trong DB (khác page.id là slug), đúng thứ mà URL admin cần. */}
+					<a
+						href={`/_emdash/admin/content/pages/${page.data.id}`}
+						class="mt-6 inline-block rounded-full bg-sky-700 px-8 py-3 font-bold text-white hover:bg-sky-600"
+					>
+						{t("page.edit")}
+					</a>
+				</>
+			)}
+		</section>
+	)
+}

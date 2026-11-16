@@ -1,0 +1,35 @@
+---
+/**
+ * Route: GET /{slug}  (mọi trang CMS tiếng Anh: /about, /products,
+ * /infrastructure, /certifications, ...).
+ *
+ * Đây là route động "bắt tất cả" cho collection `pages` ở locale "en". Các
+ * route tĩnh cụ thể hơn luôn thắng nó: / (index.astro), /home (home.astro,
+ * redirect), /404, /news và /news/{slug}, /vi/* ...
+ *
+ * KHÔNG có getStaticPaths(): site chạy `output: "server"`, nên Astro cho phép
+ * param động mà không cần liệt kê trước. Slug được tra thẳng trong D1 mỗi
+ * request, nhờ vậy editor tạo trang mới trong admin là truy cập được ngay.
+ *
+ * Duplicated với src/pages/vi/[slug].astro (locale "vi"): xem lý do trong
+ * header của src/pages/index.astro (EN không prefix, VI dưới /vi).
+ */
+import { decodeSlug } from "emdash";
+import PageShell from "../components/PageShell.astro";
+import { loadPage } from "../utils/load-page";
+
+// Astro.params.slug có thể còn bị percent-encode (slug tiếng Việt/Unicode do
+// trình duyệt mã hoá). decodeSlug() giải mã và trả undefined nếu chuỗi hỏng
+// hoặc rỗng; loadPage xử lý undefined bằng cách trả null (=> 404).
+const result = await loadPage(Astro, decodeSlug(Astro.params.slug), "en");
+// Không có trang: dùng rewrite (không phải redirect) tới /404 để URL gốc trên
+// thanh địa chỉ không đổi, đồng thời render trang 404 tuỳ chỉnh. Mã trạng thái
+// 404 được chính src/pages/404.astro đặt tường minh (Astro.response.status = 404),
+// để phản hồi không bị trả nhầm 200 ("soft 404"). `return` ở cấp cao nhất của
+// frontmatter dừng render template bên dưới.
+if (!result) return Astro.rewrite("/404");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - result gồm { page, title, pageTitle, description, image, canonical, robots, alternates } - PageShell tách `page` ra, phần còn lại là meta cho Base layout.
+---
+
+<PageShell {...result} />

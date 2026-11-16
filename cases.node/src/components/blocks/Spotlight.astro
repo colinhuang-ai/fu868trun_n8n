@@ -1,0 +1,116 @@
+---
+/**
+ * Spotlight.astro - render block `cases_spotlight` (tên trong admin: "Spotlight"): một panel rộng nổi bật gồm
+ * tiêu đề + đoạn mô tả + hàng thẻ "tag" (vd danh sách thị trường) ở bên trái và một huy hiệu tròn có vòng sóng ở bên phải.
+ * Seed dùng nó cho phần "US FDA Registration" (block key "fda") ở trang Certifications.
+ *
+ * Nguồn dữ liệu: hoàn toàn trong block (field `content` của entry `pages`), không đọc collection. Dữ liệu mẫu nằm ở
+ * block("cases_spotlight", "fda", {...}) trong scripts/build-seed.mjs. Mỗi locale có entry trang riêng (translationOf)
+ * nên chữ đã đúng ngôn ngữ; không có link CMS nên không cần locale/resolveHref.
+ *
+ * Schema (blockType("cases_spotlight") trong build-seed.mjs):
+ * - headline : string, bắt buộc.   - eyebrow : string, tùy chọn.   - body : text, tùy chọn (đoạn mô tả).
+ * - tags : text, tùy chọn, MỖI DÒNG MỘT TAG (xuống dòng làm dấu phân cách; editor thường gõ kèm emoji cờ).
+ * - badge_icon : string, tùy chọn: một EMOJI (không phải tên icon Material Symbols như các block khác).
+ * - badge_title / badge_caption : string, tùy chọn: chữ dưới huy hiệu (vd "FDA Registered", "Registrar Corp").
+ * - anchor_id : id section (vd "fda").
+ *
+ * Hiệu ứng (global.css): .market-tag (viên thuốc sky), .pulse-ring (hai vòng sóng lan ra quanh huy hiệu, animation `ring`).
+ */
+// Type-only: BlockComponentProps<T> = { value, index, blockKey }, props do <Blocks> truyền vào.
+import { type BlockComponentProps } from "emdash/ui";
+// Union kiểu mọi block (sinh vào emdash-env.d.ts).
+import type { PageContentBlock } from "../../../emdash-env";
+
+// Thu hẹp union xuống block có _type = "cases_spotlight".
+type SpotlightBlock = Extract<PageContentBlock, { _type: "cases_spotlight" }>;
+// Props chuẩn của component block.
+type Props = BlockComponentProps<SpotlightBlock>;
+
+// Chỉ cần `value`.
+const { value } = Astro.props;
+// Biến chuỗi `tags` (nhiều dòng) thành mảng tag sạch:
+// - `?? ""` : tags là tùy chọn nên có thể undefined;
+// - split(/\n/) : tách theo dòng. Trình soạn thảo trên Windows có thể lưu CRLF nên mỗi phần tử có thể còn \r ở cuối;
+// - trim() : bỏ khoảng trắng và \r thừa;
+// - filter(Boolean) : bỏ dòng trống (người nhập có thể chừa dòng trống ở giữa/cuối).
+const tags = (value.tags ?? "")
+	.split(/\n/)
+	.map((tag) => tag.trim())
+	.filter(Boolean);
+---
+
+{/*
+	Section gốc. id từ anchor_id (|| undefined để không in id rỗng). Dùng token màu bg-navy (từ --color-navy #071525
+	trong global.css) và tự giới hạn max-w-7xl + mx-auto thay vì bọc container riêng, nên nền navy chỉ phủ đúng bề rộng này.
+	py-8 pb-20: đệm trên nhỏ, đệm dưới lớn (pb ghi đè phần dưới của py) để chừa khoảng trống trước phần kế tiếp.
+*/}
+<section id={value.anchor_id || undefined} class="mx-auto max-w-7xl bg-navy px-4 py-8 pb-20 sm:px-8">
+	{/*
+		Panel: reveal (hiện dần khi cuộn tới), overflow-hidden rounded-3xl + viền sky-400/20. Nền là gradient inline
+		#0c2340 → #071525 (navy-3 → navy theo token trong global.css) ghi bằng style vì chỉ dùng ở đây.
+	*/}
+	<div
+		class="reveal overflow-hidden rounded-3xl border border-sky-400/20"
+		style="background:linear-gradient(135deg,#0c2340,#071525)"
+	>
+		{/*
+			Bố cục: mobile xếp dọc canh giữa (flex-col items-center); từ lg chuyển thành hàng ngang (lg:flex-row) với
+			cột chữ flex-1 bên trái và huy hiệu shrink-0 bên phải. Chữ canh giữa ở mobile, canh trái ở lg (lg:text-left).
+		*/}
+		<div class="flex flex-col items-center gap-8 p-8 sm:p-12 lg:flex-row">
+			<div class="flex-1 text-center lg:text-left">
+				{/*
+					Eyebrow tùy chọn (thường kèm emoji cờ do editor nhập trong nội dung).
+				*/}
+				{
+					value.eyebrow && (
+						<p class="mb-3 text-xs font-bold tracking-widest text-sky-400 uppercase">{value.eyebrow}</p>
+					)
+				}
+				<h2 class="mb-4 text-2xl font-extrabold text-white sm:text-3xl">{value.headline}</h2>
+				{/*
+					Đoạn mô tả tùy chọn; max-w-lg giữ độ dài dòng dễ đọc.
+				*/}
+				{value.body && <p class="max-w-lg text-sm leading-relaxed text-slate-300">{value.body}</p>}
+				{/*
+					Danh sách tag: chỉ render khi sau khi lọc còn ít nhất một tag. justify-center ở mobile, lg:justify-start ở desktop.
+					Mỗi li dùng class market-tag (viên thuốc sky trong global.css). Style inline gán custom property --i bằng chỉ số tag; CSS
+					.js .reveal.revealed .market-tag đọc nó (animation-delay: calc(var(--i) * 70ms + 0.3s)) để các tag bật lên lần lượt
+					sau khi panel được reveal. Phải truyền qua style vì Tailwind không sinh class cho chỉ số động.
+				*/}
+				{
+					tags.length > 0 && (
+						<ul class="mt-6 flex flex-wrap justify-center gap-2 lg:justify-start">
+							{tags.map((tag, index) => (
+								<li class="market-tag" style={`--i:${index}`}>{tag}</li>
+							))}
+						</ul>
+					)
+				}
+			</div>
+			{/*
+				Huy hiệu bên phải: chỉ hiện khi có icon hoặc tiêu đề. Vòng tròn h-28 w-28 mang class pulse-ring (global.css) với hai pseudo-element
+				::before và ::after là hai vòng viền sky phóng to dần rồi mờ đi, lệch pha 1.3s (tắt khi người dùng chọn giảm chuyển động).
+				Emoji trong vòng tròn là trang trí (aria-hidden) vì ý nghĩa đã có ở badge_title. Nếu chỉ nhập badge_title mà bỏ
+				badge_icon thì vòng tròn vẫn hiện nhưng trống. badge_caption là dòng phụ nhỏ màu slate-500.
+			*/}
+			{
+				(value.badge_icon || value.badge_title) && (
+					<div class="shrink-0 text-center">
+						<div
+							class="pulse-ring mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-sky-400/30 bg-sky-400/10"
+							aria-hidden="true"
+						>
+							<span class="text-5xl">{value.badge_icon}</span>
+						</div>
+						{value.badge_title && (
+							<p class="mt-3 text-sm font-bold text-sky-400">{value.badge_title}</p>
+						)}
+						{value.badge_caption && <p class="text-xs text-slate-500">{value.badge_caption}</p>}
+					</div>
+				)
+			}
+		</div>
+	</div>
+</section>

@@ -1,0 +1,89 @@
+---
+/**
+ * CasesBlocks.astro - bộ đăng ký (registry) ánh xạ block type (`cases_*`) -> component Astro.
+ *
+ * Bối cảnh:
+ * - Mỗi trang CMS (collection `pages`) lưu nội dung trong field `content` kiểu `blocks`: một mảng block,
+ *   mỗi block là object { _type: "cases_hero", _version: 1, _key: "hero", ...các field của block }.
+ *   Mảng này giống tinh thần Portable Text (mảng object phân biệt bằng `_type`) nhưng được render bằng
+ *   <Blocks> của `emdash/ui`, không phải <PortableText>.
+ * - Dữ liệu ban đầu do scripts/build-seed.mjs sinh ra (seed/seed.json); sau khi site chạy thì editor sửa
+ *   trong admin (/_emdash/admin). Mỗi block type được khai báo schema bằng blockType(...) trong build-seed.
+ *
+ * Luồng render:
+ *   src/pages/[slug].astro (hoặc index/vi/...) -> loadPage() -> PageView.astro ->
+ *   <CasesBlocks value={page.data.content} /> -> <Blocks> (emdash/ui) -> component trong bảng bên dưới.
+ *
+ * Cách <Blocks> hoạt động (xem node_modules/emdash/src/components/Blocks.astro):
+ * - Lặp qua mảng `value`; với mỗi block tra `components[block._type]`.
+ * - Tìm thấy: render <Component value={block} index={i} blockKey={block._key} />. Vì vậy mọi component
+ *   trong ./blocks nhận props `{ value, index, blockKey }` (kiểu BlockComponentProps<T>).
+ * - Không tìm thấy: ở dev (import.meta.env.DEV) in console.warn và hiện <div role="alert"> báo thiếu
+ *   component; ở production, vì ở đây không truyền `fallback`, block đó bị bỏ qua im lặng (render null).
+ * - Nếu `value` không phải mảng (null/undefined) thì không render gì.
+ *
+ * Thêm một block type mới:
+ *   1) khai báo blockType("cases_xyz", ...) + dữ liệu mẫu trong scripts/build-seed.mjs;
+ *   2) chạy `npx emdash types` để emdash-env.d.ts sinh lại union `PageContentBlock` (có thêm thành viên mới);
+ *   3) tạo ./blocks/Xyz.astro;
+ *   4) thêm một dòng `cases_xyz: Xyz` vào bảng `components` bên dưới.
+ *   Vì `defineBlockComponents<PageContentBlock>` yêu cầu đủ mọi key của union, thiếu bước 4 thì `astro check`
+ *   báo lỗi kiểu ngay.
+ */
+// `Blocks` là renderer chung của EmDash; `defineBlockComponents` là helper thuần kiểu (chỉ trả lại đúng
+// object truyền vào) để TypeScript kiểm tra bảng ánh xạ.
+import { Blocks, defineBlockComponents } from "emdash/ui";
+// Import type-only (bị xóa lúc build): union mọi loại block của field `pages.content`, được sinh tự động
+// vào emdash-env.d.ts ở gốc dự án (đường dẫn ../../ vì file này nằm ở src/components/).
+import type { PageContentBlock } from "../../emdash-env";
+// 13 component, mỗi component một block type. Thứ tự import chỉ là alphabet; thứ tự hiển thị trên trang
+// do thứ tự các block trong mảng `content` quyết định, không liên quan đến file này.
+// Catalog / CertTable / Certs / Plants còn tự đọc collection products / certifications / plants lúc request.
+import Catalog from "./blocks/Catalog.astro";
+import CertTable from "./blocks/CertTable.astro";
+import Certs from "./blocks/Certs.astro";
+import Codes from "./blocks/Codes.astro";
+import Cta from "./blocks/Cta.astro";
+import Features from "./blocks/Features.astro";
+import Hero from "./blocks/Hero.astro";
+import Plants from "./blocks/Plants.astro";
+import Reach from "./blocks/Reach.astro";
+import Spotlight from "./blocks/Spotlight.astro";
+import Tech from "./blocks/Tech.astro";
+import Timeline from "./blocks/Timeline.astro";
+import Values from "./blocks/Values.astro";
+
+// Props: `value` là mảng block của field `content` (có thể null/undefined khi trang chưa có nội dung;
+// khi đó <Blocks> bỏ qua). PageView.astro đã kiểm tra mảng rỗng và hiển thị trạng thái trống trước khi gọi.
+interface Props {
+	value?: PageContentBlock[] | null;
+}
+
+// Chỉ cần `value`; locale không cần ở đây vì mỗi component con tự gọi toLocale(Astro.currentLocale).
+const { value } = Astro.props;
+
+// Bảng ánh xạ `_type` -> component. Khóa là giá trị `_type` lưu trong DB (khớp slug blockType trong
+// build-seed.mjs). Generic <PageContentBlock> làm TypeScript: (a) bắt buộc đủ 13 khóa, (b) suy ra kiểu
+// `value` của từng component bằng Extract<PageContentBlock, { _type: ... }>.
+// Muốn đổi giao diện một block thì sửa component; muốn đổi nội dung thì sửa seed (máy mới) hoặc admin.
+const components = defineBlockComponents<PageContentBlock>({
+	cases_hero: Hero,
+	cases_codes: Codes,
+	cases_reach: Reach,
+	cases_features: Features,
+	cases_timeline: Timeline,
+	cases_values: Values,
+	cases_plants: Plants,
+	cases_tech: Tech,
+	cases_certs: Certs,
+	cases_spotlight: Spotlight,
+	cases_cert_table: CertTable,
+	cases_catalog: Catalog,
+	cases_cta: Cta,
+});
+---
+
+{/*
+	Truyền value và bảng components cho Blocks. Không truyền fallback nên block lạ bị bỏ qua ở production.
+*/}
+<Blocks {value} components={components} />

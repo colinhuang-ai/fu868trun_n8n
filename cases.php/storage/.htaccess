@@ -1,0 +1,10 @@
+# ============================================================================
+#  storage/.htaccess – CHẶN HOÀN TOÀN TRUY CẬP TỪ WEB
+# ============================================================================
+# Thư mục storage/ chứa file database.sqlite (toàn bộ dữ liệu: tài khoản admin,
+# bài viết, yêu cầu báo giá của khách...). Tuyệt đối không được tải về qua trình duyệt.
+# Bình thường storage/ nằm ngoài public/ nên web không với tới; file này là lớp
+# phòng hờ khi DocumentRoot bị trỏ nhầm vào thư mục gốc dự án.
+
+# Từ chối mọi request tới thư mục này và các file bên trong (cú pháp Apache 2.4).
+Require all denied

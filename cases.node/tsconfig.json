@@ -1,0 +1,16 @@
+{
+	// Kế thừa preset "strict" của Astro (strict mode TS + cấu hình JSX/module phù hợp .astro).
+	"extends": "astro/tsconfigs/strict",
+	// Các file được TypeScript / `astro check` (pnpm typecheck) kiểm tra:
+	//  - .astro/types.d.ts        : type do Astro sinh (astro:content, import.meta.env, i18n...)
+	//  - src/**/*                 : toàn bộ mã nguồn của site
+	//  - emdash-env.d.ts          : type của collection EmDash (sinh bằng `npx emdash types`)
+	//  - worker-configuration.d.ts: type của bindings Cloudflare (DB, MEDIA...) do `wrangler types` sinh
+	//  - astro.config.mjs         : để cấu hình cũng được kiểm tra type
+	"include": [".astro/types.d.ts", "src/**/*", "emdash-env.d.ts", "worker-configuration.d.ts", "astro.config.mjs"],
+	// Loại trừ:
+	//  - dist, node_modules : output build và thư viện
+	//  - "cases-website 13-5": bản thiết kế HTML tĩnh gốc, chỉ để tham khảo, không build
+	//  - scripts            : build-seed.mjs là script Node thuần JS, không cần type-check
+	"exclude": ["dist", "node_modules", "cases-website 13-5", "scripts"]
+}

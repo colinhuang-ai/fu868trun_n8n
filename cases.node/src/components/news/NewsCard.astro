@@ -1,0 +1,51 @@
+---
+/**
+ * NewsCard: thẻ xem trước một bài viết (ảnh, ngày, tiêu đề, đoạn trích).
+ * Dùng trong lưới của NewsList (danh sách tin) và khối "More news" của
+ * NewsArticle. Thẻ là component thuần hiển thị: không tự truy vấn dữ liệu,
+ * nhận entry `posts` đã tải qua prop `post`.
+ */
+import type { ContentEntry } from "emdash";
+import type { Post } from "../../../emdash-env";
+import PhotoSlot from "../PhotoSlot.astro";
+import { toLocale, useTranslations } from "../../i18n/ui";
+import { formatNewsDate, newsPath } from "../../utils/news";
+
+interface Props {
+	post: ContentEntry<Post>;
+}
+
+const { post } = Astro.props;
+// Locale lấy từ URL của trang đang render thẻ (thẻ luôn cùng ngôn ngữ trang chứa nó).
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+// Dùng post.data.slug (slug trần, không có tiền tố locale) thay vì post.id, vì
+// newsPath() tự thêm /vi khi cần: /news/{slug} hoặc /vi/news/{slug}.
+const href = newsPath(locale, post.data.slug);
+// Ngày xuất bản, rơi về ngày tạo nếu chưa có (phòng publishedAt rỗng).
+const date = post.data.publishedAt ?? post.data.createdAt;
+---
+
+{/* `group` cho phép tiêu đề đổi màu khi hover cả thẻ; `relative` làm mốc cho lớp phủ liên kết ở dưới. */}
+<article
+	class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg"
+>
+	{/* Ảnh đại diện; thiếu ảnh thì PhotoSlot vẽ khung chữ "Photo" nét đứt (placeholder). */}
+	<PhotoSlot image={post.data.featured_image} label={t("photo.placeholder")} class="h-48 sm:h-52" />
+	<div class="flex flex-1 flex-col p-5">
+		{/* Ngày: datetime ISO cho máy đọc, chữ hiển thị theo locale (formatNewsDate). */}
+		<time datetime={date.toISOString()} class="mb-2 text-xs font-semibold tracking-wider text-sky-600 uppercase">
+			{formatNewsDate(date, locale)}
+		</time>
+		{/* Liên kết duy nhất của thẻ nằm ở tiêu đề; after:absolute after:inset-0 kéo giãn vùng bấm ra phủ cả thẻ (stretched link) mà HTML vẫn chỉ có một thẻ <a>, tốt cho trình đọc màn hình. */}
+		<h3 class="font-jakarta text-lg leading-snug font-bold text-slate-900 group-hover:text-sky-700">
+			<a href={href} class="after:absolute after:inset-0">{post.data.title}</a>
+		</h3>
+		{/* Đoạn trích tối đa 3 dòng (line-clamp-3), chỉ in khi bài có excerpt. */}
+		{post.data.excerpt && <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-500">{post.data.excerpt}</p>}
+		{/* "Read more →" chỉ để trang trí (aria-hidden) vì vùng bấm đã là liên kết tiêu đề; mt-auto đẩy nó xuống đáy thẻ để các thẻ cao bằng nhau. */}
+		<span class="mt-auto pt-4 text-sm font-bold text-sky-700" aria-hidden="true">
+			{t("news.readMore")} →
+		</span>
+	</div>
+</article>

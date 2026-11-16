@@ -1,0 +1,13 @@
+/*
+Theme Name: CASES
+Theme URI: https://www.cases.com.vn
+Author: CASES
+Description: Corporate website theme for CaMau Seafood Processing and Service Joint-Stock Corporation (CASES). Converted from the static HTML prototype (EN/VI bilingual, Tailwind CSS compiled to assets/css/app.css).
+Version: 1.0.0
+Requires at least: 6.5
+Requires PHP: 8.0
+License: GPL-2.0-or-later
+Text Domain: cases
+*/
+
+/* All styling lives in assets/css/app.css (built from src/input.css with Tailwind). */

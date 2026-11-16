@@ -1,0 +1,146 @@
+---
+/**
+ * Features.astro - render block `cases_features` (tên trong admin: "Advantages"): lưới thẻ icon giới thiệu
+ * điểm mạnh, có thể kèm một thẻ call-to-action (CTA) ở cuối lưới.
+ *
+ * Nguồn dữ liệu: hoàn toàn nằm trong block (field `content` của entry `pages`). Component KHÔNG đọc collection
+ * nào lúc request. Dữ liệu mẫu: block("cases_features", "advantages", {...}) trong scripts/build-seed.mjs
+ * (trang About); sau khi cài đặt thì sửa trong admin. Mỗi locale (en, vi) có một bản entry riêng nối bằng
+ * `translationOf`, nên `value` đến đây đã là chữ đúng ngôn ngữ; locale chỉ cần để thêm tiền tố /vi cho link.
+ *
+ * Schema (khớp blockType("cases_features") trong build-seed.mjs):
+ * - headline      : string, bắt buộc. Tiêu đề section (h2).
+ * - eyebrow       : string, tùy chọn. Dòng nhãn nhỏ phía trên tiêu đề.
+ * - features[]    : repeater tối đa 9 thẻ; mỗi thẻ có `icon` (TÊN icon Material Symbols như factory, public),
+ *                   `title`, `description` (cả ba bắt buộc).
+ * - cta_title / cta_body / cta_label / cta_url : thẻ CTA (đều tùy chọn). Thẻ chỉ hiện khi có cta_title;
+ *                   nút chỉ hiện khi vừa có cta_label vừa có cta_url hợp lệ.
+ * - anchor_id     : string, tùy chọn (chữ thường). Thành id của <section> để link kiểu /#advantages.
+ *
+ * Lưu ý: seed script (hàm resolve) bỏ các field rỗng/null nên field tùy chọn là undefined -> các kiểm tra
+ * `value.xxx && (...)` bên dưới vừa tránh render thẻ rỗng vừa tránh in ra chữ `undefined`.
+ * Bố cục: nền trắng, 1 cột (mobile) -> 2 cột (md) -> 3 cột (lg).
+ */
+// Type-only: BlockComponentProps<T> = { value: T; index: number; blockKey: string }, props mà <Blocks> truyền vào.
+import { type BlockComponentProps } from "emdash/ui";
+// Union kiểu của mọi block, sinh tự động vào emdash-env.d.ts (chạy `npx emdash types` để cập nhật).
+import type { PageContentBlock } from "../../../emdash-env";
+// toLocale chuẩn hóa Astro.currentLocale (string | undefined) về "en" | "vi", mặc định "en".
+import { toLocale } from "../../i18n/ui";
+// Link do editor nhập trong CMS phải đi qua resolveHref(): nó chặn URL không an toàn (sanitizeHref) rồi thêm
+// tiền tố /vi cho đường dẫn gốc trên bản tiếng Việt. Trả về undefined nếu URL rỗng/không hợp lệ.
+import { resolveHref } from "../../utils/links";
+
+// Thu hẹp union PageContentBlock xuống đúng block có _type = "cases_features" để `value.features`,
+// `value.cta_url`... có kiểu chính xác.
+type FeaturesBlock = Extract<PageContentBlock, { _type: "cases_features" }>;
+// Props của component (Astro dùng để kiểm tra kiểu): { value, index, blockKey } với value là block trên.
+type Props = BlockComponentProps<FeaturesBlock>;
+
+// Chỉ lấy `value`; index và blockKey không dùng ở block này.
+const { value } = Astro.props;
+// Locale hiện tại của request ("en" mặc định không có tiền tố URL, "vi" dưới /vi/).
+// Quy tắc dự án: luôn dùng toLocale(Astro.currentLocale) thay vì đọc thẳng.
+const locale = toLocale(Astro.currentLocale);
+// Href đã làm sạch + bản địa hóa của nút trong thẻ CTA; undefined nếu không có/không hợp lệ.
+// Tính ở frontmatter một lần để template chỉ cần kiểm tra `ctaHref && value.cta_label`.
+const ctaHref = resolveHref(value.cta_url, locale);
+---
+
+{/*
+	Section gốc. id lấy từ anchor_id; || undefined biến chuỗi rỗng/null thành undefined để Astro KHÔNG in thuộc tính
+	id rỗng. overflow-hidden chặn hiệu ứng .reveal (translateY) và shadow thẻ tràn gây thanh cuộn ngang.
+	py-14 md:py-24 là nhịp dọc chung của các section nền sáng.
+*/}
+<section id={value.anchor_id || undefined} class="overflow-hidden bg-white py-14 md:py-24">
+	{/*
+		Container chuẩn của site: giới hạn 7xl, canh giữa, đệm ngang tăng dần theo breakpoint (px-4 / sm:px-6 / lg:px-8).
+	*/}
+	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+		{/*
+			Khối tiêu đề. Class reveal: ẩn + dịch xuống 24px khi JS bật (.js .reveal trong global.css); script trong layouts/Base.astro
+			dùng IntersectionObserver thêm class revealed khi cuộn tới để chạy hiệu ứng hiện dần. Không có JS thì nội dung vẫn hiển thị.
+		*/}
+		<div class="reveal mb-14 text-center">
+			{/*
+				Eyebrow tùy chọn. Dùng span nên cần class block để xuống dòng riêng; tracking-[0.3em] là giá trị tùy ý (arbitrary value)
+				của Tailwind để dãn chữ rộng, kết hợp uppercase tạo kiểu nhãn nhỏ.
+			*/}
+			{
+				value.eyebrow && (
+					<span class="mb-3 block text-sm font-bold tracking-[0.3em] text-sky-600 uppercase">
+						{value.eyebrow}
+					</span>
+				)
+			}
+			{/*
+				Tiêu đề h2 dùng font-display (Playfair Display, khai báo --font-display trong global.css) cho giọng điệu chữ nghiêng sang trọng.
+			*/}
+			<h2 class="mb-4 font-display text-4xl font-bold text-slate-900 md:text-5xl">
+				{value.headline}
+			</h2>
+			{/*
+				Gạch trang trí dưới tiêu đề. bg-linear-to-r là tên utility gradient của Tailwind v4 (v3 gọi là bg-gradient-to-r).
+			*/}
+			<div class="mx-auto h-1 w-20 rounded-full bg-linear-to-r from-sky-500 to-sky-700"></div>
+		</div>
+		{/*
+			Lưới thẻ: 1 cột → md 2 cột → lg 3 cột. Với tối đa 9 thẻ, thẻ CTA (nếu có) chỉ là ô cuối của cùng lưới này.
+		*/}
+		<div class="reveal grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+			{/*
+				Mỗi feature thành một thẻ: ô icon (nền sky-100) + tiêu đề + mô tả. feature.icon là TÊN icon Material Symbols,
+				được ligature của font .material-symbols-outlined (global.css) biến thành hình; aria-hidden vì icon chỉ trang trí.
+				Thẻ có class group nhưng hiện chưa dùng biến thể group-hover nào. hover:border-sky-200 hover:shadow-lg cho hiệu ứng nâng nhẹ,
+				transition-all duration-300 làm mượt. Màu nền slate-50 + viền slate-100 để thẻ nổi nhẹ trên nền trắng.
+			*/}
+			{
+				value.features.map((feature) => (
+					<div class="group rounded-2xl border border-slate-100 bg-slate-50 p-7 transition-all duration-300 hover:border-sky-200 hover:shadow-lg">
+						<div class="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100">
+							<span class="material-symbols-outlined text-2xl text-sky-600" aria-hidden="true">
+								{feature.icon}
+							</span>
+						</div>
+						<h3 class="mb-2 text-lg font-bold text-slate-900">{feature.title}</h3>
+						<p class="text-sm leading-relaxed text-slate-500">{feature.description}</p>
+					</div>
+				))
+			}
+			{/*
+				Thẻ CTA tùy chọn, chỉ hiện khi editor nhập cta_title. Màu nhấn sky (gradient sky-50 → sky-100, viền sky-200) để
+				khác với thẻ thường. Icon handshake được ghi cứng trong component (không có field icon cho CTA).
+				justify-between đẩy nút xuống đáy thẻ để thẳng hàng với các thẻ bên cạnh. Nút chỉ render khi ctaHref hợp lệ VÀ có cta_label;
+				w-fit để nút không giãn hết chiều ngang flex-col.
+			*/}
+			{
+				value.cta_title && (
+					<div class="flex flex-col justify-between rounded-2xl border border-sky-200 bg-linear-to-br from-sky-50 to-sky-100 p-7 transition-all duration-300 hover:shadow-lg">
+						<div>
+							<div class="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-sky-600">
+								<span class="material-symbols-outlined text-2xl text-white" aria-hidden="true">
+									handshake
+								</span>
+							</div>
+							<h3 class="mb-2 text-lg font-bold text-slate-900">{value.cta_title}</h3>
+							{value.cta_body && (
+								<p class="mb-6 text-sm leading-relaxed text-slate-500">{value.cta_body}</p>
+							)}
+						</div>
+						{ctaHref && value.cta_label && (
+							<a
+								href={ctaHref}
+								class="inline-flex w-fit items-center gap-2 rounded-full bg-sky-700 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-sky-800"
+							>
+								{value.cta_label}
+								<span class="material-symbols-outlined text-base" aria-hidden="true">
+									arrow_forward
+								</span>
+							</a>
+						)}
+					</div>
+				)
+			}
+		</div>
+	</div>
+</section>

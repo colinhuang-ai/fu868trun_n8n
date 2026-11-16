@@ -1,0 +1,1034 @@
+---
+/*
+ * Base.astro — LAYOUT GỐC của toàn site. Mọi trang (EN ở "/", VI ở "/vi/") đều render bên trong
+ * layout này: nó sinh ra toàn bộ khung HTML (doctype, head, body), header cố định, vùng nội dung
+ * (slot), footer, panel liên hệ trượt từ phải, và các script nhỏ điều khiển tương tác.
+ *
+ * AI DÙNG LAYOUT NÀY (truyền props, nội dung trang đi vào <slot />):
+ *   - src/pages/index.astro, src/pages/vi/index.astro, 404.astro (en/vi): dùng trực tiếp <Base>
+ *     cho trường hợp "chưa có trang home" / 404.
+ *   - src/components/PageShell.astro: bọc trang CMS (collection "pages"). PageShell nhận kết quả
+ *     của loadPage() (src/utils/load-page.ts: title, pageTitle, description, image, canonical,
+ *     robots, alternates) và bổ sung prop `content` = { collection, id, slug } để EmDash biết
+ *     đây là một bản ghi CMS (phục vụ SEO/toolbar chỉnh sửa).
+ *   - src/components/news/NewsList.astro và NewsArticle.astro: trang tin tức (tự tính alternates
+ *     EN | VI qua src/utils/news.ts).
+ *
+ * DATA FLOW TỔNG QUAN:
+ *   Request -> Astro.currentLocale (do i18n routing của Astro quyết định: "/" = en, "/vi/..." = vi)
+ *   -> toLocale() -> `locale`; useTranslations(locale) -> hàm t() cho chuỗi giao diện
+ *   -> song song lấy từ EmDash: site settings, menu "primary", menu "footer" (đều theo `locale`),
+ *      và collection "plants" (cột "Main Plants" ở footer)
+ *   -> gắn cache hint vào Astro.cache (để cache route tự vô hiệu khi nội dung CMS đổi)
+ *   -> dựng tiêu đề, link active, link chuyển ngôn ngữ, "page context" cho EmDash
+ *   -> template HTML bên dưới.
+ *
+ * PHÂN CHIA STYLE/SCRIPT:
+ *   - File này KHÔNG có thẻ <style>. CSS tùy biến nằm ở src/styles/global.css (nhập ở dòng import
+ *     cuối frontmatter): .site-header(.scrolled), .contact-overlay, .contact-panel, .contact-open,
+ *     .contact-field, .js .reveal(.revealed)... Còn lại là class Tailwind v4 viết trực tiếp.
+ *   - Có 2 script: (1) <script is:inline> nhỏ trong <head> thêm class "js"; (2) <script> cuối body
+ *     (Astro bundle thành module, có TypeScript) xử lý header/menu/panel liên hệ/form/scroll reveal.
+ *
+ * QUY TẮC DỰ ÁN LIÊN QUAN (AGENTS.md):
+ *   - Chuỗi UI luôn đi qua t() (src/i18n/ui.ts), không hard-code trong template.
+ *   - Mọi lời gọi getMenu/getEmDashCollection phải truyền `locale`.
+ *   - Class Tailwind phải viết nguyên văn (không ghép từ biến) để Tailwind quét được.
+ */
+// ================================ IMPORTS ================================
+import {
+	// Các hàm đọc dữ liệu của EmDash (chạy phía server, đọc từ D1):
+	//   - getEmDashCollection: lấy danh sách bản ghi của một collection (ở đây là "plants").
+	//   - getMenuWithCacheHint: lấy menu theo tên + locale, kèm `cacheHint` để cache route.
+	//   - getSiteSettingsWithCacheHint: lấy cài đặt site (title, logo, SEO...) kèm cacheHint.
+	// Các biến thể *WithCacheHint trả về { data, cacheHint } thay vì chỉ dữ liệu.
+	getEmDashCollection,
+	getMenuWithCacheHint,
+	getSiteSettingsWithCacheHint,
+} from "emdash";
+// Component của EmDash chèn nội dung bắt buộc vào head / đầu body / cuối body (meta SEO, Open Graph,
+// canonical, và các đoạn do plugin hoặc thanh công cụ chỉnh sửa của EmDash đóng góp). Chúng nhận
+// prop `page` (xem pageCtx bên dưới). KHÔNG được bỏ — thiếu chúng thì SEO và tính năng edit hỏng.
+import { EmDashBodyEnd, EmDashBodyStart, EmDashHead } from "emdash/ui";
+// Hàm dựng "page context" công khai của EmDash từ Astro global + metadata trang.
+import { createPublicPageContext } from "emdash/page";
+// `Font` từ astro:assets: component của Astro Fonts API, sinh @font-face/CSS variable và thẻ preload
+// cho các font khai báo ở fonts: [...] trong astro.config.mjs (--ff-inter, --ff-jakarta, --ff-playfair).
+import { Font } from "astro:assets";
+// Dữ kiện liên hệ cố định dùng chung hai ngôn ngữ (xem src/site.config.ts).
+import { company } from "../site.config";
+// Các tiện ích i18n (src/i18n/ui.ts). `type Locale` là import chỉ-kiểu (bị xóa lúc build).
+import {
+	LOCALES,
+	type Locale,
+	localizePath,
+	stripLocale,
+	toLocale,
+	useTranslations,
+} from "../i18n/ui";
+// Chuẩn hóa tên/logo/dấu ngăn cách của site từ settings (có fallback), xem src/utils/site.ts.
+import { resolveSiteIdentity } from "../utils/site";
+// CSS toàn cục: theme Tailwind v4 (màu navy, font), hiệu ứng header/panel/reveal. Import ở layout
+// nên mọi trang đều có; Astro tự gom vào <head>.
+import "../styles/global.css";
+
+// ================================ PROPS ================================
+// Tất cả đều tùy chọn, vì trang 404/trang rỗng chỉ cần khung. Phần lớn được loadPage() tính sẵn
+// từ SEO panel của bản ghi CMS rồi chuyển qua PageShell.
+interface Props {
+	// `title`: tiêu đề riêng của trang cho thẻ <title> (đã ưu tiên SEO title). Thiếu thì dùng tiêu đề
+	// mặc định "Tên site — Tên pháp lý". Xem fullTitle bên dưới.
+	title?: string;
+	// `pageTitle`: tiêu đề "thuần" của nội dung (không kèm tên site), dùng cho og:title/JSON-LD.
+	pageTitle?: string | null;
+	// `description`: meta description; rỗng/null thì dùng t("brand.description").
+	description?: string | null;
+	// `image`: URL ảnh chia sẻ (og:image).
+	image?: string | null;
+	// `canonical`: URL chuẩn; null thì dùng URL hiện tại (origin + pathname, bỏ query).
+	canonical?: string | null;
+	// `robots`: giá trị meta robots (vd "noindex") nếu bản ghi CMS đặt.
+	robots?: string | null;
+	// `content`: định danh bản ghi CMS đang hiển thị. CÓ => EmDash coi là trang "content" (kind
+	// "content"), KHÔNG => "custom" (trang tự do như 404). Phục vụ SEO và công cụ edit tại chỗ.
+	content?: { collection: string; id: string; slug?: string | null };
+	// `alternates`: URL của CHÍNH trang này ở từng locale (chỉ locale có bản dịch đã publish). Dùng dựng
+	// nút EN | VI; locale thiếu thì rơi về cùng đường dẫn ở locale đó (xem languageLinks).
+	/** URL of this page in each locale, for the EN | VI switch. */
+	alternates?: Partial<Record<Locale, string>>;
+}
+
+// Lấy props ra biến. Interface Props ở trên chỉ để kiểm tra kiểu, không có giá trị mặc định ở đây.
+const { title, pageTitle, description, image, canonical, robots, content, alternates } =
+	Astro.props;
+// ================================ LOCALE & DỊCH ================================
+// Locale của request hiện tại, ép về "en" | "vi" (Astro.currentLocale có thể undefined).
+const locale = toLocale(Astro.currentLocale);
+// `t` = hàm tra chuỗi UI theo locale, ví dụ t("nav.contact").
+const t = useTranslations(locale);
+
+// ================================ TẢI DỮ LIỆU CMS ================================
+// Bốn truy vấn độc lập nên chạy SONG SONG bằng Promise.all (giảm độ trễ so với await lần lượt).
+// Kết quả được destructure theo đúng thứ tự mảng.
+const [settingsResult, menuResult, footerMenuResult, plantsResult] = await Promise.all([
+	// Cài đặt site (title, logo, SEO...); không phụ thuộc locale.
+	getSiteSettingsWithCacheHint(),
+	// Menu chính (nav ở header). `locale` BẮT BUỘC: mỗi ngôn ngữ có menu riêng, thiếu locale sẽ lấy sai
+	// ngôn ngữ hoặc rỗng. Mục menu có url đã gồm tiền tố /vi cho bản tiếng Việt.
+	getMenuWithCacheHint("primary", { locale }),
+	// Menu footer (các liên kết nhỏ ở thanh dưới cùng), cũng theo locale.
+	getMenuWithCacheHint("footer", { locale }),
+	// Danh sách nhà máy cho cột "Main Plants". Sắp theo sort_order tăng dần (thứ tự do admin đặt),
+	// giới hạn 20 bản ghi để chặn truy vấn quá lớn ở footer (mọi trang đều chạy truy vấn này).
+	getEmDashCollection("plants", { locale, orderBy: { sort_order: "asc" }, limit: 20 }),
+]);
+
+// Cache route của Astro (Astro.cache) có thể bật hoặc không (undefined khi tắt, nên dùng `?.`).
+// Mỗi kết quả EmDash kèm `cacheHint` (tag/TTL); gắn vào cache để khi admin sửa menu, settings hay nhà máy
+// thì bản cache của trang này được vô hiệu đúng lúc. Lặp qua cả 4 kết quả vì trang phụ thuộc vào cả 4.
+if (Astro.cache?.enabled) {
+	for (const result of [settingsResult, menuResult, footerMenuResult, plantsResult]) {
+		if (result.cacheHint) Astro.cache.set(result.cacheHint);
+	}
+}
+
+// ================================ DANH TÍNH & TIÊU ĐỀ ================================
+// siteTitle/siteLogo/titleSeparator đã được làm sạch (có fallback). siteTagline không được dùng ở đây.
+const { siteTitle, siteLogo, titleSeparator } = resolveSiteIdentity(
+	settingsResult.data,
+);
+// Tagline dưới tên thương hiệu lấy từ i18n (dịch được), không lấy từ site settings.
+const brandTagline = t("brand.tagline");
+// Logo: ưu tiên logo admin tải lên (settings), không có thì dùng /cases-logo.svg mặc định.
+const logoSrc = siteLogo?.url ?? company.logo;
+// Tiêu đề thẻ <title>:
+//   - Có `title` và đã chứa sẵn tên site => dùng nguyên (tránh lặp "CASES — CASES").
+//   - Có `title` nhưng chưa chứa tên site => "Title — Tên site".
+//   - Không có `title` (trang chủ) => "Tên site — Tên pháp lý đầy đủ" (đã dịch).
+const fullTitle = title
+	? title.includes(siteTitle)
+		? title
+		: `${title} ${titleSeparator} ${siteTitle}`
+	: `${siteTitle} ${titleSeparator} ${t("brand.legalName")}`;
+
+// ================================ ĐIỀU HƯỚNG ================================
+// Link về trang chủ theo locale: "/" (EN) hoặc "/vi/" (VI).
+const homeHref = localizePath("/", locale);
+// Đường dẫn hiện tại ĐÃ BỎ tiền tố locale và dấu "/" cuối (vd "/vi/about/" -> "/about"; "/vi/" -> "/"),
+// để so sánh với menu và dựng link ngôn ngữ khác. `|| "/"` xử lý trường hợp chuỗi rỗng sau khi bỏ "/".
+const currentPath = stripLocale(Astro.url.pathname).replace(/\/$/, "") || "/";
+// Các mục menu chính (mảng rỗng nếu menu chưa tạo; khi rỗng cả nút hamburger lẫn nav đều không render).
+const navItems = menuResult.data?.items ?? [];
+// Xác định mục menu đang "active" (để tô sky-400 + aria-current="page").
+const isActive = (url: string) => {
+	// Chỉ so sánh với link nội bộ (bắt đầu bằng "/"); link ngoài/anchor/mailto không bao giờ active.
+	if (!url.startsWith("/")) return false;
+	// Chuẩn hóa url của mục menu giống currentPath: bỏ query/hash (`split(/[?#]/)[0]`), bỏ tiền tố locale
+	// và dấu "/" cuối. Nhờ vậy menu VI ("/vi/about") và trang hiện tại so khớp được với nhau.
+	const path = stripLocale(url.split(/[?#]/)[0] ?? url).replace(/\/$/, "") || "/";
+	// A section item (e.g. /news) stays active on its sub-pages (/news/some-article).
+	return path === currentPath || (path !== "/" && currentPath.startsWith(`${path}/`));
+};
+// Các liên kết footer (rỗng thì ẩn cả thẻ nav ở thanh dưới).
+const footerLinks = footerMenuResult.data?.items ?? [];
+// Danh sách nhà máy (`entries`) cho footer; `?? []` phòng khi truy vấn không có kết quả.
+const plants = plantsResult.entries ?? [];
+
+// Dữ liệu cho nút chuyển ngôn ngữ: mỗi locale một mục { code, href, active }.
+// - href: ưu tiên `alternates[code]` (URL bản dịch thật của trang, có thể có slug khác nhau theo
+//   ngôn ngữ, ví dụ tin tức). Nếu không có bản dịch, rơi về cùng đường dẫn đã bỏ tiền tố nhưng
+//   gắn tiền tố của locale đích: người dùng sang trang tương ứng (có thể 404 nếu bản đó không tồn tại).
+// - active: locale hiện tại, để tô đậm và gắn aria-current.
+const languageLinks = LOCALES.map((code) => ({
+	code,
+	href: alternates?.[code] ?? localizePath(currentPath, code),
+	active: code === locale,
+}));
+
+// ================================ PAGE CONTEXT CHO EMDASH ================================
+// Ngữ cảnh trang để <EmDashHead/BodyStart/BodyEnd> sinh meta SEO/Open Graph và các hook của EmDash.
+const pageCtx = createPublicPageContext({
+	Astro,
+	// "content" = trang gắn với bản ghi CMS; "custom" = trang tự do (404, trang rỗng...).
+	kind: content ? "content" : "custom",
+	// Kiểu trang cho Open Graph (og:type = website).
+	pageType: "website",
+	// Tiêu đề đầy đủ dùng cho <title>/og:title (đã ghép tên site).
+	title: fullTitle,
+	// Tiêu đề thuần của nội dung. Thứ tự ưu tiên: pageTitle > title > siteTitle.
+	pageTitle: pageTitle ?? title ?? siteTitle,
+	// `||` (không phải `??`): description rỗng "" cũng rơi về mô tả thương hiệu mặc định.
+	description: description || t("brand.description"),
+	// Canonical: dùng prop nếu có, mặc định là URL hiện tại không kèm query string (tránh trùng lặp do tham số).
+	canonical: canonical ?? `${Astro.url.origin}${Astro.url.pathname}`,
+	// Ảnh og:image.
+	image,
+	// Định danh bản ghi CMS (hoặc undefined cho trang tự do).
+	content,
+	// Gửi ảnh og + robots dưới dạng khối `seo` để EmDash xuất đúng thẻ meta.
+	seo: { ogImage: image, robots },
+	// Tên site cho og:site_name; `locale` để EmDash xuất og:locale / ngôn ngữ phù hợp.
+	siteName: siteTitle,
+	locale,
+});
+
+// Năm hiện tại cho dòng bản quyền ở footer. Tính ở server mỗi request (hoặc theo cache của route).
+const year = new Date().getFullYear();
+
+// Preload only the font files the header paints on every page: Inter 500/700
+// for the menu, Plus Jakarta Sans 600/800 for the wordmark and tagline. With
+// these in flight before the CSS is parsed, the header renders in its real
+// fonts instead of swapping from the fallback (which made the menu jump).
+// Vietnamese pages also need the `vietnamese` subset for diacritics.
+const fontSubsets = locale === "vi" ? ["latin", "vietnamese"] : ["latin"];
+// Tạo mảng mô tả preload: flatMap trải phẳng "weight x subset". Mỗi phần tử { weight, style, subset }
+// chính là bộ lọc của <Font preload={...}>. Mẹo: Vietnamese cần subset riêng nên trang VI có thêm.
+const preloadFor = (weights: number[]) =>
+	weights.flatMap((weight) =>
+		fontSubsets.map((subset) => ({ weight, style: "normal", subset })),
+	);
+// Hai danh sách preload (mỗi cặp weight x subset một mục) cho Inter và Plus Jakarta Sans. Phải khớp
+// đúng weights/subsets khai báo ở astro.config.mjs thì Astro mới tìm được file font để preload.
+const interPreload = preloadFor([500, 700]);
+const jakartaPreload = preloadFor([600, 800]);
+---
+
+<!doctype html>
+<html lang={locale}>
+	<head>
+		{/*
+			KHUNG TÀI LIỆU: doctype, html lang, head, body. Thuộc tính lang của thẻ html lấy từ locale
+			(en hoặc vi) để trình đọc màn hình chọn giọng đúng và trình duyệt gợi ý dịch chính xác.
+			Không dùng comment HTML kiểu dấu ngoặc nhọn vì chúng sẽ lọt vào HTML xuất ra; chỉ dùng comment
+			của Astro (xuất hiện trong mã nguồn nhưng không bao giờ ra trình duyệt).
+			HEAD: charset UTF-8 bắt buộc để hiển thị đúng ký tự tiếng Việt có dấu.
+		*/}
+		<meta charset="UTF-8" />
+		{/*
+			Viewport responsive. maximum-scale=5 vẫn cho phép người dùng phóng to (tốt cho truy cập);
+			không đặt user-scalable=no vì sẽ vi phạm quy tắc accessibility.
+		*/}
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+		{/*
+			Tiêu đề tab/kết quả tìm kiếm, tính ở fullTitle ở trên.
+		*/}
+		<title>{fullTitle}</title>
+		{/*
+			Favicon dùng chính logo SVG mặc định (kiểu image/svg+xml); không đổi theo logo tải lên trong CMS.
+		*/}
+		<link rel="icon" href={company.logo} type="image/svg+xml" />
+		{/*
+			EmDash chèn vào head: meta SEO, Open Graph, canonical, JSON-LD và các đoạn do plugin đóng góp,
+			dựa trên pageCtx đã dựng ở frontmatter.
+		*/}
+		<EmDashHead page={pageCtx} />
+		{/*
+			FONT: Astro Fonts API tải font Google về self-host lúc build và xuất CSS variable tương ứng.
+			Preload CHỈ các weight/subset mà header dùng ngay khi tải trang (Inter 500 và 700 cho menu).
+			Nhờ vậy header không bị nhảy chữ khi font thay thế rồi font thật được áp dụng (FOUT).
+		*/}
+		<Font cssVariable="--ff-inter" preload={interPreload} />
+		{/*
+			Plus Jakarta Sans 600 và 800 cho tên thương hiệu và tagline (preload như trên).
+		*/}
+		<Font cssVariable="--ff-jakarta" preload={jakartaPreload} />
+		{/*
+			Playfair Display (tiêu đề lớn của hero) không preload vì không nằm trong vùng nhìn thấy đầu tiên
+			trên mọi trang; vẫn được khai báo font-face để dùng khi cần.
+		*/}
+		<Font cssVariable="--ff-playfair" />
+		{/*
+			Kết nối trước tới Google Fonts để tăng tốc việc tải stylesheet Material Symbols bên dưới.
+			fonts.gstatic.com cần thuộc tính crossorigin vì file font được tải theo chế độ CORS.
+		*/}
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		{/*
+			Font biểu tượng Material Symbols (dùng cho icon như call, mail, location_on, send ở footer và panel).
+			Icon là chữ ligature nên phần tử chứa phải để aria-hidden để trình đọc màn hình không đọc tên icon.
+			display=block giữ chỗ trống thay vì hiện chữ tên icon trong lúc font chưa tải xong.
+			Đây là stylesheet bên ngoài chặn render (render-blocking) và là phụ thuộc vào Google Fonts duy nhất.
+		*/}
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+		/>
+		{/*
+			Script inline chạy NGAY khi trình duyệt đọc tới (is:inline = Astro không bundle/hoist nó).
+			Thêm class js vào html trước khi trang được vẽ, để CSS dạng .js .reveal chỉ ẩn phần tử cần
+			hiệu ứng cuộn KHI có JavaScript. Không có JS thì nội dung vẫn hiện bình thường (progressive
+			enhancement) và cũng không bị chớp nội dung vì class có từ trước lần vẽ đầu tiên.
+		*/}
+		<script is:inline>
+			document.documentElement.classList.add("js");
+		</script>
+	</head>
+	<body class="bg-navy font-sans text-slate-700 antialiased">
+		{/*
+			BODY: nền bg-navy (màu khai báo trong theme Tailwind, global.css), font-sans = Inter, chữ mặc định
+			slate-700, antialiased làm chữ mịn hơn trên macOS/iOS.
+			EmDashBodyStart: EmDash chèn nội dung ngay sau thẻ mở body (ví dụ thanh công cụ cho người
+			dùng đã đăng nhập, theo pageCtx).
+		*/}
+		<EmDashBodyStart page={pageCtx} />
+		{/*
+			SKIP LINK (accessibility): liên kết Skip to content là phần tử đầu tiên có thể focus. Ẩn bằng
+			sr-only (chỉ trình đọc màn hình thấy) và HIỆN khi nhận focus bàn phím (focus:not-sr-only),
+			cố định góc trên trái với z-300, cao hơn header (z-50) và panel liên hệ (z-201). Người dùng bàn phím
+			bấm Tab một lần rồi Enter để nhảy qua toàn bộ header tới nội dung chính (id main).
+		*/}
+		<a
+			href="#main"
+			class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-sky-800"
+			>{t("skip")}</a
+		>
+
+		{/*
+			HEADER CỐ ĐỊNH (fixed inset-x-0 top-0, z-50): luôn dính đầu màn hình. Do fixed nên nó rời khỏi luồng
+			văn bản; vùng main bên dưới phải có padding-top bằng chiều cao header (xem main). Nền navy và hiệu ứng
+			kính mờ nằm trong class site-header ở global.css; script cuối trang thêm class scrolled khi cuộn.
+		*/}
+		<header id="site-header" class="site-header fixed inset-x-0 top-0 z-50">
+			{/*
+				Vùng trong của header: cột flex dọc căn giữa. Hàng 1 = logo + tên + ngôn ngữ + nút liên hệ;
+				hàng 2 = menu chính desktop (hoặc nút hamburger trên mobile). max-w-1920 giới hạn trên màn hình
+				siêu rộng. Padding nhỏ trên mobile (px-3 py-2), rộng hơn từ sm. Class header-inner cho phép
+				global.css thu nhỏ padding dọc khi đã cuộn.
+			*/}
+			<div
+				class="header-inner mx-auto flex w-full max-w-[1920px] flex-col items-center px-3 py-2 sm:px-8 sm:py-4"
+			>
+				{/*
+					HÀNG 1 của header: bố cục 3 cột bằng justify-between. Cột trái và cột phải cùng flex-1 nên luôn
+					rộng bằng nhau, vì vậy khối tên thương hiệu ở giữa (shrink-0) luôn nằm đúng tâm màn hình bất kể
+					độ rộng nội dung hai bên.
+				*/}
+				<div class="mb-2 flex w-full items-center justify-between sm:mb-4">
+					{/*
+						Cột trái: logo bấm được về trang chủ theo locale. alt rỗng vì liên kết đã có aria-label là tên site
+						(tránh trình đọc màn hình đọc trùng). Có width và height để trình duyệt giữ chỗ, tránh dịch chuyển
+						bố cục (CLS). Chiều cao responsive h-9 / sm:h-12 / md:h-14, hiệu ứng phóng nhẹ khi hover.
+					*/}
+					<div class="flex-1">
+						<a href={homeHref} class="inline-block" aria-label={siteTitle}>
+							<img
+								src={logoSrc}
+								alt=""
+								width="56"
+								height="56"
+								class="h-9 w-auto object-contain transition-transform hover:scale-105 sm:h-12 md:h-14"
+							/>
+						</a>
+					</div>
+					{/*
+						Cột giữa: tên thương hiệu (font Jakarta rất đậm, màu sky-300, chữ hoa) và tagline. Tagline ẩn trên
+						mobile (hidden sm:block) để tiết kiệm chỗ. Cỡ chữ dùng giá trị tùy ý tính bằng rem để khớp
+						thiết kế gốc. tracking rộng cho tagline tạo cảm giác thương hiệu cao cấp.
+					*/}
+					<a href={homeHref} class="shrink-0 text-center">
+						<span
+							class="block font-jakarta text-[1.4rem] leading-none font-black tracking-tighter text-sky-300 uppercase sm:text-[2rem] md:text-[2.6rem]"
+							>{siteTitle}</span
+						>
+						<span
+							class="mt-1 hidden font-jakarta text-[0.72rem] font-semibold tracking-[0.22em] text-sky-400 uppercase sm:block"
+							>{brandTagline}</span
+						>
+					</a>
+					{/*
+						Cột phải: cụm chuyển ngôn ngữ và nút liên hệ, căn về bên phải (justify-end).
+					*/}
+					<div class="flex flex-1 items-center justify-end gap-2 sm:gap-6">
+						{/*
+							CHUYỂN NGÔN NGỮ EN | VI. Là một nav có aria-label (t nav.language) để trình đọc màn hình
+							nhận ra đây là vùng điều hướng riêng, tách khỏi menu chính.
+						*/}
+						<nav
+							class="flex items-center gap-2 text-xs font-medium text-white/80 sm:text-sm"
+							aria-label={t("nav.language")}
+						>
+							{/*
+								Lặp qua languageLinks (dựng ở frontmatter): mỗi locale là một liên kết thật (không phải nút JS)
+								nên hoạt động khi tắt JavaScript và crawler đi theo được. Ký tự | chỉ chèn GIỮA các mục
+								(index lớn hơn 0). hreflang và lang trên thẻ a báo ngôn ngữ của đích. aria-current true đánh dấu
+								ngôn ngữ đang dùng. Ngôn ngữ hiện tại tô đậm sky-400, ngôn ngữ còn lại mờ hơn và sáng lên khi hover.
+								Không đặt comment bên trong vòng lặp này để tránh sinh thêm node văn bản trong dòng chữ.
+							*/}
+							{
+								languageLinks.map((lang, index) => (
+									<>
+										{index > 0 && <span class="text-slate-300">|</span>}
+										<a
+											href={lang.href}
+											hreflang={lang.code}
+											lang={lang.code}
+											aria-current={lang.active ? "true" : undefined}
+											class:list={[
+												"uppercase transition-all",
+												lang.active
+													? "font-bold text-sky-400 hover:opacity-80"
+													: "text-white/60 hover:text-sky-400",
+											]}
+										>
+											{lang.code}
+										</a>
+									</>
+								))
+							}
+						</nav>
+						{/*
+							Nút mở panel liên hệ. Thuộc tính data-contact-open là điểm móc cho script cuối trang (dùng ủy
+							quyền sự kiện click ở document, nên không cần id). type button để không submit form nào.
+							Nền sky-700 làm nút nổi bật (call to action), nhỏ hơn trên mobile.
+						*/}
+						<button
+							type="button"
+							data-contact-open
+							class="rounded-full bg-sky-700 px-3 py-1.5 text-xs font-bold text-white shadow-md transition-all hover:bg-sky-800 sm:px-6 sm:py-2.5 sm:text-sm"
+						>
+							{t("nav.contact")}
+						</button>
+					</div>
+				</div>
+				{/*
+					Chỉ render phần điều hướng chính khi menu có mục. Nếu rỗng thì không có hamburger lẫn nav
+					(tránh nút rỗng). Khối này gồm: nút hamburger (mobile) và nav ngang (desktop).
+				*/}
+				{
+					navItems.length > 0 && (
+						<>
+							{/*
+								Nút hamburger (chỉ mobile: md:hidden). aria-expanded bắt đầu false và được script cập nhật;
+								aria-controls trỏ tới id mobile-menu để công nghệ hỗ trợ biết nút này điều khiển phần tử nào.
+								aria-label (t nav.menu) vì nút chỉ chứa ký tự icon. data-menu-toggle là điểm móc cho script.
+							*/}
+							<button
+								type="button"
+								class="px-2 text-2xl font-bold text-white md:hidden"
+								aria-label={t("nav.menu")}
+								aria-expanded="false"
+								aria-controls="mobile-menu"
+								data-menu-toggle
+							>
+								☰
+							</button>
+							{/*
+								Menu chính cho DESKTOP: ẩn mặc định, hiện flex từ md trở lên (hidden md:flex); trên mobile thay
+								bằng hamburger và mobile-menu bên dưới. Mỗi mục: target/rel lấy từ CMS (mục mở tab mới được
+								thêm noopener noreferrer để chống tabnabbing). aria-current page cho mục đang ở. Mục active được
+								gạch chân sky-400 (border-b-2) và chữ đậm; mục thường mờ hơn, sáng lên khi hover. isActive
+								được gọi 2 lần mỗi mục (rẻ, không đáng tối ưu).
+							*/}
+							<nav class="hidden items-center gap-10 md:flex" aria-label={t("nav.label")}>
+								{navItems.map((item) => (
+									<a
+										href={item.url}
+										target={item.target}
+										rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
+										aria-current={isActive(item.url) ? "page" : undefined}
+										class:list={[
+											"transition-all duration-300",
+											isActive(item.url)
+												? "border-b-2 border-sky-400 pb-1 font-bold text-sky-400"
+												: "font-medium text-white/80 hover:text-sky-400",
+										]}
+									>
+										{item.label}
+									</a>
+								))}
+							</nav>
+						</>
+					)
+				}
+			</div>
+			{/*
+				MENU MOBILE: nằm trong header nhưng ngoài hàng chính (vẫn dưới header cố định). Mặc định hidden;
+				script bật/tắt class hidden và flex khi bấm hamburger. md:hidden đảm bảo luôn ẩn ở desktop kể cả
+				khi đang mở rồi người dùng xoay/phóng to màn hình. Nền bg-navy đặc và viền trên mờ để tách khỏi
+				nội dung. Các mục menu mobile không có target (luôn mở cùng tab).
+			*/}
+			{
+				navItems.length > 0 && (
+					<nav
+						id="mobile-menu"
+						class="hidden flex-col gap-4 border-t border-white/10 bg-navy px-6 py-4 md:hidden"
+						aria-label={t("nav.label")}
+					>
+						{navItems.map((item) => (
+							<a
+								href={item.url}
+								aria-current={isActive(item.url) ? "page" : undefined}
+								class:list={[
+									"font-medium transition-all hover:text-sky-400",
+									isActive(item.url) ? "text-sky-400" : "text-white/80",
+								]}
+							>
+								{item.label}
+							</a>
+						))}
+					</nav>
+				)
+			}
+		</header>
+
+		{/*
+			VÙNG NỘI DUNG CHÍNH. id main là đích của skip link; tabindex -1 cho phép focus bằng JS/skip link
+			mà không đưa nó vào thứ tự Tab; outline-none bỏ khung focus xấu trên vùng lớn này.
+			padding-top tăng theo breakpoint (88 / 110 / 132 px) bằng chiều cao header cố định tương ứng,
+			nếu không nội dung đầu trang sẽ bị header che.
+			Mỗi trang chèn nội dung của mình vào slot.
+		*/}
+		<main id="main" tabindex="-1" class="pt-[88px] outline-none sm:pt-[110px] md:pt-[132px]">
+			<slot />
+		</main>
+
+		{/*
+			FOOTER: id contact. Liên kết dạng href contact (vd nút CTA từ CMS) bị script chặn để MỞ PANEL thay
+			vì cuộn, nhưng khi không có JS thì vẫn cuộn xuống footer (progressive enhancement).
+			Bố cục: 4 cột trên desktop (lg:grid-cols-4) trong đó cột thương hiệu chiếm 2; 2 cột ở md; 1 cột mobile.
+		*/}
+		<footer class="bg-navy text-sky-100/70" id="contact">
+			<div class="mx-auto max-w-7xl px-6 pt-20 pb-12 sm:px-12">
+				<div class="mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
+					{/*
+						Cột 1 (rộng gấp đôi trên lg): logo, tên, mô tả thương hiệu, địa chỉ.
+					*/}
+					<div class="col-span-1 lg:col-span-2">
+						<div class="mb-6 flex items-center gap-3">
+							<img src={logoSrc} alt="" width="48" height="48" class="h-12 w-auto object-contain" />
+							<p class="text-2xl font-bold tracking-wide text-white">{siteTitle}</p>
+						</div>
+						<p class="mb-8 max-w-md leading-relaxed text-sky-100/80">{t("brand.description")}</p>
+						<div class="flex items-start gap-3">
+							<span class="material-symbols-outlined mt-0.5 text-sky-300" aria-hidden="true"
+								>location_on</span
+							>
+							<span class="text-sm text-sky-100/90">{t("brand.address")}</span>
+						</div>
+					</div>
+					{/*
+						Cột 2: thông tin liên hệ (điện thoại, email, website) lấy từ site.config.ts. Icon Material
+						Symbols nằm trong span aria-hidden vì chỉ để trang trí; chữ liên kết mới là nội dung thật.
+						Website mở tab mới với rel noopener noreferrer.
+					*/}
+					<div>
+						<h2 class="mb-8 text-xs font-bold tracking-widest text-white uppercase">
+							{t("footer.contactInfo")}
+						</h2>
+						<ul class="space-y-4 text-sm font-medium text-sky-100/90">
+							<li class="flex items-center gap-3">
+								<span class="material-symbols-outlined text-lg text-sky-400" aria-hidden="true"
+									>call</span
+								>
+								<a class="transition-colors hover:text-sky-400" href={company.phoneHref}
+									>{company.phone}</a
+								>
+							</li>
+							<li class="flex items-center gap-3">
+								<span class="material-symbols-outlined text-lg text-sky-400" aria-hidden="true"
+									>mail</span
+								>
+								<a class="transition-colors hover:text-sky-400" href={`mailto:${company.email}`}
+									>{company.email}</a
+								>
+							</li>
+							<li class="flex items-center gap-3">
+								<span class="material-symbols-outlined text-lg text-sky-400" aria-hidden="true"
+									>language</span
+								>
+								<a
+									class="transition-colors hover:text-sky-400"
+									href={company.website}
+									target="_blank"
+									rel="noopener noreferrer">{company.websiteLabel}</a
+								>
+							</li>
+						</ul>
+					</div>
+					{/*
+						Cột 3: danh sách nhà máy chính, chỉ render khi collection plants có dữ liệu. Mỗi dòng gồm
+						mã nhà máy (code) và, nếu có, địa điểm (location) nối bằng dấu gạch.
+					*/}
+					{
+						plants.length > 0 && (
+							<div>
+								<h2 class="mb-8 text-xs font-bold tracking-widest text-white uppercase">
+									{t("footer.mainPlants")}
+								</h2>
+								<ul class="space-y-3 text-sm text-sky-100/90">
+									{plants.map((plant) => (
+										<li>
+											{plant.data.code}
+											{plant.data.location && ` - ${plant.data.location}`}
+										</li>
+									))}
+								</ul>
+							</div>
+						)
+					}
+				</div>
+				{/*
+					THANH DƯỚI CÙNG: bản quyền (năm tính động, tên site) bên trái, các liên kết footer từ menu CMS
+					bên phải. Mobile xếp dọc và căn giữa, từ md xếp ngang (md:flex-row). Viền trên mờ để phân tách.
+				*/}
+				<div
+					class="flex flex-col items-center justify-between gap-6 border-t border-sky-900/50 py-12 md:flex-row"
+				>
+					<p class="font-jakarta text-xs tracking-widest uppercase">
+						© {year} {siteTitle}. {t("footer.rights")}
+					</p>
+					{/*
+						Menu footer (menu footer trong CMS theo locale). Ẩn cả thẻ nav khi menu rỗng.
+					*/}
+					{
+						footerLinks.length > 0 && (
+							<nav class="flex flex-wrap justify-center gap-8 font-jakarta text-xs tracking-widest uppercase">
+								{footerLinks.map((item) => (
+									<a
+										class="decoration-sky-500 underline-offset-4 transition-colors hover:text-sky-400 hover:underline"
+										href={item.url}
+										target={item.target}
+									>
+										{item.label}
+									</a>
+								))}
+							</nav>
+						)
+					}
+				</div>
+			</div>
+		</footer>
+
+		{/*
+			PANEL LIÊN HỆ (slide-over). Gồm hai phần tử anh em đặt ngoài footer/main, cuối body:
+			1) Lớp phủ tối (contact-overlay): mờ nền, bấm vào để đóng (data-contact-close). aria-hidden vì chỉ
+			   là phần trang trí, người dùng bàn phím đóng bằng nút ✕ hoặc phím Escape.
+			2) Panel (contact-panel) trượt từ phải sang.
+			Trạng thái mở/đóng điều khiển bằng class contact-open trên thẻ html (script thêm/xóa). CSS ở
+			global.css: khi đóng, panel bị translateX(100%) VÀ visibility hidden nên nội dung KHÔNG thể được
+			focus hay đọc bởi trình đọc màn hình; khi mở thì hiện ngay (visibility chuyển ngay, transform có
+			hoạt ảnh). Overlay z-200, panel z-201 để nằm trên header (z-50).
+		*/}
+		<div class="contact-overlay" data-contact-close aria-hidden="true"></div>
+		{/*
+			Phần tử aside là dialog theo ARIA: role dialog, aria-modal true (nội dung bên dưới không tương
+			tác được) và aria-labelledby trỏ tới tiêu đề contact-title. LƯU Ý: chưa có bẫy focus (focus trap)
+			và phần còn lại của trang chưa bị inert, nên Tab có thể rời khỏi panel; xem phần script.
+		*/}
+		<aside
+			class="contact-panel"
+			id="contact-panel"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="contact-title"
+		>
+			{/*
+				Phần đầu panel: sticky top-0 nên tiêu đề và nút đóng luôn hiện khi nội dung dài phải cuộn
+				(panel có overflow-y auto). Nền navy trong suốt 95 phần trăm kết hợp backdrop-blur cho cảm giác kính mờ.
+			*/}
+			<div
+				class="sticky top-0 z-10 flex items-center justify-between border-b border-sky-400/10 bg-navy/95 px-7 pt-6 pb-4 backdrop-blur-md"
+			>
+				<div>
+					<p
+						class="mb-1 font-jakarta text-[0.65rem] font-bold tracking-[0.2em] text-sky-400 uppercase"
+					>
+						{t("contact.eyebrow")}
+					</p>
+					<h2 id="contact-title" class="font-jakarta text-[1.35rem] leading-tight font-extrabold text-white">
+						{t("contact.title")}
+					</h2>
+				</div>
+				{/*
+					Nút đóng. data-contact-close được script bắt; đây cũng là phần tử được FOCUS đầu tiên khi panel mở.
+					aria-label vì nút chỉ có ký tự ✕.
+				*/}
+				<button
+					type="button"
+					data-contact-close
+					aria-label={t("contact.close")}
+					class="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition-all hover:bg-sky-400/15 hover:text-sky-400"
+				>
+					✕
+				</button>
+			</div>
+			{/*
+				Thân panel: flex-1 chiếm hết chiều cao còn lại để chân panel dính đáy khi nội dung ngắn.
+			*/}
+			<div class="flex flex-1 flex-col gap-6 p-7">
+				{/*
+					Ba thẻ thông tin liên hệ nhanh. Điện thoại và email là liên kết (tel và mailto); địa chỉ chỉ là
+					khối chữ (hai dòng ngắt bằng br, lấy từ i18n để dịch). Cùng một kiểu: viền sky mờ, nền sky rất nhạt,
+					hover sáng lên. Ô icon vuông cố định (shrink-0) để chữ bên cạnh luôn thẳng hàng.
+				*/}
+				<div class="flex flex-col gap-3">
+					<a
+						href={company.phoneHref}
+						class="flex items-center gap-3.5 rounded-xl border border-sky-400/15 bg-sky-400/5 px-4 py-3.5 transition-all hover:border-sky-400/30 hover:bg-sky-400/10"
+					>
+						<span
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-400/10"
+						>
+							<span class="material-symbols-outlined text-xl text-sky-400" aria-hidden="true"
+								>call</span
+							>
+						</span>
+						<span>
+							<span
+								class="block text-[0.7rem] font-semibold tracking-wider text-slate-500 uppercase"
+								>{t("contact.phone")}</span
+							>
+							<span class="block text-[0.92rem] font-semibold text-slate-200">{company.phone}</span>
+						</span>
+					</a>
+					<a
+						href={`mailto:${company.email}`}
+						class="flex items-center gap-3.5 rounded-xl border border-sky-400/15 bg-sky-400/5 px-4 py-3.5 transition-all hover:border-sky-400/30 hover:bg-sky-400/10"
+					>
+						<span
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-400/10"
+						>
+							<span class="material-symbols-outlined text-xl text-sky-400" aria-hidden="true"
+								>mail</span
+							>
+						</span>
+						<span>
+							<span
+								class="block text-[0.7rem] font-semibold tracking-wider text-slate-500 uppercase"
+								>{t("contact.email")}</span
+							>
+							<span class="block text-[0.88rem] font-semibold text-slate-200">{company.email}</span>
+						</span>
+					</a>
+					<div
+						class="flex items-center gap-3.5 rounded-xl border border-sky-400/15 bg-sky-400/5 px-4 py-3.5"
+					>
+						<span
+							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-400/10"
+						>
+							<span class="material-symbols-outlined text-xl text-sky-400" aria-hidden="true"
+								>location_on</span
+							>
+						</span>
+						<span>
+							<span
+								class="block text-[0.7rem] font-semibold tracking-wider text-slate-500 uppercase"
+								>{t("contact.address")}</span
+							>
+							<span class="block text-[0.88rem] leading-snug font-medium text-slate-200">
+								{t("brand.addressLine1")}<br />{t("brand.addressLine2")}
+							</span>
+						</span>
+					</div>
+				</div>
+				{/*
+					Đường kẻ phân cách có nhãn Send a Message: hai thanh h-px flex-1 ở hai bên chữ.
+				*/}
+				<div class="flex items-center gap-3">
+					<div class="h-px flex-1 bg-sky-400/10"></div>
+					<span class="text-[0.7rem] font-semibold tracking-widest text-slate-600 uppercase"
+						>{t("contact.sendMessage")}</span
+					>
+					<div class="h-px flex-1 bg-sky-400/10"></div>
+				</div>
+				{/*
+					FORM LIÊN HỆ. KHÔNG có endpoint server (xem Known gaps trong AGENTS.md): script chặn submit rồi
+					soạn một email gửi tới data-email bằng mailto. data-subject là tiền tố tiêu đề đã dịch. Các trường
+					required để trình duyệt tự kiểm tra hợp lệ trước khi sự kiện submit phát ra. autocomplete giúp
+					trình duyệt điền sẵn tên, công ty, email. Ô nhập dùng class contact-field (định nghĩa ở global.css
+					cho đồng bộ kiểu dáng).
+				*/}
+				<form
+					class="flex flex-col gap-3.5"
+					data-contact-form
+					data-email={company.email}
+					data-subject={t("contact.subject")}
+				>
+					{/*
+						Hàng 2 cột: Họ tên và Công ty đặt cạnh nhau. Mỗi trường bọc trong label nên bấm vào chữ nhãn cũng focus được ô nhập.
+					*/}
+					<div class="grid grid-cols-2 gap-3">
+						<label class="block">
+							<span
+								class="mb-1.5 block text-[0.7rem] font-bold tracking-wider text-slate-500 uppercase"
+								>{t("contact.name")}</span
+							>
+							<input
+								class="contact-field"
+								type="text"
+								name="name"
+								autocomplete="name"
+								required
+								placeholder={t("contact.namePlaceholder")}
+							/>
+						</label>
+						<label class="block">
+							<span
+								class="mb-1.5 block text-[0.7rem] font-bold tracking-wider text-slate-500 uppercase"
+								>{t("contact.company")}</span
+							>
+							<input
+								class="contact-field"
+								type="text"
+								name="company"
+								autocomplete="organization"
+								placeholder={t("contact.companyPlaceholder")}
+							/>
+						</label>
+					</div>
+					{/*
+						Email (bắt buộc, type email để có bàn phím và kiểm tra định dạng email trên di động).
+					*/}
+					<label class="block">
+						<span class="mb-1.5 block text-[0.7rem] font-bold tracking-wider text-slate-500 uppercase"
+							>{t("contact.emailAddress")}</span
+						>
+						<input
+							class="contact-field"
+							type="email"
+							name="email"
+							autocomplete="email"
+							required
+							placeholder={t("contact.emailPlaceholder")}
+						/>
+					</label>
+					{/*
+						Nội dung tin nhắn (bắt buộc). resize-y chỉ cho kéo giãn theo chiều dọc để không phá bố cục panel.
+					*/}
+					<label class="block">
+						<span class="mb-1.5 block text-[0.7rem] font-bold tracking-wider text-slate-500 uppercase"
+							>{t("contact.message")}</span
+						>
+						<textarea
+							class="contact-field resize-y leading-normal"
+							name="message"
+							rows="4"
+							required
+							placeholder={t("contact.messagePlaceholder")}></textarea>
+					</label>
+					{/*
+						Nút gửi: gradient sky-700 sang sky-600 (bg-linear-to-br là cách viết của Tailwind v4, tương đương
+						bg-gradient-to-br của v3), nhấc nhẹ lên khi hover (-translate-y-px). Icon send là Material Symbol.
+					*/}
+					<button
+						type="submit"
+						class="flex w-full items-center justify-center gap-2 rounded-[0.6rem] bg-linear-to-br from-sky-700 to-sky-600 py-3.5 font-jakarta text-[0.92rem] font-bold tracking-wide text-white transition-all hover:-translate-y-px hover:from-sky-600 hover:to-sky-500"
+					>
+						<span class="material-symbols-outlined text-base" aria-hidden="true">send</span>
+						{t("contact.submit")}
+					</button>
+					<p class="text-center text-xs text-slate-500">{t("contact.note")}</p>
+				</form>
+			</div>
+			{/*
+				Chân panel: tên pháp lý và năm thành lập.
+			*/}
+			<div class="border-t border-sky-400/10 px-7 py-4 text-center">
+				<p class="text-xs text-slate-600">{t("brand.legalName")} · {t("brand.est")}</p>
+			</div>
+		</aside>
+
+		{/*
+			EmDash chèn nội dung cuối body (script/markup do EmDash và plugin đóng góp), nằm TRƯỚC các
+			script của site để không cản trở chúng.
+		*/}
+		<EmDashBodyEnd page={pageCtx} />
+
+		<script>
+			// SCRIPT CỦA SITE. Thẻ <script> thường (không is:inline) nên Astro: bundle thành ES module, hỗ trợ
+			// TypeScript, loại trùng lặp và thực thi sau khi HTML được phân tích (hành vi giống defer). Vì vậy
+			// mọi phần tử DOM bên trên đã tồn tại khi code chạy. Biến khai báo ở đây có phạm vi module
+			// (không rò rỉ ra window; tên `company` bên dưới không xung đột với biến frontmatter cùng tên).
+			// Không dùng View Transitions nên không cần khởi tạo lại sau khi điều hướng: mỗi lần chuyển trang là
+			// một lần tải đầy đủ, script chạy lại từ đầu. Gồm 4 phần: header kính mờ, menu mobile, panel liên hệ
+			// + form, và hiệu ứng scroll reveal.
+			// --- 1. HEADER KÍNH MỜ KHI CUỘN ---
+			// Sau 40px cuộn đầu tiên header chuyển sang hiệu ứng "liquid glass" (kính mờ) thay vì nền đặc.
+			// Header turns to liquid glass after the first 40px of scroll.
+			// Lấy phần tử header theo id (có thể null nếu layout đổi; vì vậy bên dưới dùng `?.`).
+			const header = document.getElementById("site-header");
+			// Bật/tắt class scrolled: toggle(tên, điều kiện) thêm class khi scrollY > 40, bỏ khi quay lại đầu trang.
+			// CSS (global.css .site-header.scrolled) làm nền trong suốt hơn, blur mạnh hơn, padding nhỏ lại.
+			const onScroll = () => header?.classList.toggle("scrolled", window.scrollY > 40);
+			// Listener scroll ở chế độ passive: báo cho trình duyệt biết handler không gọi preventDefault,
+			// nhờ đó cuộn mượt, không bị chặn chờ JS.
+			window.addEventListener("scroll", onScroll, { passive: true });
+			// Gọi một lần ngay để trạng thái đúng khi trang tải lại giữa chừng (trình duyệt khôi phục vị trí cuộn).
+			onScroll();
+
+			// --- 2. MENU MOBILE ---
+			// Mobile menu
+			// Nút hamburger (chỉ tồn tại khi menu có mục). Kiểu generic cho TypeScript, null nếu không render.
+			const menuToggle = document.querySelector<HTMLButtonElement>("[data-menu-toggle]");
+			// Khối menu mobile (cùng điều kiện render với nút hamburger).
+			const mobileMenu = document.getElementById("mobile-menu");
+			// Bấm nút: bật/tắt hiển thị menu. Nếu một trong hai phần tử không tồn tại thì không làm gì (`?.`).
+			menuToggle?.addEventListener("click", () => {
+				// classList.toggle("hidden") trả về TRUE nếu class hidden hiện CÓ mặt sau khi toggle (menu đang bị ẩn).
+				// So sánh `=== false` nghĩa là hidden vừa bị gỡ => menu đang MỞ (open = true). Nếu mobileMenu là
+				// undefined thì kết quả undefined === false là false, tức coi như đóng.
+				const open = mobileMenu?.classList.toggle("hidden") === false;
+				// Menu ẩn dùng `hidden` (display none), nên khi mở phải thêm `flex` để có bố cục cột (flex-col). Thêm
+				// khi mở, gỡ khi đóng (toggle với điều kiện thứ hai).
+				mobileMenu?.classList.toggle("flex", open);
+				// Cập nhật aria-expanded theo trạng thái thực (chuỗi "true"/"false") để trình đọc màn hình báo
+				// đúng "đã mở/đã thu gọn". LƯU Ý: không có xử lý Escape hay đóng khi bấm ra ngoài cho menu này.
+				menuToggle.setAttribute("aria-expanded", String(open));
+			});
+
+			// --- 3. PANEL LIÊN HỆ (SLIDE-OVER) ---
+			// Contact slide-over: the header button and any link to #contact open it.
+			// Thẻ html: class contact-open đặt ở đây để CSS điều khiển cả lớp phủ lẫn panel (global.css).
+			const root = document.documentElement;
+			// Phần tử panel, dùng để tìm nút đóng bên trong khi cần chuyển focus.
+			const panel = document.getElementById("contact-panel");
+			// Ghi nhớ phần tử đang focus trước khi mở, để trả focus về đó khi đóng (quy tắc accessibility của
+			// dialog: không làm người dùng bàn phím mất vị trí đang đọc).
+			let lastFocus: HTMLElement | null = null;
+			// MỞ panel.
+			const openContact = () => {
+				// Lưu phần tử đang focus (nút Contact ở header, liên kết CTA...). Ép kiểu vì activeElement có thể null.
+				lastFocus = document.activeElement as HTMLElement | null;
+				// Thêm class contact-open lên html => overlay hiện (display block + mờ dần) và panel trượt vào.
+				root.classList.add("contact-open");
+				// Khóa cuộn của trang phía sau để cuộn chuột/ngón tay không làm trang nền trôi khi đang xem panel.
+				document.body.style.overflow = "hidden";
+				// Chuyển focus vào nút đóng (phần tử đầu tiên có thể thao tác trong panel) để người dùng bàn phím
+				// và trình đọc màn hình bắt đầu từ trong dialog. Panel khi đóng có visibility hidden nên chưa focus được
+				// trước đó; vì class vừa được thêm đồng bộ nên visibility chuyển ngay sang visible.
+				panel?.querySelector<HTMLElement>("[data-contact-close]")?.focus();
+			};
+			// ĐÓNG panel.
+			const closeContact = () => {
+				// Chặn sớm nếu panel chưa mở: handler Escape và click ngoài đều gọi hàm này, nên cần an toàn khi gọi thừa.
+				if (!root.classList.contains("contact-open")) return;
+				// Gỡ contact-open => panel trượt ra, overlay mờ dần rồi biến mất (CSS đặt visibility hidden trễ 0,4 s
+				// để hoạt ảnh trượt chạy xong trước khi panel bị ẩn hẳn).
+				root.classList.remove("contact-open");
+				// Trả lại khả năng cuộn trang (chuỗi rỗng = xóa style inline).
+				document.body.style.overflow = "";
+				// Trả focus về phần tử trước đó (nếu có).
+				lastFocus?.focus();
+			};
+			// ỦY QUYỀN SỰ KIỆN: một listener click duy nhất trên document cho cả 3 nguồn (nút Contact ở header,
+			// bất kỳ liên kết href contact kể cả các nút CTA do CMS tạo trong block, và mọi phần tử đóng). Ưu điểm:
+			// không phải gắn listener cho từng nút và vẫn hoạt động với phần tử được render sau.
+			document.addEventListener("click", (event) => {
+				// Phần tử thực sự bị bấm (có thể là span/icon bên trong nút nên phải dùng closest bên dưới).
+				const target = event.target as HTMLElement | null;
+				if (!target) return;
+				// closest() đi ngược lên tổ tiên để khớp cả khi bấm vào con của nút. Nếu bấm nút mở HOẶC liên kết
+				// a[href="#contact"] thì chặn hành vi mặc định (không cuộn tới footer) và mở panel.
+				if (target.closest("[data-contact-open]") || target.closest('a[href="#contact"]')) {
+					event.preventDefault();
+					openContact();
+				// Ngược lại nếu bấm vào phần tử có data-contact-close (nút ✕ hoặc lớp phủ tối) thì đóng panel.
+				} else if (target.closest("[data-contact-close]")) {
+					closeContact();
+				}
+			});
+			// Phím Escape đóng panel (chuẩn bàn phím cho dialog). closeContact tự bỏ qua khi panel chưa mở.
+			// LƯU Ý: chưa có bẫy Tab (focus trap) trong panel; với aria-modal true thì đây là điểm có thể cải thiện.
+			document.addEventListener("keydown", (event) => {
+				if (event.key === "Escape") closeContact();
+			});
+
+			// --- 4. FORM LIÊN HỆ: SOẠN EMAIL (không gửi lên server) ---
+			// The form has no server endpoint: it composes an email to sales.
+			// Form có thuộc tính data-contact-form; mang data-email (người nhận) và data-subject (tiền tố tiêu đề đã dịch).
+			const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
+			// Sự kiện submit chỉ phát khi các trường required đã hợp lệ (trình duyệt tự kiểm tra). Ta chặn gửi
+			// mặc định (tránh tải lại trang) và tự dựng liên kết mailto.
+			form?.addEventListener("submit", (event) => {
+				event.preventDefault();
+				// FormData đọc giá trị các ô theo thuộc tính name. `?? ""` và String() để luôn là chuỗi, trim bỏ
+				// khoảng trắng thừa. Trường company là tùy chọn nên có thể rỗng.
+				const data = new FormData(form);
+				const name = String(data.get("name") ?? "").trim();
+				const company = String(data.get("company") ?? "").trim();
+				const email = String(data.get("email") ?? "").trim();
+				const message = String(data.get("message") ?? "").trim();
+				// Tiêu đề email: "<tiền tố đã dịch> <Tên>" và thêm " (Công ty)" nếu có công ty.
+				const subject = `${form.dataset.subject} ${name}${company ? ` (${company})` : ""}`;
+				// Nội dung email: lời nhắn, hai dòng trống, rồi chữ ký gồm tên (kèm công ty nếu có) và địa chỉ email
+				// của người gửi để bộ phận kinh doanh có thể phản hồi.
+				const body = `${message}\n\n${name}${company ? `, ${company}` : ""}\n${email}`;
+				// Mở ứng dụng email mặc định bằng liên kết mailto. encodeURIComponent bắt buộc để ký tự đặc biệt, dấu
+				// tiếng Việt và xuống dòng (\n) được mã hóa đúng. Gán window.location.href không rời khỏi trang
+				// vì mailto được trình duyệt chuyển cho ứng dụng ngoài. Giới hạn: URL mailto rất dài có thể bị
+				// cắt bởi một số ứng dụng email; trình duyệt/máy không cài ứng dụng email thì không có gì xảy ra.
+				window.location.href = `mailto:${form.dataset.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+			});
+
+			// --- 5. SCROLL REVEAL: HIỆN DẦN KHI CUỘN TỚI ---
+			// Các block nội dung gắn class reveal. CSS (.js .reveal) đặt chúng ẩn + dịch xuống 24px chỉ khi có
+			// JS (class js đặt ở head), khi thêm class revealed thì hiện dần lên. Với prefers-reduced-motion,
+			// global.css bỏ hiệu ứng và để nội dung hiện sẵn.
+			// Scroll reveal
+			// Lấy tất cả phần tử cần hiệu ứng một lần lúc tải (NodeList).
+			const revealEls = document.querySelectorAll(".reveal");
+			// Trình duyệt hỗ trợ IntersectionObserver (hầu như tất cả hiện nay): theo dõi khi phần tử vào khung nhìn.
+			if ("IntersectionObserver" in window) {
+				// Callback nhận danh sách thay đổi; threshold 0.08 nghĩa là chỉ cần ~8 phần trăm phần tử xuất hiện là kích hoạt
+				// (khối cao vẫn hiện sớm, không phải chờ cuộn hết).
+				const observer = new IntersectionObserver(
+					(entries) => {
+						for (const entry of entries) {
+							// Khi phần tử đã giao cắt khung nhìn: thêm revealed (kích hoạt CSS transition).
+							if (entry.isIntersecting) {
+								entry.target.classList.add("revealed");
+								// Hiệu ứng chỉ chạy MỘT lần: ngừng theo dõi để giải phóng tài nguyên và để phần tử không ẩn lại khi cuộn ngược.
+								observer.unobserve(entry.target);
+							}
+						}
+					},
+					{ threshold: 0.08 },
+				);
+				revealEls.forEach((el) => observer.observe(el));
+			// Trình duyệt quá cũ không có IntersectionObserver: hiện ngay mọi phần tử (đừng để nội dung bị ẩn vĩnh viễn).
+			} else {
+				revealEls.forEach((el) => el.classList.add("revealed"));
+			}
+		</script>
+	</body>
+</html>

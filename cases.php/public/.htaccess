@@ -1,0 +1,28 @@
+# ============================================================================
+#  public/.htaccess – "FRONT CONTROLLER" CHO APACHE
+# ============================================================================
+# Mục đích: mọi URL "đẹp" như /bai-viet/tom-su, /admin/posts đều được chuyển
+# cho public/index.php xử lý (index.php đọc URL và gọi Router).
+# File tĩnh có thật (CSS, JS, ảnh trong uploads/) thì Apache trả thẳng, không qua PHP.
+#
+# Tương đương với public/router.php khi chạy bằng PHP built-in server (php -S).
+
+# Tắt chức năng liệt kê danh sách file khi truy cập một thư mục không có index
+# (vd. /assets/ sẽ trả 403 thay vì hiện toàn bộ tên file).
+Options -Indexes
+
+# Chỉ chạy khi Apache có module mod_rewrite.
+<IfModule mod_rewrite.c>
+    # Bật bộ máy viết lại URL.
+    RewriteEngine On
+    # Điều kiện 1: đường dẫn KHÔNG phải là một file có thật (-f = file tồn tại).
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # Điều kiện 2: đường dẫn KHÔNG phải là một thư mục có thật (-d = thư mục tồn tại).
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # Thoả cả 2 điều kiện → chuyển cho index.php.
+    #   ^      = khớp mọi URL
+    #   [QSA]  = Query String Append: giữ nguyên ?cat=san-pham&page=2 khi chuyển
+    #   [L]    = dừng, không xét các quy tắc khác
+    # URL gốc vẫn nằm trong $_SERVER['REQUEST_URI'] để index.php đọc.
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>

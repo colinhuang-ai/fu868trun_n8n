@@ -1,0 +1,43 @@
+---
+/**
+ * Route: trang 404 tiếng Anh. Phục vụ trực tiếp ở GET /404 và, quan trọng hơn,
+ * là đích của `Astro.rewrite("/404")` trong src/pages/[slug].astro và
+ * src/pages/news/[slug].astro khi không tìm thấy trang/bài viết.
+ *
+ * Vì sao dùng rewrite + tự đặt status thay vì redirect:
+ *   - rewrite giữ nguyên URL người dùng gõ (không chuyển sang /404) và render
+ *     nội dung trang này trong cùng một request;
+ *   - file này tự đặt Astro.response.status = 404 để CHẮC CHẮN phản hồi là 404
+ *     dù được truy cập trực tiếp hay qua rewrite; nếu trình duyệt/crawler nhận
+ *     200 ("soft 404") thì Google có thể index trang lỗi.
+ *
+ * Bản tiếng Việt: src/pages/vi/404.astro (vì EN/VI tách file, xem
+ * src/pages/index.astro). Hai file hard-code locale riêng ("en"/"vi") thay vì
+ * dựa vào Astro.currentLocale để thông báo luôn đúng ngôn ngữ dù đang ở trạng
+ * thái rewrite.
+ */
+import Base from "../layouts/Base.astro";
+import { localizePath, useTranslations } from "../i18n/ui";
+
+// Đặt mã HTTP 404 cho phản hồi hiện tại (áp dụng cho cả truy cập trực tiếp lẫn rewrite).
+Astro.response.status = 404;
+const t = useTranslations("en");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - robots="noindex": không cho công cụ tìm kiếm lập chỉ mục trang lỗi. title lấy từ ui.ts, Base tự nối thêm tên site.
+---
+
+<Base title={t("notFound.title")} robots="noindex">
+	<section class="mx-auto max-w-3xl px-4 py-24 text-center text-white">
+		{/* Số 404 trang trí, chỉ là chữ lớn màu sky-400. */}
+		<p class="font-jakarta text-7xl font-black text-sky-400">404</p>
+		<h1 class="mt-4 font-jakarta text-3xl font-black">{t("notFound.title")}</h1>
+		<p class="mt-3 text-sky-100/70">{t("notFound.body")}</p>
+		{/* localizePath("/", "en") = "/" (EN không có prefix); bản VI cho ra "/vi/". Nút này đưa khách về trang chủ đúng ngôn ngữ. */}
+		<a
+			href={localizePath("/", "en")}
+			class="mt-8 inline-block rounded-full bg-sky-700 px-8 py-3 font-bold text-white hover:bg-sky-600"
+		>
+			{t("notFound.home")}
+		</a>
+	</section>
+</Base>

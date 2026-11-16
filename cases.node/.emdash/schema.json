@@ -1,0 +1,387 @@
+{
+  "collections": [
+    {
+      "slug": "certifications",
+      "label": "Certifications",
+      "labelSingular": "Certification",
+      "supports": [
+        "drafts",
+        "revisions"
+      ],
+      "hidden": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Name",
+          "type": "string",
+          "required": true,
+          "unique": false
+        },
+        {
+          "slug": "group",
+          "label": "Group (other: table only)",
+          "type": "select",
+          "required": true,
+          "unique": false,
+          "validation": {
+            "options": [
+              "food_safety",
+              "aquaculture",
+              "specialist",
+              "other"
+            ]
+          }
+        },
+        {
+          "slug": "icon",
+          "label": "Emoji",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "tone",
+          "label": "Icon colour",
+          "type": "select",
+          "required": false,
+          "unique": false,
+          "validation": {
+            "options": [
+              "blue",
+              "green",
+              "amber",
+              "purple"
+            ]
+          }
+        },
+        {
+          "slug": "badge",
+          "label": "Badge text",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "badge_tone",
+          "label": "Badge colour",
+          "type": "select",
+          "required": false,
+          "unique": false,
+          "validation": {
+            "options": [
+              "blue",
+              "green",
+              "amber",
+              "purple"
+            ]
+          }
+        },
+        {
+          "slug": "description",
+          "label": "Description",
+          "type": "text",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "note",
+          "label": "Footnote",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "issuer",
+          "label": "Issuing body",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "scope",
+          "label": "Scope",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "cert_status",
+          "label": "Status",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "show_in_table",
+          "label": "Show in the overview table",
+          "type": "boolean",
+          "required": false,
+          "unique": false,
+          "defaultValue": true
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order",
+          "type": "integer",
+          "required": false,
+          "unique": false
+        }
+      ]
+    },
+    {
+      "slug": "pages",
+      "label": "Pages",
+      "labelSingular": "Page",
+      "supports": [
+        "drafts",
+        "revisions",
+        "preview",
+        "seo"
+      ],
+      "hidden": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title",
+          "type": "string",
+          "required": true,
+          "unique": false
+        },
+        {
+          "slug": "content",
+          "label": "Content",
+          "type": "blocks",
+          "required": false,
+          "unique": false,
+          "validation": {
+            "allowedTypes": [
+              "cases_hero",
+              "cases_codes",
+              "cases_reach",
+              "cases_features",
+              "cases_timeline",
+              "cases_values",
+              "cases_plants",
+              "cases_tech",
+              "cases_certs",
+              "cases_spotlight",
+              "cases_cert_table",
+              "cases_catalog",
+              "cases_cta"
+            ],
+            "retiredTypes": [],
+            "minItems": 0,
+            "maxItems": 20
+          }
+        }
+      ]
+    },
+    {
+      "slug": "plants",
+      "label": "Plants",
+      "labelSingular": "Plant",
+      "supports": [
+        "drafts",
+        "revisions"
+      ],
+      "hidden": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Plant name",
+          "type": "string",
+          "required": true,
+          "unique": false
+        },
+        {
+          "slug": "code",
+          "label": "Export code (e.g. DL 113)",
+          "type": "string",
+          "required": true,
+          "unique": false
+        },
+        {
+          "slug": "line",
+          "label": "Product line",
+          "type": "select",
+          "required": true,
+          "unique": false,
+          "validation": {
+            "options": [
+              "shrimp",
+              "surimi",
+              "cephalopod",
+              "fishmeal"
+            ]
+          }
+        },
+        {
+          "slug": "location",
+          "label": "Short location (footer)",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "province",
+          "label": "Province",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "address",
+          "label": "Address",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "image",
+          "label": "Photo",
+          "type": "image",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order",
+          "type": "integer",
+          "required": false,
+          "unique": false
+        }
+      ]
+    },
+    {
+      "slug": "posts",
+      "label": "News",
+      "labelSingular": "Article",
+      "supports": [
+        "drafts",
+        "revisions",
+        "preview",
+        "scheduling",
+        "search",
+        "seo"
+      ],
+      "hidden": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Title",
+          "type": "string",
+          "required": true,
+          "unique": false
+        },
+        {
+          "slug": "excerpt",
+          "label": "Summary (shown on the news list and in search results)",
+          "type": "text",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "featured_image",
+          "label": "Cover photo",
+          "type": "image",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "content",
+          "label": "Article",
+          "type": "portableText",
+          "required": false,
+          "unique": false
+        }
+      ]
+    },
+    {
+      "slug": "products",
+      "label": "Products",
+      "labelSingular": "Product",
+      "supports": [
+        "drafts",
+        "revisions",
+        "search"
+      ],
+      "hidden": false,
+      "fields": [
+        {
+          "slug": "title",
+          "label": "Product name",
+          "type": "string",
+          "required": true,
+          "unique": false
+        },
+        {
+          "slug": "category",
+          "label": "Category",
+          "type": "select",
+          "required": true,
+          "unique": false,
+          "validation": {
+            "options": [
+              "btp",
+              "van",
+              "vap_btp",
+              "vap_van",
+              "surimi",
+              "cephalopod"
+            ]
+          }
+        },
+        {
+          "slug": "image",
+          "label": "Photo",
+          "type": "image",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "size",
+          "label": "Size range",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "packing",
+          "label": "Pack form",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "origin",
+          "label": "Origin",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "glaze",
+          "label": "Glaze",
+          "type": "string",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "description",
+          "label": "Description",
+          "type": "text",
+          "required": false,
+          "unique": false
+        },
+        {
+          "slug": "sort_order",
+          "label": "Order",
+          "type": "integer",
+          "required": false,
+          "unique": false
+        }
+      ]
+    }
+  ],
+  "version": "271b4e9f8f340653"
+}

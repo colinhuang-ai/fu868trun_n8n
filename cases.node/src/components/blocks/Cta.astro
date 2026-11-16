@@ -1,0 +1,76 @@
+---
+/**
+ * Cta.astro — block `cases_cta` (bảng kêu gọi hành động: tiêu đề + đoạn ngắn + MỘT nút).
+ *
+ * ĐƯỢC ĐĂNG KÝ Ở ĐÂU
+ *   `src/components/CasesBlocks.astro` -> `cases_cta: Cta`. Trang `products` đặt block này ở
+ *   cuối, ngay sau `cases_catalog` (mời khách liên hệ/xem thêm).
+ *
+ * DỮ LIỆU (props `value`, schema trong `scripts/build-seed.mjs`; sửa trong admin):
+ *   - headline  (string, bắt buộc) tiêu đề h2
+ *   - body      (text)             đoạn mô tả ngắn
+ *   - icon      (string)           TÊN icon Material Symbols (vd "mail", "call"), hiện trước chữ nút
+ *   - cta_label (string)           chữ trên nút
+ *   - cta_url   (string)           link của nút: bắt đầu bằng /, https://, mailto:, tel: hoặc #
+ *   - anchor_id (string)           id của section
+ *   Không đọc collection nào lúc request. Chữ trên nút do CMS cung cấp (bản VI là entry
+ *   riêng), nên component không có chuỗi giao diện cố định.
+ */
+
+import { type BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+import { toLocale } from "../../i18n/ui";
+// Làm sạch link do CMS nhập (chặn scheme nguy hiểm) và thêm tiền tố /vi cho link nội bộ.
+import { resolveHref } from "../../utils/links";
+
+// Thu hẹp union về đúng block `cases_cta`.
+type CtaBlock = Extract<PageContentBlock, { _type: "cases_cta" }>;
+type Props = BlockComponentProps<CtaBlock>;
+
+const { value } = Astro.props;
+// Locale cần cho `resolveHref` để chèn /vi vào link nội bộ khi đang ở trang tiếng Việt
+// (vd "/#contact" -> "/vi/#contact"). Link ngoài (https:, mailto:, tel:) giữ nguyên.
+const locale = toLocale(Astro.currentLocale);
+// `undefined` nếu URL trống/không an toàn -> nút sẽ không render (xem điều kiện ở template).
+const href = resolveHref(value.cta_url, locale);
+---
+
+{/*
+	Section nền slate-50 (liền mạch với catalog phía trên, vốn cũng slate-50); chỉ có padding
+	dưới `pb-12` vì khoảng cách phía trên đã do khối trước tạo ra. `id` rỗng → `undefined`.
+*/}
+<section id={value.anchor_id || undefined} class="bg-slate-50 px-4 pb-12 sm:px-8">
+	{/*
+		Khung CTA: gradient chéo navy → sky-700 viết inline (màu đúng của thiết kế), bo góc lớn,
+		chữ trắng căn giữa; `reveal` = hiện dần khi cuộn. `max-w-screen-2xl` cùng bề rộng với
+		Catalog/Hero banner để các khối thẳng hàng.
+	*/}
+	<div
+		class="reveal mx-auto max-w-screen-2xl rounded-2xl p-10 text-center text-white sm:p-14"
+		style="background:linear-gradient(135deg,#071525 0%,#0369a1 100%)"
+	>
+		<h2 class="mb-3 font-headline text-2xl font-black sm:text-3xl">{value.headline}</h2>
+		{value.body && <p class="mx-auto mb-7 max-w-xl text-sm text-sky-200">{value.body}</p>}
+		{/*
+			Nút chỉ render khi CÓ cả href (đã qua `resolveHref`) lẫn label — tránh nút rỗng/hỏng link.
+			Nút trắng nổi trên nền gradient tối; hover nhấc lên (-translate-y-1) và đậm bóng.
+			Icon (nếu có) là font icon Material Symbols: nội dung text của span chính là TÊN icon
+			(`value.icon`), nên `aria-hidden` để trình đọc màn hình không đọc tên đó.
+		*/}
+		{
+			href && value.cta_label && (
+				<a
+					href={href}
+					class="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-sky-800 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+				>
+					{value.icon && (
+						<span class="material-symbols-outlined text-lg" aria-hidden="true">
+							{value.icon}
+						</span>
+					)}
+					{value.cta_label}
+				</a>
+			)
+		}
+	</div>
+</section>

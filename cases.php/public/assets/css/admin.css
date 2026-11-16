@@ -1,0 +1,432 @@
+/* =========================================================================
+   CASES CMS – STYLESHEET CHO TRANG QUẢN TRỊ (/admin)
+   File này chỉ được nạp trong views/layouts/admin.php và views/admin/login.php,
+   hoàn toàn tách biệt với site.css của website.
+
+   Cách tổ chức file:
+     1. :root + reset    – biến màu/font, style nền tảng
+     2. Nút              – .btn, .icon-btn
+     3. Khung (shell)    – sidebar trái + topbar + vùng nội dung
+     4. Thông báo        – .alert (flash message sau khi lưu/xoá)
+     5. Panel            – khối nền trắng viền mảnh dùng khắp nơi
+     6. Dashboard        – thẻ thống kê, danh sách gần đây
+     7. Badge            – nhãn trạng thái (Đã xuất bản / Bản nháp / Hẹn giờ…)
+     8. Danh sách & bảng – tab trạng thái, ô tìm kiếm, input chung, bảng, phân trang
+     9. Form soạn thảo   – bố cục 2 cột, trường nhập, ảnh đại diện, trình soạn thảo Quill
+    10. Cài đặt, Đăng nhập
+    11. Responsive       – 1180 / 960 / 600px
+   ========================================================================= */
+/* Biến CSS của admin (tông màu đồng bộ với website nhưng trung tính hơn để dễ làm việc) */
+:root {
+    /* Xanh navy: nền sidebar, avatar, nền trang đăng nhập */
+    --navy: #1f3d73;
+    --navy-900: #17305e;
+    /* Màu chữ tiêu đề */
+    --ink: #1e2b45;
+    /* Xanh dương: nút chính, link, focus */
+    --blue: #2f6bdb;
+    /* Hover nút chính */
+    --blue-600: #2559c0;
+    /* Xanh rất nhạt: nền icon thống kê, hover nút icon */
+    --blue-50: #eef3fb;
+    /* Đỏ: nút/hành động xoá */
+    --red: #c0392b;
+    --text: #374151;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    /* Nền xám-xanh của toàn bộ vùng làm việc */
+    --bg: #f4f6fa;
+    /* Nền các panel/card */
+    --card: #fff;
+    --radius: 14px;
+    /* Font giống website: Plus Jakarta Sans cho tiêu đề, Source Sans 3 cho nội dung */
+    --font-head: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+/* ---------- RESET & NỀN TẢNG ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font: 400 15.5px/1.55 var(--font-body); color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3 { font-family: var(--font-head); color: var(--ink); margin: 0; font-weight: 600; letter-spacing: -.01em; }
+p { margin: 0; }
+img { max-width: 100%; display: block; }
+/* Icon SVG mặc định 18px trong admin */
+.icon { width: 18px; height: 18px; flex: none; }
+.muted { color: var(--muted); }
+/* Ẩn trực quan nhưng trình đọc màn hình vẫn đọc được (vd. tiêu đề cột “Thao tác”) */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Viền focus khi điều hướng bằng bàn phím */
+:focus-visible { outline: 3px solid rgba(47, 107, 219, .4); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Buttons ---------- */
+/*
+ * Nút cơ bản cao 40px (gọn hơn nút ngoài website).
+ * Các biến thể: primary (xanh), light (trắng viền xám), ghost (chữ xanh không nền),
+ * danger-ghost (chữ đỏ – nút xoá), block (rộng 100%), sm (nhỏ).
+ */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid transparent; font: 500 14px var(--font-head); cursor: pointer; transition: background .15s, border-color .15s, color .15s; white-space: nowrap; background: none; color: var(--ink); }
+.btn .icon { width: 16px; height: 16px; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-600); }
+.btn-light { background: #fff; border-color: var(--line); }
+.btn-light:hover { border-color: #c9d2e3; background: #fafbfd; }
+.btn-ghost { color: var(--blue); }
+.btn-ghost:hover { background: var(--blue-50); }
+.btn-danger-ghost { color: var(--red); border-color: #f1d5d1; background: #fff; }
+.btn-danger-ghost:hover { background: #fdf1ef; }
+.btn-block { width: 100%; }
+.btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+/* Nút vuông chỉ có icon (xem / sửa / nhân bản / xoá trong bảng) */
+.icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 0; background: none; color: var(--muted); display: inline-grid; place-items: center; cursor: pointer; transition: background .15s, color .15s; }
+.icon-btn:hover { background: var(--blue-50); color: var(--blue); }
+/* Nút icon “xoá”: hover chuyển đỏ để cảnh báo */
+.icon-btn-danger:hover { background: #fdf1ef; color: var(--red); }
+
+/* ---------- Shell ---------- */
+/*
+ * ====================== KHUNG GIAO DIỆN (SHELL) ======================
+ * Lưới 2 cột: sidebar 248px | phần chính co giãn. min-height: 100vh để luôn cao bằng màn hình.
+ */
+.admin-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+/* Sidebar dính bên trái, cao bằng màn hình; flex dọc để đẩy link “Xem website” xuống đáy */
+.sidebar { position: sticky; top: 0; height: 100vh; background: var(--navy); color: rgba(255, 255, 255, .8); display: flex; flex-direction: column; padding: 20px 14px; }
+.sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 6px 10px 22px; color: #fff; font: 600 19px var(--font-head); letter-spacing: .06em; }
+.sidebar-logo svg { width: 32px; height: 32px; }
+/* Nhãn nhỏ “CMS” cạnh logo */
+.sidebar-logo small { font-size: 11px; letter-spacing: .1em; padding: 3px 6px; border-radius: 6px; background: rgba(255, 255, 255, .14); margin-left: 4px; vertical-align: 3px; }
+.sidebar-nav { display: grid; gap: 4px; }
+/* Mục menu: icon + chữ, bo góc */
+.sidebar-nav a, .sidebar-foot a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font: 500 14.5px var(--font-head); transition: background .15s, color .15s; }
+.sidebar-nav a:hover, .sidebar-foot a:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+/* Mục đang mở: nền trắng chữ navy (nổi bật trên nền sidebar) */
+.sidebar-nav a.active { background: #fff; color: var(--navy); }
+/* Huy hiệu đỏ đếm số yêu cầu báo giá chưa đọc (margin-left: auto đẩy sang phải) */
+.nav-badge { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #e0574f; color: #fff; font-size: 12px; display: grid; place-items: center; }
+/* Chân sidebar: margin-top: auto đẩy xuống đáy */
+.sidebar-foot { margin-top: auto; border-top: 1px solid rgba(255, 255, 255, .12); padding-top: 12px; }
+
+/* min-width: 0 cho phép cột chính co lại (tránh bảng rộng làm tràn layout) */
+.main { min-width: 0; display: flex; flex-direction: column; }
+/* Thanh trên cùng dính khi cuộn: tiêu đề trang + tên người dùng + nút đăng xuất */
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 16px; height: 64px; padding: 0 32px; background: rgba(244, 246, 250, .92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topbar-title { font-size: 19px; }
+.topbar-user { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.topbar-user > a { display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border-radius: 999px; font: 500 14px var(--font-head); color: var(--ink); }
+.topbar-user > a:hover, .topbar-user > a.active { background: #fff; }
+/* Avatar tròn chứa chữ cái đầu của tên */
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-size: 14px; }
+/* Nút mở sidebar – chỉ hiện trên màn hình nhỏ */
+.sidebar-toggle { display: none; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); place-items: center; cursor: pointer; }
+/* Lớp phủ tối phía sau sidebar trên mobile (mặc định ẩn) */
+.sidebar-backdrop { display: none; }
+/* Vùng nội dung chính, tối đa 1320px */
+.content { padding: 28px 32px 64px; max-width: 1320px; width: 100%; }
+
+/* ---------- Alerts ---------- */
+/*
+ * ====================== THÔNG BÁO (FLASH MESSAGE) ======================
+ * Hiện ở đầu trang sau khi lưu/xoá… Màu theo loại: success / info / error.
+ */
+.alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; font-size: 15px; border: 1px solid transparent; }
+.alert > .icon { margin-top: 2px; }
+.alert span { flex: 1; }
+.alert-success { background: #ecf8f1; color: #166534; border-color: #c9ecd7; }
+.alert-info { background: var(--blue-50); color: #1e40af; border-color: #d4e1f7; }
+.alert-error { background: #fdf0ef; color: #9f2a20; border-color: #f4d0cb; }
+/* Nút X đóng thông báo (xử lý trong admin.js) */
+.alert-close { border: 0; background: none; color: inherit; opacity: .6; cursor: pointer; padding: 2px; }
+.alert-close:hover { opacity: 1; }
+
+/* ---------- Panels ---------- */
+/*
+ * ====================== PANEL ======================
+ * Khối nền trắng bo góc – dùng cho form, bảng, các khối dashboard
+ */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+.panel-pad { padding: 22px; }
+/* Hai panel liền nhau tự cách 18px */
+.panel + .panel { margin-top: 18px; }
+.panel-title { font-size: 15px; margin-bottom: 16px; }
+/* Đầu panel: tiêu đề bên trái + link “Tất cả” bên phải */
+.panel-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.panel-head h2 { font-size: 15px; }
+.panel-head a { color: var(--blue); font: 500 13.5px var(--font-head); }
+
+/* ---------- Dashboard ---------- */
+/*
+ * ====================== DASHBOARD ======================
+ * 4 thẻ thống kê trên một hàng
+ */
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+/*
+ * Thẻ thống kê dùng grid-template-areas: icon chiếm cột trái suốt 3 hàng,
+ * bên phải lần lượt là nhãn / con số / dòng phụ.
+ */
+.stat-card { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon label" "icon num" "icon sub"; column-gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; transition: border-color .15s, box-shadow .15s; }
+.stat-card:hover { border-color: #c9d6ef; box-shadow: 0 8px 24px rgba(31, 61, 115, .07); }
+.stat-icon { grid-area: icon; width: 44px; height: 44px; border-radius: 12px; background: var(--blue-50); color: var(--blue); display: grid; place-items: center; }
+.stat-label { grid-area: label; font: 500 13.5px var(--font-head); color: var(--muted); }
+.stat-num { grid-area: num; font: 600 28px/1.2 var(--font-head); color: var(--ink); }
+.stat-sub { grid-area: sub; font-size: 13.5px; color: var(--muted); }
+/* Hàng nút thao tác nhanh (Viết bài mới, Thêm trang…) */
+.quick-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; }
+/* Lưới 2 cột cho các khối “gần đây” */
+.dash-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.dash-grid .panel + .panel { margin-top: 0; }
+/* Mỗi dòng danh sách: tiêu đề + dòng phụ bên trái, badge trạng thái bên phải */
+.list li { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; padding: 12px 20px; border-bottom: 1px solid #f0f2f5; }
+.list li:last-child { border-bottom: 0; }
+/* Tiêu đề quá dài bị cắt bằng dấu “…” (text-overflow: ellipsis) */
+.list li > a { font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list li > a:hover { color: var(--blue); }
+.list .list-meta { grid-column: 1; font-size: 13.5px; color: var(--muted); }
+/* Badge chiếm cột phải, trải dài 2 hàng, căn giữa theo chiều dọc */
+.list .badge { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+/* Chấm đỏ trước tên khách cho yêu cầu chưa đọc */
+.list li.unread > a::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e0574f; margin-right: 8px; vertical-align: 2px; }
+.list .empty { color: var(--muted); display: block; }
+ul.list { list-style: none; margin: 0; padding: 0; }
+
+/* ---------- Badges ---------- */
+/*
+ * ====================== BADGE TRẠNG THÁI ======================
+ * published = xanh lá, draft = xám, scheduled (hẹn giờ) = vàng, featured (nổi bật) = đỏ nhạt
+ */
+.badge { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; font: 500 12px var(--font-head); white-space: nowrap; }
+.badge-published { background: #e5f6ec; color: #17803d; }
+.badge-draft { background: #f1f2f5; color: #5b6272; }
+.badge-scheduled { background: #fff4d6; color: #8a6100; margin-left: 4px; }
+.badge-featured { background: #fdeceb; color: #b5403f; margin-left: 6px; }
+
+/* ---------- Lists / tables ---------- */
+/*
+ * ====================== DANH SÁCH & BẢNG ======================
+ * Thanh công cụ trên bảng: tab trạng thái bên trái, nút “Thêm…” bên phải
+ */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+/* Tab Tất cả / Đã xuất bản / Bản nháp dạng “segmented control” (nền xám, tab chọn nền trắng) */
+.status-tabs { display: flex; gap: 4px; background: #e9edf4; padding: 4px; border-radius: 12px; }
+.status-tabs a { padding: 7px 14px; border-radius: 9px; font: 500 14px var(--font-head); color: var(--muted); }
+/* Số đếm nhỏ cạnh tên tab */
+.status-tabs a b { font-weight: 500; font-size: 12px; margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: rgba(0, 0, 0, .06); }
+.status-tabs a.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
+/* Hàng bộ lọc: ô tìm kiếm + chọn chuyên mục + nút Lọc */
+.filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+/* Ô tìm kiếm có icon kính lúp đặt tuyệt đối bên trái */
+.search-input { position: relative; flex: 1; min-width: 220px; max-width: 420px; }
+.search-input .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 16px; height: 16px; }
+.search-input input { padding-left: 36px; }
+
+/* Style chung cho MỌI ô nhập liệu trong admin (text, email, mật khẩu, số, ngày giờ, select, textarea) */
+input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], input[type=datetime-local], select, textarea {
+    width: 100%; height: 40px; padding: 0 12px; border: 1px solid #d9dee8; border-radius: 10px; background: #fff;
+    font: 400 15px var(--font-body); color: var(--ink); transition: border-color .15s, box-shadow .15s;
+}
+/* Textarea cao tự do, chỉ kéo giãn theo chiều dọc */
+textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+select { cursor: pointer; }
+.filters select { width: auto; min-width: 180px; }
+/* Khi focus: viền xanh + quầng sáng mờ */
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47, 107, 219, .14); }
+
+/* Panel chứa bảng: overflow hidden để góc bo không bị bảng đè */
+.table-panel { overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+/* Tiêu đề cột: chữ hoa nhỏ, màu xám */
+.table th { text-align: left; font: 500 12.5px var(--font-head); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 12px 16px; background: #fafbfc; border-bottom: 1px solid var(--line); }
+.table td { padding: 14px 16px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: #fafcff; }
+/* Tiêu đề bài trong bảng + dòng đường dẫn công khai bên dưới (.row-slug) */
+.row-title { display: block; font-weight: 600; color: var(--ink); font-size: 15.5px; }
+a.row-title:hover { color: var(--blue); }
+.row-slug { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+/* Cột thao tác: width 1% + nowrap → co vừa đúng các nút, không chiếm chỗ */
+.col-actions { width: 1%; white-space: nowrap; text-align: right; }
+.row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.row-actions form { margin: 0; }
+/* Dòng yêu cầu báo giá chưa đọc: nền vàng rất nhạt + chấm đỏ */
+.row-unread { background: #fffaf3; }
+.row-unread .row-title::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e0574f; margin-right: 8px; vertical-align: 2px; }
+/* Ô nội dung nhu cầu của khách, giới hạn bề rộng */
+.cell-message { max-width: 420px; font-size: 14.5px; }
+/* Trạng thái rỗng (chưa có dữ liệu): icon lớn + câu thông báo + nút tạo mới */
+.empty-state { padding: 56px 24px; text-align: center; color: var(--muted); display: grid; justify-items: center; gap: 14px; }
+.empty-icon { width: 42px; height: 42px; color: #b6c0d3; }
+
+/* Phân trang (dùng chung partial với website, style riêng cho admin) */
+.pagination { display: flex; justify-content: center; gap: 6px; margin-top: 20px; }
+.pagination a, .pagination span { min-width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--line); background: #fff; font: 500 14px var(--font-head); }
+.pagination a:hover { border-color: var(--blue); color: var(--blue); }
+.pagination .current { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* ---------- Editor form ---------- */
+/*
+ * ====================== FORM SOẠN TRANG / BÀI VIẾT ======================
+ * Link “← Danh sách …” phía trên form
+ */
+.back-link { margin-bottom: 14px; }
+.back-link a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font: 500 14px var(--font-head); }
+.back-link a:hover { color: var(--blue); }
+/* Bố cục 2 cột: nội dung chính (tiêu đề, slug, editor, tóm tắt, SEO) | cột phụ 320px (xuất bản, thuộc tính, ảnh) */
+.editor-form { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+/* Cột phụ dính khi cuộn để nút Lưu luôn trong tầm tay (top 84px = dưới topbar 64px) */
+.editor-side { position: sticky; top: 84px; }
+.editor-side > .btn { margin-top: 18px; }
+/* Một trường form = label + input + gợi ý/lỗi, xếp dọc */
+.form-field { display: grid; gap: 6px; margin-bottom: 16px; }
+.form-field:last-child { margin-bottom: 0; }
+.form-field > label, .form-field > span { font: 500 13.5px var(--font-head); color: var(--ink); }
+/* Trường lỗi (server trả về): viền đỏ */
+.form-field.has-error input, .form-field.has-error textarea, .image-field.has-error .image-preview { border-color: #e2685d; }
+/* Dòng thông báo lỗi dưới trường */
+.field-error { color: #b42318; font-size: 13.5px; }
+/* Dòng gợi ý màu xám */
+.hint { color: var(--muted); font-size: 13px; }
+/* Ô tiêu đề to và đậm hơn các ô khác (!important để thắng style input chung ở trên) */
+.input-title { height: 50px !important; font: 600 20px var(--font-head) !important; }
+/* Ô đường dẫn có tiền tố cố định (vd. “/bai-viet/”) dính liền bên trái input */
+.input-prefix { display: flex; align-items: stretch; border: 1px solid #d9dee8; border-radius: 10px; overflow: hidden; background: #fff; }
+/* :focus-within → khi input bên trong được focus thì cả khung đổi viền xanh */
+.input-prefix:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47, 107, 219, .14); }
+.input-prefix span { display: flex; align-items: center; padding: 0 10px; background: #f6f7fa; color: var(--muted); font-size: 14px; border-right: 1px solid #e5e8ef; white-space: nowrap; }
+.input-prefix input { border: 0; box-shadow: none !important; border-radius: 0; }
+/* Hàng 2 cột nhỏ trong cột phụ (vd. Thứ tự | Nổi bật) */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+.form-row .form-field { margin-bottom: 0; }
+/* Checkbox kèm nhãn */
+.check { display: flex; align-items: center; gap: 8px; height: 40px; cursor: pointer; font: 500 14px var(--font-head); color: var(--ink); }
+/* accent-color: đổi màu checkbox gốc của trình duyệt sang xanh thương hiệu */
+.check input { width: 18px; height: 18px; accent-color: var(--blue); }
+.check-sm { height: auto; font-size: 13.5px; margin-top: 10px; }
+/* Dòng “Tạo: … / Cập nhật: …” */
+.meta-line { font-size: 13px; color: var(--muted); margin: 4px 0 16px; }
+.side-actions { display: grid; gap: 8px; }
+/*
+ * Khối SEO dùng thẻ <details>/<summary> (đóng/mở không cần JS).
+ * Ẩn tam giác mặc định của trình duyệt, tự vẽ “▸” bằng ::before và xoay 90° khi mở.
+ */
+.seo-box summary { cursor: pointer; font: 600 15px var(--font-head); color: var(--ink); list-style: none; }
+.seo-box summary::-webkit-details-marker { display: none; }
+.seo-box summary::before { content: "▸"; display: inline-block; margin-right: 8px; transition: transform .15s; color: var(--muted); }
+.seo-box[open] summary::before { transform: rotate(90deg); }
+.seo-box[open] summary { margin-bottom: 16px; }
+
+/* Khung xem trước ảnh đại diện tỉ lệ 16:10, viền đứt khi chưa có ảnh */
+.image-preview { position: relative; aspect-ratio: 16 / 10; border: 1.5px dashed #cfd6e3; border-radius: 12px; overflow: hidden; display: grid; place-items: center; background: #fafbfd; margin-bottom: 10px; }
+.image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.image-preview.has-image { border-style: solid; }
+/* Có ảnh rồi thì ẩn dòng “Chưa có ảnh” */
+.image-preview.has-image .image-empty { display: none; }
+.image-empty { display: grid; justify-items: center; gap: 6px; color: var(--muted); font-size: 13.5px; }
+.image-empty .icon { width: 30px; height: 30px; color: #b6c0d3; }
+/*
+ * Nút chọn file tuỳ biến: input[type=file] thật được phủ trong suốt lên toàn bộ nút
+ * (opacity: 0) → bấm vào nút là mở hộp chọn file, nhưng nhìn như nút bình thường.
+ */
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/*
+ * ---------- Trình soạn thảo Quill ----------
+ * Ghi đè style mặc định của theme “snow” cho đồng bộ giao diện (viền, bo góc, font).
+ */
+/* Quill */
+.editor { min-height: 360px; background: #fff; }
+.ql-toolbar.ql-snow { border: 1px solid #d9dee8; border-radius: 10px 10px 0 0; background: #fafbfc; font-family: var(--font-body); }
+.ql-container.ql-snow { border: 1px solid #d9dee8; border-top: 0; border-radius: 0 0 10px 10px; font: 400 17px/1.7 var(--font-body); }
+.ql-editor { min-height: 360px; color: #2b3240; }
+/* Tiêu đề trong editor trông giống khi hiển thị ngoài website */
+.ql-editor h2 { font: 600 24px/1.3 var(--font-head); color: var(--ink); margin: 1em 0 .4em; }
+.ql-editor h3 { font: 600 19px/1.3 var(--font-head); color: var(--ink); margin: 1em 0 .4em; }
+/* Trích dẫn: vạch đỏ bên trái như ngoài website */
+.ql-editor blockquote { border-left: 4px solid #b5403f !important; background: #f6f7f9; padding: 8px 16px !important; }
+.ql-editor img { border-radius: 10px; }
+/*
+ * Việt hoá nhãn của menu chọn kiểu đoạn (mặc định Quill ghi “Normal”, “Heading 2”…).
+ * Quill hiển thị nhãn bằng ::before nên chỉ cần đổi content.
+ */
+.ql-snow .ql-picker.ql-header .ql-picker-label::before, .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: "Đoạn văn"; }
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: "Tiêu đề 2"; }
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: "Tiêu đề 3"; }
+/* Làm mờ editor và chặn thao tác trong lúc đang tải ảnh lên */
+.editor-uploading { opacity: .6; pointer-events: none; }
+
+/* ---------- Settings ---------- */
+/*
+ * ====================== CÀI ĐẶT & TÀI KHOẢN ======================
+ * Form rộng tối đa 880px, trường xếp lưới 2 cột
+ */
+.settings-form, .profile-form { max-width: 880px; }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+/* Trường chiếm cả 2 cột (textarea) */
+.settings-grid .span-2 { grid-column: span 2; }
+.settings-grid .form-field:last-child { margin-bottom: 16px; }
+.profile-form .muted { margin: -8px 0 16px; font-size: 14px; }
+/* Thanh nút Lưu dính đáy màn hình khi cuộn, có nền chuyển sắc để không đè chữ */
+.sticky-actions { position: sticky; bottom: 0; padding: 16px 0; margin-top: 8px; background: linear-gradient(to top, var(--bg) 70%, transparent); }
+
+/* ---------- Login ---------- */
+/*
+ * ====================== TRANG ĐĂNG NHẬP ======================
+ * Nền gradient tròn navy, card trắng ở giữa màn hình (grid + place-items: center)
+ */
+.login-page { min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle at 20% 10%, #2a4d8a, var(--navy) 55%, #142a52); padding: 24px; }
+.login-wrap { width: 100%; max-width: 400px; display: grid; justify-items: center; gap: 20px; }
+.login-logo { display: flex; align-items: center; gap: 12px; color: #fff; font: 600 24px var(--font-head); letter-spacing: .08em; }
+.login-logo svg { width: 38px; height: 38px; }
+/* Đảo màu logo: vòng tròn trắng, chữ C navy (SVG dùng chung với website) */
+.login-logo svg circle { fill: #fff; }
+.login-logo svg path { stroke: var(--navy); }
+.login-card { width: 100%; background: #fff; border-radius: 20px; padding: 32px 28px; box-shadow: 0 30px 70px rgba(5, 15, 40, .35); }
+.login-card h1 { font-size: 22px; }
+.login-card .muted { margin: 6px 0 22px; font-size: 15px; }
+.login-card .btn { height: 46px; margin-top: 8px; }
+.login-back { display: inline-flex; align-items: center; gap: 6px; color: rgba(255, 255, 255, .75); font: 500 14px var(--font-head); }
+.login-back:hover { color: #fff; }
+
+/* ---------- Responsive ---------- */
+/*
+ * ====================== RESPONSIVE ======================
+ * ≤ 1180px: thống kê 2 cột, cột phụ của form hẹp lại
+ */
+@media (max-width: 1180px) {
+    .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .editor-form { grid-template-columns: minmax(0, 1fr) 290px; }
+}
+/*
+ * ≤ 960px (tablet/điện thoại):
+ * - Sidebar ẩn ra ngoài bên trái (translateX(-100%)), trượt vào khi body có .sidebar-open (JS)
+ * - Mọi lưới 2 cột thành 1 cột
+ * - Bảng chuyển thành dạng “thẻ”: mỗi dòng là một khối, mỗi ô hiện nhãn cột lấy từ data-label
+ */
+@media (max-width: 960px) {
+    .admin-shell { grid-template-columns: 1fr; }
+    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; z-index: 60; transform: translateX(-100%); transition: transform .25s; }
+    .sidebar-open .sidebar { transform: none; }
+    .sidebar-open .sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(10, 20, 40, .4); z-index: 50; }
+    .sidebar-toggle { display: inline-grid; }
+    .topbar { padding: 0 16px; }
+    .content { padding: 20px 16px 48px; }
+    .dash-grid, .editor-form { grid-template-columns: 1fr; }
+    .editor-side { position: static; }
+    .topbar-name { display: none; }
+    .table thead { display: none; }
+    .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+    .table tr { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .table td { padding: 4px 0; border: 0; }
+    /* Hiện nhãn cột trước giá trị, vd. “Trạng thái: Đã xuất bản” – lấy từ thuộc tính data-label của <td> */
+    .table td[data-label]::before { content: attr(data-label) ": "; font: 500 12.5px var(--font-head); color: var(--muted); }
+    .table td:first-child::before { display: none; }
+    .col-actions { text-align: left; }
+    .row-actions { justify-content: flex-start; margin-top: 6px; }
+}
+/* ≤ 600px: thống kê & cài đặt 1 cột, tab trạng thái cuộn ngang được, ẩn tiền tố đường dẫn */
+@media (max-width: 600px) {
+    .stat-grid, .settings-grid { grid-template-columns: 1fr; }
+    .settings-grid .span-2 { grid-column: auto; }
+    .toolbar { align-items: stretch; flex-direction: column; }
+    .status-tabs { overflow-x: auto; }
+    .input-prefix span { display: none; }
+}

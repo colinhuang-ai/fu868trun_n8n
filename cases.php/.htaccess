@@ -1,0 +1,26 @@
+# ============================================================================
+#  .htaccess (THƯ MỤC GỐC DỰ ÁN) – chỉ dùng với Apache (XAMPP, Laragon, hosting)
+# ============================================================================
+# Trường hợp dùng: DocumentRoot của Apache trỏ vào thư mục gốc dự án
+# (vd. đặt cả thư mục trong C:\xampp\htdocs\cases.php).
+# Khi đó, nếu không có file này, người ngoài có thể gõ thẳng URL tới
+# app/, config/, database/, storage/ (chứa file database.sqlite!) → lộ mã nguồn và dữ liệu.
+#
+# Cách giải quyết: chuyển MỌI request vào thư mục public/ (thư mục duy nhất
+# được phép truy cập từ web). Bên trong public/ có .htaccess riêng xử lý tiếp.
+#
+# Khuyến nghị tốt nhất vẫn là trỏ DocumentRoot thẳng vào public/ – khi đó file này không được dùng tới.
+# (PHP built-in server và Docker trong dự án KHÔNG đọc file .htaccess.)
+
+# Chỉ chạy khối bên trong nếu Apache đã bật module mod_rewrite (tránh lỗi 500 nếu chưa bật).
+<IfModule mod_rewrite.c>
+    # Bật bộ máy viết lại URL.
+    RewriteEngine On
+    # Điều kiện: URL chưa chứa "/public/" → tránh vòng lặp vô hạn
+    # (sau khi đã chuyển vào public/ thì không chuyển thêm lần nữa).
+    RewriteCond %{REQUEST_URI} !/public/
+    # Quy tắc: lấy toàn bộ đường dẫn ($1) và nối vào sau "public/".
+    #   vd. /cases.php/bai-viet  →  /cases.php/public/bai-viet
+    # [L] (Last) = dừng, không xét các quy tắc phía sau.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

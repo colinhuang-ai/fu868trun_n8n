@@ -1,0 +1,350 @@
+[
+ {
+  "slug": "black-tiger-prawn",
+  "name": "Black Tiger Prawn",
+  "order": 1,
+  "skus": [
+   {
+    "name": "PD Tail On",
+    "desc": "Peeled and deveined with the tail left on. A classic for cocktail shrimp in the US and EU markets.",
+    "size": "6/8 – 31/40",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10–15%",
+    "desc_vi": "Black Tiger Prawn – PD Tail On. Bóc vỏ, bỏ chỉ, còn đuôi. Phổ biến tại thị trường Mỹ, EU cho món cocktail shrimp."
+   },
+   {
+    "name": "PD",
+    "desc": "Fully peeled and deveined. Export standard, HACCP certified.",
+    "size": "8/12 – 41/50",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10–15%",
+    "desc_vi": "Black Tiger Prawn – PD. Peeled & Deveined, bỏ hoàn toàn vỏ và chỉ lưng. Chuẩn xuất khẩu HACCP."
+   },
+   {
+    "name": "Head On Shell On",
+    "desc": "Whole shrimp with head and shell on, keeping the natural fresh flavour.",
+    "size": "16/20 – 51/60",
+    "pack": "Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "12%",
+    "desc_vi": "Black Tiger Prawn – Head On Shell On. Tôm nguyên con, giữ nguyên đầu và vỏ. Hương vị tự nhiên tươi ngon."
+   },
+   {
+    "name": "Headless Shell On",
+    "desc": "Head removed, shell on (HLSO). Popular for export to Japan and Korea.",
+    "size": "8/12 – 41/50",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10–15%",
+    "desc_vi": "Black Tiger Prawn – Headless Shell On (HLSO). Bỏ đầu, còn vỏ. Phổ biến xuất khẩu sang Nhật, Hàn Quốc."
+   },
+   {
+    "name": "Nobashi",
+    "desc": "Stretched shrimp (Nobashi), ideal for tempura and premium Japanese dishes.",
+    "size": "3L / 4L / 5L",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Black Tiger – Nobashi. Tôm kéo dài, thích hợp cho Tempura và các món ăn Nhật Bản cao cấp."
+   },
+   {
+    "name": "Head On Body Peeled",
+    "desc": "Head on, body fully peeled. Used for premium plating and presentation.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Black Tiger – Head On Body Peeled. Còn đầu nhưng bóc toàn bộ thân vỏ. Dùng cho trình bày món ăn cao cấp."
+   },
+   {
+    "name": "Easy Peeled",
+    "desc": "Shell split along the back for easy peeling. Convenient for end consumers.",
+    "size": "16/20 – 41/50",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Black Tiger – Easy Peeled. Khía dọc sống lưng, bóc vỏ dễ dàng. Tiện lợi cho người tiêu dùng cuối."
+   },
+   {
+    "name": "Cooked PDTO",
+    "desc": "Cooked, peeled, tail on and deveined. Used for buffets and premium cocktails.",
+    "size": "16/20 – 41/50",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Black Tiger – Cooked PDTO. Tôm luộc, bóc vỏ, còn đuôi, bỏ chỉ lưng. Dùng cho buffet và cocktail cao cấp."
+   },
+   {
+    "name": "Skewer PDTO",
+    "desc": "Skewered shrimp, peeled with tail on. Convenient for BBQ and foodservice.",
+    "size": "21/25 – 36/40",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Black Tiger – Skewer PDTO. Tôm xiên que, bóc vỏ còn đuôi. Tiện lợi cho BBQ và foodservice."
+   },
+   {
+    "name": "Cooked PD",
+    "desc": "Cooked and fully peeled. Ready to eat, exported to the EU and North America.",
+    "size": "31/40 – 71/90",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Black Tiger – Cooked PD. Tôm luộc, bóc hoàn toàn vỏ. Tiện dùng ngay, xuất EU và Bắc Mỹ."
+   }
+  ]
+ },
+ {
+  "slug": "vannamei-shrimp",
+  "name": "Vannamei Shrimp",
+  "order": 2,
+  "skus": [
+   {
+    "name": "HLSO",
+    "desc": "Head Less Shell On. Head removed, shell on. Popular for export to Japan and Korea.",
+    "size": "8/12 – 41/50",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10–15%",
+    "desc_vi": "Vannamei – HLSO. Head Less Shell On, thân tôm bỏ đầu còn vỏ. Phổ biến xuất khẩu sang Nhật, Hàn Quốc."
+   },
+   {
+    "name": "Nobashi",
+    "desc": "Stretched shrimp, suited to tempura in the premium Japanese market.",
+    "size": "3L / 4L / 5L",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Vannamei – Nobashi. Tôm kéo dài phù hợp cho Tempura tại thị trường Nhật Bản cao cấp."
+   },
+   {
+    "name": "Head On Shell On",
+    "desc": "Whole shrimp with head and shell on, keeping the full natural flavour.",
+    "size": "16/20 – 51/60",
+    "pack": "Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "12%",
+    "desc_vi": "Vannamei – Head On Shell On. Tôm nguyên con còn đầu còn vỏ. Giữ trọn hương vị tự nhiên."
+   },
+   {
+    "name": "Skewer PD",
+    "desc": "Skewered peeled shrimp. Convenient for BBQ restaurants and US fast food.",
+    "size": "21/25 – 36/40",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Vannamei – Skewer PD. Tôm xiên que đã bóc vỏ. Tiện lợi cho nhà hàng BBQ và fast food tại Mỹ."
+   },
+   {
+    "name": "Cooked PD",
+    "desc": "Cooked, peeled, IQF frozen. Ready to eat, exported to Europe and North America.",
+    "size": "31/40 – 71/90",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Vannamei – Cooked PD. Tôm luộc bóc vỏ, đông IQF. Tiện dùng ngay, xuất châu Âu và Bắc Mỹ."
+   },
+   {
+    "name": "PD",
+    "desc": "Peeled and deveined. EU export standard, HACCP certified.",
+    "size": "16/20 – 61/70",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10–15%",
+    "desc_vi": "Vannamei – PD. Peeled & Deveined, bóc vỏ bỏ chỉ lưng. Chuẩn xuất khẩu EU, HACCP certified."
+   },
+   {
+    "name": "Cooked PDTO",
+    "desc": "Cooked, peeled, tail on, deveined. Used for premium cocktails and buffets.",
+    "size": "16/20 – 41/50",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Vannamei – Cooked PDTO. Tôm luộc bóc vỏ còn đuôi, bỏ chỉ lưng. Dùng cho cocktail và buffet cao cấp."
+   },
+   {
+    "name": "PDTO",
+    "desc": "Peeled, Deveined, Tail On. Popular in the US and Canada.",
+    "size": "8/12 – 41/50",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10–12%",
+    "desc_vi": "Vannamei – PDTO. Peeled, Deveined, Tail On. Bóc vỏ còn đuôi. Phổ biến tại Mỹ và Canada."
+   },
+   {
+    "name": "Skewer PDTO",
+    "desc": "Skewered peeled shrimp with tail on. Ideal for BBQ and foodservice in Japan and the US.",
+    "size": "21/25 – 36/40",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Vannamei – Skewer PDTO. Tôm xiên que bóc vỏ còn đuôi. Ideal cho BBQ, foodservice Nhật, Mỹ."
+   }
+  ]
+ },
+ {
+  "slug": "value-added-btp",
+  "name": "Value-Added · BTP",
+  "order": 3,
+  "skus": [
+   {
+    "name": "Butterfly",
+    "desc": "Butterfly cut along the back and opened out. Commonly used for breaded shrimp and restaurant presentation.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "BTP – Butterfly. Tôm bướm, cắt dọc lưng mở rộng. Thường dùng cho breaded shrimp và trình bày nhà hàng."
+   },
+   {
+    "name": "Coconut Torpedo",
+    "desc": "Torpedo-shaped shrimp coated in coconut. Premium value-added product for the EU and US.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "BTP – Coconut Torpedo. Tôm hình ngư lôi phủ dừa. Sản phẩm value-added cao cấp xuất EU, Mỹ."
+   },
+   {
+    "name": "Sushi Ebi",
+    "desc": "Cooked, stretched shrimp for sushi. Exported to Japan and the premium sushi market.",
+    "size": "3L / 4L / 5L",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "BTP – Sushi Ebi. Tôm luộc kéo dài dạng sushi. Xuất khẩu sang Nhật Bản và thị trường sushi cao cấp."
+   },
+   {
+    "name": "Breaded Fried",
+    "desc": "Breaded and fried, IQF frozen. Convenient for foodservice and retail.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "BTP – Breaded Fried. Tôm tẩm bột chiên giòn, đông lạnh IQF. Tiện lợi cho foodservice và retail."
+   },
+   {
+    "name": "Tempura",
+    "desc": "Tempura shrimp with a thin, light, crisp batter. A Japanese export favourite that keeps the texture of fresh shrimp.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "BTP – Tempura. Tôm tempura, lớp bột mỏng giòn nhẹ. Đặc sản xuất khẩu Nhật Bản, giữ kết cấu tôm tươi."
+   }
+  ]
+ },
+ {
+  "slug": "value-added-vannamei",
+  "name": "Value-Added · Vannamei",
+  "order": 4,
+  "skus": [
+   {
+    "name": "Breaded Crump Butterfly",
+    "desc": "Butterfly shrimp coated in breadcrumbs. Suited to fried appetisers in restaurants.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Vannamei – Breaded Crumb Butterfly. Tôm bướm phủ breadcrumb. Phù hợp fried appetizer tại nhà hàng."
+   },
+   {
+    "name": "Breaded Butterfly Fried",
+    "desc": "Breaded butterfly shrimp, pre-fried. Retail-ready in the EU and North America.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Vannamei – Breaded Butterfly Fried. Tôm bướm tẩm bột chiên sẵn. Retail-ready tại EU và Bắc Mỹ."
+   },
+   {
+    "name": "Tempura",
+    "desc": "Light, crisp tempura batter. Popular in Japan and premium Asian markets.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Vannamei – Tempura. Lớp bột tempura nhẹ, giòn. Phổ biến tại Nhật Bản và thị trường châu Á cao cấp."
+   },
+   {
+    "name": "Coconut Butterfly",
+    "desc": "Butterfly shrimp coated in shredded coconut. A signature item for the US and Caribbean markets.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Vannamei – Coconut Butterfly. Tôm bướm phủ dừa bào. Sản phẩm đặc trưng cho thị trường Mỹ và Caribbean."
+   },
+   {
+    "name": "Coconut Torpedo",
+    "desc": "Torpedo-shaped shrimp coated in coconut. Premium value-added product for the US and EU.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Vannamei – Coconut Torpedo. Tôm hình ngư lôi phủ dừa. Value-added cao cấp, thị trường Mỹ và EU."
+   },
+   {
+    "name": "Breaded Torpedo",
+    "desc": "Torpedo-shaped shrimp in breadcrumbs. Uniform size, suited to fast-food chains.",
+    "size": "As required",
+    "pack": "IQF",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Vannamei – Breaded Torpedo. Tôm ngư lôi tẩm breadcrumb. Kích thước đồng đều, phù hợp fast food chain."
+   }
+  ]
+ },
+ {
+  "slug": "surimi-fish-meal",
+  "name": "Frozen Surimi & Fish Meal",
+  "order": 5,
+  "skus": [
+   {
+    "name": "Frozen Surimi",
+    "desc": "Smooth frozen fish paste in blocks. Raw material for export crab sticks and fish balls.",
+    "size": "As required",
+    "pack": "Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Frozen Surimi. Thịt cá xay mịn đông lạnh dạng block. Nguyên liệu sản xuất crabstick, fishball xuất khẩu."
+   },
+   {
+    "name": "Fish Meal",
+    "desc": "High-protein fish meal. Raw material for animal and aquaculture feed, exported to many markets.",
+    "size": "As required",
+    "pack": "Bulk",
+    "origin": "Cà Mau, VN",
+    "glaze": "N/A",
+    "desc_vi": "Fish Meal. Bột cá dinh dưỡng cao. Nguyên liệu thức ăn chăn nuôi và thủy sản, xuất khẩu nhiều thị trường."
+   }
+  ]
+ },
+ {
+  "slug": "cephalopod",
+  "name": "Cephalopod",
+  "order": 6,
+  "skus": [
+   {
+    "name": "Baby Octopus",
+    "desc": "Whole baby octopus, IQF frozen. Exported to Japan, Korea, the EU and the Mediterranean.",
+    "size": "As required",
+    "pack": "IQF / Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Baby Octopus. Bạch tuộc non nguyên con đông lạnh IQF. Xuất khẩu sang Nhật, Hàn Quốc, EU và Địa Trung Hải."
+   },
+   {
+    "name": "Baby Octopus Block Frozen",
+    "desc": "Baby octopus frozen in blocks. Easy to transport and suited to long-term storage.",
+    "size": "As required",
+    "pack": "Block",
+    "origin": "Cà Mau, VN",
+    "glaze": "10%",
+    "desc_vi": "Baby Octopus Block Frozen. Bạch tuộc non đông lạnh dạng block. Tiện vận chuyển và bảo quản dài hạn."
+   }
+  ]
+ }
+]

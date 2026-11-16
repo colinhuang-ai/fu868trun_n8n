@@ -1,0 +1,14 @@
+---
+/**
+ * Route: GET /vi/home  ->  301 về "/vi/".
+ *
+ * Bản tiếng Việt của src/pages/home.astro (xem giải thích đầy đủ ở đó): entry
+ * "home" của collection `pages` có URL theo mẫu "/{slug}" là "/vi/home", nhưng
+ * trang chủ VI thực sự render ở "/vi/" (src/pages/vi/index.astro). Route tĩnh
+ * này thắng route động vi/[slug].astro nên "/vi/home" không bị render trùng.
+ */
+// "/vi/home" renders at "/vi/". Keep the query string so preview links work.
+// Dấu "/" cuối trong "/vi/" khớp đúng đường dẫn trang chủ VI mà localizePath("/", "vi")
+// sinh ra. Giữ nguyên query string (token preview có chữ ký) khi chuyển hướng 301.
+return Astro.redirect(`/vi/${Astro.url.search}`, 301);
+---

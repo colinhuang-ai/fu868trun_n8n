@@ -1,0 +1,1456 @@
+/*
+ * ======================================================================
+ *  CASES - global.css  (Tailwind v4 + các hiệu ứng viết tay)
+ * ======================================================================
+ * File này chỉ được import đúng một lần, trong src/layouts/Base.astro
+ * (import "../styles/global.css"), nên áp dụng cho mọi trang EN lẫn VI.
+ *
+ * CASES site styles: Tailwind v4 plus the handful of hand-written effects the
+ * HTML design uses (glass header, scroll reveal, certification cards, the
+ * product lightbox). Only files under src/ are scanned for classes; the static
+ * design in "cases-website 13-5/" is reference material, not a class source.
+ *
+ * MỤC LỤC (theo thứ tự xuất hiện trong file; các comment mục dùng nhãn [số] tương ứng)
+ *   [1]  Import Tailwind v4 + @source ........ nạp Tailwind, chỉ quét src/
+ *   [2]  @theme inline ....................... font, màu navy / sky / slate
+ *   [3]  @layer base ......................... reset nhẹ, smooth scroll, scroll-margin
+ *   [4]  Material Symbols .................... icon font (tên icon là text thường)
+ *   [5]  Texture / gradient nền .............. bg-dots, bg-grid, bg-navy-*, hero-gradient
+ *   [6]  .article-body ....................... typography bài tin (NewsArticle.astro)
+ *   [7]  .site-header ........................ header kính mờ (glass) khi cuộn
+ *   [8]  Scroll reveal ....................... .js .reveal / .revealed
+ *   [9]  Certification ....................... cert-card, badge, icon-tile, section-line,
+ *                                              market-tag, float, cert-table
+ *   [10] Product catalog ..................... hover-lift, expand-panel, lightbox
+ *   [11] Contact slide-over .................. overlay + panel trượt từ bên phải
+ *   [12] prefers-reduced-motion (lần 1) ...... reset animation/transition toàn cục
+ *   [13] Certifications page motion .......... keyframes + hiệu ứng Hero "glow", stagger,
+ *                                              shimmer, orb, pulse-ring, bảng, thẻ
+ *   [14] prefers-reduced-motion (lần 2) ...... tắt hẳn các vòng lặp "ambient"
+ *
+ * QUY ƯỚC CHUNG
+ *  - Các class ở đây là CSS thường (không qua @utility), nên Tailwind không quét
+ *    hay tree-shake chúng: tên class có thể được ghép động trong template
+ *    (vd badge-${tone}) mà vẫn hoạt động.
+ *  - Màu nền tối chủ đạo: #071525 (navy); màu nhấn: #38bdf8 (sky-400) và #0369a1 (sky-700).
+ *    Nhiều rule viết thẳng hex/rgba thay vì var(--color-*) vì design gốc viết như vậy và
+ *    cần alpha riêng cho từng chỗ (vd rgba(56, 189, 248, 0.15) = sky-400 độ mờ 15%).
+ *  - Stagger (xuất hiện lần lượt): biến CSS --d (giây, Hero) và --i (chỉ số, Certs / CertTable /
+ *    Spotlight) được gán bằng inline style, vd style="--i:index", ngay trong component.
+ */
+/*
+ * Tailwind v4: một dòng import thay cho 3 directive @tailwind base/components/utilities của v3.
+ * `source(none)` TẮT cơ chế tự phát hiện nguồn (auto source detection). Mặc định Tailwind v4 quét
+ * rất rộng, kể cả thư mục "cases-website 13-5/" (bản HTML tĩnh gốc, chỉ để tham khảo), khiến class
+ * trong đó bị sinh thừa vào CSS build. Thay vào đó ta chỉ định nguồn bằng @source ngay bên dưới.
+ */
+@import "tailwindcss" source(none);
+/*
+ * Chỉ quét class trong src/ (đường dẫn tính từ vị trí file này: src/styles/ -> "../" = src/), gồm
+ * layouts/Base.astro, components/ và pages/ (đệ quy). Hệ quả (xem AGENTS.md): class Tailwind phải được viết
+ * nguyên văn trong mã nguồn, không ghép chuỗi kiểu bg-${x}-500 (còn class tự viết trong file này
+ * thì không bị ràng buộc đó).
+ */
+@source "../";
+
+/*
+ * [2] THEME TOKENS - "@theme inline"
+ * Mỗi biến --font-* / --color-* khai báo trong @theme sinh ra utility tương ứng:
+ * --color-navy -> bg-navy, text-navy, border-navy...; --font-jakarta -> font-jakarta...
+ * Từ khóa `inline`: Tailwind chép thẳng giá trị của token vào utility thay vì tham chiếu
+ * var(--font-sans). Với font điều này quan trọng vì giá trị trỏ tới var(--ff-*) do Astro Fonts định
+ * nghĩa: `inline` bảo đảm utility luôn resolve đúng tại phần tử đang dùng nó, không phụ thuộc vào
+ * thứ tự / phạm vi khai báo của :root. Biến vẫn được đưa vào CSS khi có chỗ dùng (vd .article-body
+ * bên dưới dùng var(--color-slate-700) và var(--font-jakarta)).
+ */
+/* The design pins Tailwind v3's sky and slate hex values; keep them exact. */
+@theme inline {
+	/*
+	 * FONT. Các biến --ff-inter / --ff-jakarta / --ff-playfair KHÔNG khai báo ở đây: chúng do Astro Fonts API
+	 * sinh ra từ khối `fonts: [...]` trong astro.config.mjs (tải từ Google Fonts lúc build, self-host, kèm
+	 * @font-face) và được gắn vào trang bởi các thẻ <Font cssVariable="--ff-..."> trong src/layouts/Base.astro
+	 * (Inter và Plus Jakarta Sans được preload, Playfair thì không). Mỗi chuỗi font có 3 lớp dự phòng:
+	 * var(--ff-*) (bản self-host) -> tên font thật (nếu máy khách đã cài) -> font hệ thống / Georgia.
+	 *   - --font-sans     = Inter (300-700). Font mặc định của thân trang: <body class="font-sans ..."> trong
+	 *                       Base.astro. Dùng cho văn bản nội dung.
+	 *   - --font-display  = Playfair Display (chỉ weight 700, có chân). CHỈ dùng cho headline lớn (class
+	 *                       font-display: Hero layout "center", Features, Reach). Fallback Georgia/serif có
+	 *                       kiểu chữ tương tự để khi font chưa tải xong layout ít bị nhảy.
+	 *   - --font-jakarta  = Plus Jakarta Sans (400-800). Font tiêu đề / nhãn / số liệu, class font-jakarta xuất
+	 *                       hiện rất nhiều (Hero, Catalog, Plants, Tech, Timeline, Values, news, trang 404...).
+	 *   - --font-headline = bí danh (alias) của Jakarta, cùng giá trị với --font-jakarta. Dùng ở Catalog.astro,
+	 *                       Cta.astro, Hero.astro (class font-headline); tách riêng tên để sau này đổi vai trò
+	 *                       "headline" sang font khác mà không phải sửa từng component.
+	 * Cả ba font đều nạp subset "vietnamese" (xem astro.config.mjs) nên dấu tiếng Việt không rơi về font dự phòng.
+	 */
+	--font-sans: var(--ff-inter), "Inter", sans-serif;
+	--font-display: var(--ff-playfair), "Playfair Display", Georgia, serif;
+	--font-jakarta: var(--ff-jakarta), "Plus Jakarta Sans", sans-serif;
+	--font-headline: var(--ff-jakarta), "Plus Jakarta Sans", sans-serif;
+
+	/*
+	 * MÀU NAVY (nền tối chủ đạo của site). Dùng qua utility: bg-navy trên <body> và nhiều khối trong Base.astro
+	 * (footer, contact panel; bg-navy/95 ở header sticky của panel), Certs.astro, CertTable.astro, Spotlight.astro.
+	 * --color-navy-2 / --color-navy-3 hiện chưa có class nào trong src/ gọi tới (các gradient bên dưới viết thẳng
+	 * hex tương ứng); được giữ lại cho đủ bảng màu của design.
+	 *   - #071525 : tối nhất, ngả đen-xanh; nền trang và hai đầu các gradient.
+	 *   - #0d2137 : sáng hơn một bậc, đặt ở giữa gradient để tạo dải sáng nhẹ (.bg-navy-fade, .bg-navy-sweep).
+	 *   - #0c2340 : xanh hơn một chút, dùng trong nền .contact-panel.
+	 */
+	--color-navy: #071525;
+	--color-navy-2: #0d2137;
+	--color-navy-3: #0c2340;
+
+	/*
+	 * SKY (xanh trời) - bảng màu nhấn (accent) của site. Ghi đè bằng đúng giá trị hex của Tailwind v3, vì design
+	 * gốc viết theo v3; Tailwind v4 mặc định đổi sang oklch nên nếu không ghim lại màu sẽ lệch nhẹ.
+	 * Các bậc dùng nhiều nhất: sky-400 #38bdf8 (nhãn, viền, icon), sky-300 (chữ nhãn trên nền tối),
+	 * sky-500 #0ea5e9, sky-700 #0369a1 (điểm cuối gradient, link trong bài viết).
+	 */
+	--color-sky-50: #f0f9ff;
+	--color-sky-100: #e0f2fe;
+	--color-sky-200: #bae6fd;
+	--color-sky-300: #7dd3fc;
+	--color-sky-400: #38bdf8;
+	--color-sky-500: #0ea5e9;
+	--color-sky-600: #0284c7;
+	--color-sky-700: #0369a1;
+	--color-sky-800: #075985;
+	--color-sky-900: #0c4a6e;
+	--color-sky-950: #082f49;
+
+	/*
+	 * SLATE (xám xanh) - bảng màu chữ / viền trung tính, cũng là hex của Tailwind v3.
+	 * slate-700 / slate-900 là chữ trên nền sáng (bài tin, catalog); slate-300 / slate-400 là chữ trên nền navy;
+	 * slate-200 là màu viền mặc định (xem @layer base bên dưới).
+	 */
+	--color-slate-50: #f8fafc;
+	--color-slate-100: #f1f5f9;
+	--color-slate-200: #e2e8f0;
+	--color-slate-300: #cbd5e1;
+	--color-slate-400: #94a3b8;
+	--color-slate-500: #64748b;
+	--color-slate-600: #475569;
+	--color-slate-700: #334155;
+	--color-slate-800: #1e293b;
+	--color-slate-900: #0f172a;
+	--color-slate-950: #020617;
+}
+
+/*
+ * [3] BASE LAYER
+ * Đặt trong @layer base để có độ ưu tiên thấp nhất: mọi utility Tailwind hay class tự viết bên dưới
+ * đều ghi đè được mà không cần tăng specificity.
+ */
+@layer base {
+	/*
+	 * Tailwind v4 đổi màu viền mặc định thành currentColor (v3 là gray-200). Design gốc viết theo v3 - nhiều chỗ
+	 * chỉ ghi `border` mà không chỉ định màu - nên đặt lại về slate-200 cho mọi phần tử và các pseudo-element
+	 * (::before / ::after / ::backdrop / ::file-selector-button). `currentColor` là giá trị dự phòng nếu biến không tồn tại.
+	 */
+	/* Tailwind v3 defaults the design was written against. */
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-slate-200, currentColor);
+	}
+
+	/*
+	 * Tailwind v4 bỏ cursor: pointer mặc định của <button> (preflight để cursor: default). Khôi phục con trỏ
+	 * bàn tay cho nút và [role="button"], trừ khi đang disabled.
+	 */
+	button:not(:disabled),
+	[role="button"]:not(:disabled) {
+		cursor: pointer;
+	}
+
+	/*
+	 * scrollbar-gutter: stable giữ sẵn chỗ cho thanh cuộn, nên layout không bị giật ngang khi trang đổi từ
+	 * không cuộn sang có cuộn (vd mở / đóng panel, nội dung đổi chiều cao). scroll-behavior: smooth làm các link neo
+	 * (#contact, #markets...) cuộn mượt. Lưu ý: hai khối prefers-reduced-motion bên dưới không đụng tới thuộc tính này.
+	 */
+	html {
+		scrollbar-gutter: stable;
+		scroll-behavior: smooth;
+	}
+
+	/*
+	 * overflow-x: clip (không phải hidden): cắt phần tràn ngang (vd orb blur, hiệu ứng trượt) mà KHÔNG tạo
+	 * scroll container mới, nên position: sticky (header contact panel) và header fixed vẫn hoạt động bình thường.
+	 */
+	body {
+		overflow-x: clip;
+	}
+
+	/*
+	 * Mọi phần tử có id là đích của link neo (vd /#markets lấy từ Hero.anchor_id). Header cố định (fixed) sẽ che
+	 * đích neo nếu không chừa chỗ: 140px ~ chiều cao header (có thể hai hàng trên desktop, xem .header-inner trong
+	 * Base.astro) cộng thêm một khoảng thở.
+	 */
+	/* Anchor targets land below the fixed header. */
+	[id] {
+		scroll-margin-top: 140px;
+	}
+}
+
+/*
+ * [4] ICON FONT - Material Symbols Outlined
+ * Font được nạp bằng thẻ <link> tới Google Fonts trong <head> của Base.astro (không qua Astro Fonts), với
+ * display=block để tránh hiện tên icon ("arrow_forward"...) dưới dạng chữ trong lúc chờ font tải.
+ * Cách dùng: <span class="material-symbols-outlined">arrow_forward</span> - tên icon là text thường, font ghép
+ * thành glyph (ligature). Dùng ở Catalog, Codes, Cta, Features, Hero, Timeline, Values và Base.
+ * Các thuộc tính dưới đây là đoạn CSS chuẩn của Google cho ligature: line-height 1 + inline-block để icon vuông và
+ * căn theo dòng chữ; white-space: nowrap để tên icon không bị ngắt ở dấu gạch dưới; letter-spacing /
+ * text-transform / word-wrap / direction đặt về giá trị trung tính để ligature không bị vỡ.
+ */
+/* Material Symbols (icon names are plain text inside the span). */
+.material-symbols-outlined {
+	font-family: "Material Symbols Outlined";
+	font-weight: normal;
+	font-style: normal;
+	line-height: 1;
+	letter-spacing: normal;
+	text-transform: none;
+	display: inline-block;
+	white-space: nowrap;
+	word-wrap: normal;
+	direction: ltr;
+	-webkit-font-smoothing: antialiased;
+	/*
+	 * Các trục biến thiên của font: FILL 0 = nét rỗng (outlined), wght 400 = độ đậm thường, GRAD 0 = không chỉnh
+	 * độ dày theo màu nền, opsz 24 = kích thước quang học 24px. Thẻ <link> ở Base.astro yêu cầu dải opsz 20..48 và
+	 * wght 100..700 nên các giá trị này nằm trong khoảng đã tải.
+	 */
+	font-variation-settings:
+		"FILL" 0,
+		"wght" 400,
+		"GRAD" 0,
+		"opsz" 24;
+}
+
+/* [5] TEXTURE VÀ GRADIENT NỀN cho các khối nền navy */
+/* Dot and grid textures used on the dark navy sections. */
+/*
+ * .bg-dots: lưới chấm tròn. Chấm 1px màu sky-400 (#38bdf8): radial-gradient "circle at 1px 1px" đặt tâm chấm
+ * ở góc mỗi ô 48x48; stop `1px` rồi `transparent 0` tạo mép chấm sắc nét. KHÔNG có alpha ở đây: độ mờ được hạ
+ * tại nơi dùng bằng utility `opacity-[0.04]` (4%) trên lớp phủ absolute -> chỉ lộ ra như hạt bụi.
+ * Dùng ở Hero (layout split), Reach, Tech.
+ */
+.bg-dots {
+	background-image: radial-gradient(circle at 1px 1px, #38bdf8 1px, transparent 0);
+	background-size: 48px 48px;
+}
+
+/*
+ * .bg-grid: lưới ô vuông mảnh, 2 lớp linear-gradient (ngang và dọc 90deg), mỗi vạch 1px, sky-400 alpha 0.05 (5%)
+ * - alpha đã nằm sẵn trong màu nên không cần opacity thêm. background-size 48px 48px phải KHỚP với giá trị
+ * `48px 48px` trong keyframes grid-drift để vòng lặp trôi mượt, không giật.
+ * Dùng ở Hero layout "glow" (trang Certifications), cùng với .animate-grid.
+ */
+.bg-grid {
+	background-image:
+		linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+	background-size: 48px 48px;
+}
+
+/*
+ * .bg-navy-fade: gradient dọc (180deg) navy -> navy-2 (ở giữa, 50%) -> navy. Dải sáng nhẹ ở giữa giúp khối tách khỏi
+ * các section navy phẳng kế bên mà vẫn liền mạch ở hai đầu. Dùng ở Reach và Tech.
+ */
+.bg-navy-fade {
+	background: linear-gradient(180deg, #071525 0%, #0d2137 50%, #071525 100%);
+}
+
+/*
+ * .bg-navy-sweep: gradient chéo (160deg) navy -> navy-2 (ở 60%) -> navy; vùng sáng lệch về phía dưới phải tạo cảm giác
+ * chiều sâu. Dùng làm nền Hero layout "split" (About / Infrastructure).
+ */
+.bg-navy-sweep {
+	background: linear-gradient(160deg, #071525 0%, #0d2137 60%, #071525 100%);
+}
+
+/*
+ * .hero-gradient: lớp phủ cho Hero layout "center" (trang chủ): xanh ngọc đậm (10,60,80) -> xanh navy (5,40,65) ->
+ * gần đen (0,20,45), góc 160deg. Alpha 0.85-0.92 (không đặc hoàn toàn) để lớp nền phía sau còn lộ mờ qua;
+ * alpha giảm dần về cuối làm đáy hero nhẹ đi.
+ */
+.hero-gradient {
+	background: linear-gradient(
+		160deg,
+		rgba(10, 60, 80, 0.92) 0%,
+		rgba(5, 40, 65, 0.88) 60%,
+		rgba(0, 20, 45, 0.85) 100%
+	);
+}
+
+/*
+ * [6] ARTICLE BODY - typography cho bài tin
+ * Nội dung Portable Text của EmDash được render ra HTML trần (h2, p, ul, blockquote, figure...) không có class Tailwind
+ * trên từng phần tử, nên khối bao ngoài <div class="article-body"> (chỉ có ở src/components/news/NewsArticle.astro)
+ * định kiểu cho mọi phần tử con. Đây là vùng nền sáng (trắng), chữ slate tối - khác phần còn lại của site là nền navy.
+ */
+/* News article body (Portable Text from the editor). */
+.article-body {
+	/*
+	 * Chữ thân slate-700 (tương phản cao trên nền trắng nhưng dịu hơn đen tuyệt đối). 1.0625rem = 17px: lớn hơn 16px
+	 * một chút để đọc bài dài thoải mái; line-height 1.8 là giãn dòng rộng cho văn bản dài.
+	 */
+	color: var(--color-slate-700);
+	font-size: 1.0625rem;
+	line-height: 1.8;
+}
+
+/*
+ * Selector `> * + *` (lobotomized owl): mỗi khối con trực tiếp (trừ khối đầu) có margin-top 1.25em -> khoảng cách
+ * dọc đều giữa các khối mà không phải gán margin cho từng loại phần tử.
+ */
+.article-body > * + * {
+	margin-top: 1.25em;
+}
+
+/*
+ * Tiêu đề h2-h4: font Jakarta đậm 800, line-height chặt 1.3, màu slate-900; margin-top 2em ghi đè 1.25em ở trên
+ * để tiêu đề cách phần trước xa hơn (tách chương) so với khoảng cách giữa các đoạn văn thường.
+ */
+.article-body :is(h2, h3, h4) {
+	font-family: var(--font-jakarta);
+	font-weight: 800;
+	line-height: 1.3;
+	color: var(--color-slate-900);
+	margin-top: 2em;
+}
+
+/*
+ * Thang kích thước tiêu đề: h2 1.6rem > h3 1.3rem > h4 1.1rem (tương ứng ~25.6 / 20.8 / 17.6px).
+ */
+.article-body h2 {
+	font-size: 1.6rem;
+}
+
+.article-body h3 {
+	font-size: 1.3rem;
+}
+
+.article-body h4 {
+	font-size: 1.1rem;
+}
+
+/*
+ * Link trong bài: sky-700 (#0369a1), đậm hơn sky-400 vì nền trắng cần tương phản; gạch chân cách chữ 3px
+ * (text-underline-offset) để nét gạch không dính vào chân chữ; hover chuyển sang sky-600 sáng hơn.
+ */
+.article-body a {
+	color: var(--color-sky-700);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.article-body a:hover {
+	color: var(--color-sky-600);
+}
+
+/*
+ * Danh sách: preflight của Tailwind xóa dấu list và padding nên phải đặt lại thủ công (disc / decimal,
+ * padding-left 1.5em); khoảng cách giữa các mục 0.4em; dấu chấm / số (::marker) tô sky-600 cho đồng bộ thương hiệu.
+ */
+.article-body :is(ul, ol) {
+	padding-left: 1.5em;
+}
+
+.article-body ul {
+	list-style: disc;
+}
+
+.article-body ol {
+	list-style: decimal;
+}
+
+.article-body li + li {
+	margin-top: 0.4em;
+}
+
+.article-body li::marker {
+	color: var(--color-sky-600);
+}
+
+/*
+ * Blockquote: vạch dọc sky-500 3px bên trái, chỉ padding trái 1.25em, chữ slate-600 nghiêng.
+ */
+.article-body blockquote {
+	border-left: 3px solid var(--color-sky-500);
+	padding: 0.25em 0 0.25em 1.25em;
+	color: var(--color-slate-600);
+	font-style: italic;
+}
+
+/*
+ * Media: giới hạn max-width 100% để không tràn khung bài; bo góc 0.75rem (12px) đồng bộ với các thẻ bo tròn khác.
+ */
+.article-body :is(img, figure, video, iframe) {
+	max-width: 100%;
+	border-radius: 0.75rem;
+}
+
+/* figcaption: chữ nhỏ (0.875rem = 14px) màu slate-500, căn giữa dưới ảnh. */
+.article-body figcaption {
+	margin-top: 0.5em;
+	font-size: 0.875rem;
+	color: var(--color-slate-500);
+	text-align: center;
+}
+
+.article-body strong {
+	font-weight: 700;
+	color: var(--color-slate-900);
+}
+
+.article-body hr {
+	border-color: var(--color-slate-200);
+	margin: 2.5em 0;
+}
+
+/*
+ * [7] SITE HEADER - kính mờ (liquid glass) khi cuộn
+ * Dùng ở <header id="site-header" class="site-header fixed inset-x-0 top-0 z-50"> trong Base.astro; vị trí fixed / z-50
+ * do class Tailwind lo, ở đây chỉ là màu và hiệu ứng. Script cuối Base.astro bật / tắt class `scrolled` theo
+ * `window.scrollY > 40` (ngưỡng 40px để header không chớp nháy ngay khi cuộn rất nhẹ).
+ */
+/* Header: solid navy, liquid glass once the page scrolls. */
+/*
+ * Trạng thái đầu trang: nền navy gần như đặc (alpha 0.97) để logo và menu đọc rõ trên hero, nhưng vẫn có chút blur.
+ * -webkit-backdrop-filter để hỗ trợ Safari. Bóng đổ (0 4px 30px, 30% đen) tách header khỏi nội dung bên dưới.
+ */
+.site-header {
+	background: rgba(7, 21, 37, 0.97);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+	/*
+	 * Chuyển trạng thái 0.4s ease cho nền, blur và bóng: đủ chậm để cảm giác "tan" dần thành kính, không chậm đến mức
+	 * người dùng thấy trễ.
+	 */
+	transition:
+		background 0.4s ease,
+		backdrop-filter 0.4s ease,
+		box-shadow 0.4s ease;
+}
+
+/*
+ * .header-inner là khung bên trong header (flex, padding py-2 / sm:py-4 từ class Tailwind); chỉ transition padding để khi
+ * thu nhỏ (.scrolled) header co lại mượt, cùng nhịp 0.4s.
+ */
+.site-header .header-inner {
+	transition: padding 0.4s ease;
+}
+
+/*
+ * Trạng thái đã cuộn: nền trong hơn (alpha 0.78) để nội dung hiện mờ phía sau; blur 24px + saturate(180%) - tăng độ bão
+ * hòa màu của phần nền bị làm mờ, là đặc trưng của "liquid glass" kiểu Apple; bóng nhẹ hơn; `inset 0 1px 0
+ * rgba(255,255,255,0.06)` là vạch sáng 1px ở mép trên như ánh sáng bắt cạnh kính; viền dưới 1px sky-400 8% rất mờ
+ * để tách khỏi nội dung.
+ */
+.site-header.scrolled {
+	background: rgba(7, 21, 37, 0.78);
+	backdrop-filter: blur(24px) saturate(180%);
+	-webkit-backdrop-filter: blur(24px) saturate(180%);
+	box-shadow:
+		0 2px 32px rgba(0, 0, 0, 0.18),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	border-bottom: 1px solid rgba(56, 189, 248, 0.08);
+}
+
+/*
+ * Khi đã cuộn, header "gầy" lại: padding dọc 0.35rem (so với py-2 = 0.5rem hoặc sm:py-4 = 1rem) để bớt chiếm chiều
+ * cao màn hình.
+ */
+.site-header.scrolled .header-inner {
+	padding-top: 0.35rem;
+	padding-bottom: 0.35rem;
+}
+
+/*
+ * [8] SCROLL REVEAL
+ * Cơ chế: Base.astro thêm class `js` vào <html> bằng script inline trong <head> (chạy trước khi paint), rồi một
+ * IntersectionObserver (threshold 0.08 = chỉ cần 8% phần tử vào viewport) thêm class `revealed` vào mỗi phần tử
+ * `.reveal` đúng một lần rồi unobserve. Trình duyệt không có IntersectionObserver thì thêm `revealed` ngay.
+ * Class `.reveal` được gán ở hầu hết các khối (Catalog, Certs, CertTable, Codes, Cta, Features, Hero, Plants, Reach,
+ * Spotlight, Tech, Timeline, Values, Base).
+ * Quan trọng: tiền tố `.js` giúp khi tắt JavaScript, `.reveal` KHÔNG bị ẩn (nội dung luôn hiện) - đúng tinh thần
+ * progressive enhancement. Xem thêm khối prefers-reduced-motion bên dưới.
+ */
+/* Scroll reveal. Content stays visible without JavaScript or with reduced motion. */
+.js .reveal {
+	/*
+	 * Trạng thái đầu: trong suốt và tụt xuống 24px; transition 0.55s ease cho opacity và transform (đủ nhanh để không
+	 * làm chậm việc đọc, đủ chậm để thấy được chuyển động).
+	 */
+	opacity: 0;
+	transform: translateY(24px);
+	transition:
+		opacity 0.55s ease,
+		transform 0.55s ease;
+}
+
+/* Trạng thái cuối khi đã `revealed`: hiện đầy đủ và về đúng vị trí. */
+.js .reveal.revealed {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/*
+ * [9] CERTIFICATION: thẻ chứng chỉ, badge, icon-tile...
+ * Dùng ở src/components/blocks/Certs.astro (thẻ), CertTable.astro (bảng tổng quan), Spotlight.astro (thẻ tag).
+ * Nền kính mờ trên navy: trắng với alpha rất thấp.
+ */
+/* Certification cards */
+/*
+ * .cert-card: <article class="cert-card reveal p-7" style="--i:index"> trong Certs.astro. Nền trắng 4% và viền trắng 8%
+ * trên navy tạo hiệu ứng "kính mờ"; border-radius 20px; position: relative + overflow: hidden để các pseudo-element
+ * ::before (vạch đỉnh) và ::after (tia sáng quét) bị cắt gọn trong thẻ. Transition 0.25s chỉ cho transform /
+ * box-shadow / border-color (liệt kê rõ ba thuộc tính, không dùng `all`, để không kéo theo transition ngoài ý muốn).
+ */
+.cert-card {
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 20px;
+	position: relative;
+	overflow: hidden;
+	transition:
+		transform 0.25s,
+		box-shadow 0.25s,
+		border-color 0.25s;
+}
+
+/*
+ * Hover: nâng lên 6px, bóng đổ lớn mềm (0 20px 48px, 40% đen) và viền chuyển sang sky-400 40%.
+ */
+.cert-card:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+	border-color: rgba(56, 189, 248, 0.4);
+}
+
+/*
+ * ::before = vạch gradient sky-400 -> sky-700 cao 3px ở mép trên của thẻ; `inset: 0 0 auto` nghĩa là top / right / left = 0,
+ * bottom = auto (chỉ bám mép trên). Ẩn (opacity 0) bình thường, hiện ra khi hover.
+ */
+.cert-card::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto;
+	height: 3px;
+	background: linear-gradient(90deg, #38bdf8, #0369a1);
+	opacity: 0;
+	transition: opacity 0.25s;
+}
+
+.cert-card:hover::before {
+	opacity: 1;
+}
+
+/*
+ * .cert-badge: nhãn nhỏ dạng viên thuốc (pill, radius 99px) in hoa, chữ 0.68rem (~11px), đậm 700, giãn chữ 0.06em.
+ * Dùng ở Certs.astro (class `cert-badge badge-${badge_tone}`) và CertTable.astro (`cert-badge badge-green` cho trạng thái
+ * chứng chỉ). Màu do các class badge-* bên dưới quyết định.
+ */
+.cert-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 10px;
+	border-radius: 99px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+/*
+ * Bốn biến thể màu của badge: nền alpha 15%, viền alpha 30%, chữ đậm hơn (cùng họ màu, bậc 300-400 của Tailwind).
+ * Chọn bằng trường `badge_tone` (green / blue / amber / purple) của từng chứng chỉ trong CMS - Certs.astro ghép tên
+ * động `badge-${tone}`, mặc định blue. Vì vậy badge-blue / amber / purple không xuất hiện ở dạng literal trong src/
+ * nhưng VẪN ĐƯỢC DÙNG (CSS thường, không bị tree-shake). CertTable.astro dùng cố định badge-green.
+ */
+.badge-green {
+	background: rgba(34, 197, 94, 0.15);
+	color: #4ade80;
+	border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.badge-blue {
+	background: rgba(56, 189, 248, 0.15);
+	color: #38bdf8;
+	border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.badge-amber {
+	background: rgba(251, 191, 36, 0.15);
+	color: #fbbf24;
+	border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.badge-purple {
+	background: rgba(167, 139, 250, 0.15);
+	color: #a78bfa;
+	border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+/*
+ * .icon-tile-*: ô vuông chứa icon / emoji của thẻ chứng chỉ (Certs.astro ghép `icon-tile-${tone}` theo trường `tone`
+ * của chứng chỉ, mặc định blue). Nền alpha 12%, viền alpha 20%, cùng họ màu với badge (nhạt hơn một chút vì là mảng
+ * lớn). Bốn màu: blue (sky-400), green (green-400), amber, purple.
+ */
+.icon-tile-blue {
+	background: rgba(56, 189, 248, 0.12);
+	border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.icon-tile-green {
+	background: rgba(74, 222, 128, 0.12);
+	border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.icon-tile-amber {
+	background: rgba(251, 191, 36, 0.12);
+	border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.icon-tile-purple {
+	background: rgba(167, 139, 250, 0.12);
+	border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+/*
+ * .section-line: gạch nhấn dưới tiêu đề section (Certs.astro, CertTable.astro): rộng 48px, cao 3px, gradient sky-400 ->
+ * sky-700, bo góc 4px; margin `10px auto 0` để căn giữa. Hiệu ứng "dài ra khi cuộn tới" nằm ở mục [13]
+ * (.js .reveal .section-line).
+ */
+.section-line {
+	width: 48px;
+	height: 3px;
+	background: linear-gradient(90deg, #38bdf8, #0369a1);
+	border-radius: 4px;
+	margin: 10px auto 0;
+}
+
+/*
+ * .market-tag: viên thuốc (pill) cho các thị trường xuất khẩu trong khối Spotlight (FDA): <li class="market-tag"
+ * style="--i:index">. Màu sky-400 trên nền sky 10%, viền 25%. Hiệu ứng xuất hiện lần lượt và hover ở mục [13].
+ */
+.market-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	border-radius: 99px;
+	background: rgba(56, 189, 248, 0.1);
+	border: 1px solid rgba(56, 189, 248, 0.25);
+	color: #38bdf8;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+/* @keyframes float: trôi nhẹ lên-xuống 7px (0 -> -7px -> 0). Dùng bởi .float-el. */
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-7px);
+	}
+}
+
+/*
+ * .float-el: icon tile trong thẻ chứng chỉ (Certs.astro) trôi nhẹ chu kỳ 4s, ease-in-out, lặp vô hạn. Khi hover thẻ,
+ * .cert-card:hover .float-el (mục [13]) tăng tốc xuống 1.4s.
+ */
+.float-el {
+	animation: float 4s ease-in-out infinite;
+}
+
+/*
+ * .cert-table: bảng tổng quan chứng chỉ trong CertTable.astro (<div class="reveal cert-table ...">). Hàng tiêu đề: nền
+ * navy đậm, chữ sky-400, in hoa, 0.7rem, giãn chữ 0.08em. Padding 14px 20px cho cả th và td; vạch ngăn hàng trắng 6%;
+ * hover hàng -> nền sky 5%. Hiệu ứng hàng trượt vào nằm ở mục [13].
+ */
+.cert-table th {
+	background: #071525;
+	color: #38bdf8;
+	font-size: 0.7rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.cert-table td,
+.cert-table th {
+	padding: 14px 20px;
+}
+
+.cert-table tbody tr {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cert-table tbody tr:hover td {
+	background: rgba(56, 189, 248, 0.05);
+}
+
+/* [10] PRODUCT CATALOG - src/components/blocks/Catalog.astro */
+/* Product catalog */
+/*
+ * .editorial-shadow: bóng đổ mềm phong cách tạp chí (0 8px 32px, navy 10%) cho thẻ sản phẩm (nền sáng).
+ */
+.editorial-shadow {
+	box-shadow: 0 8px 32px rgba(0, 20, 40, 0.1);
+}
+
+/*
+ * .hover-lift: thẻ sản phẩm nâng lên 3px khi hover kèm bóng đậm hơn (18%). Nhẹ hơn .cert-card (6px) vì thẻ sản phẩm
+ * nhỏ và xếp dày thành lưới. Dùng chung với editorial-shadow trên cùng phần tử.
+ */
+.hover-lift {
+	transition:
+		transform 0.25s,
+		box-shadow 0.25s;
+}
+
+.hover-lift:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 20px 48px rgba(0, 20, 40, 0.18);
+}
+
+/*
+ * .expand-panel: panel chi tiết nền trắng bo góc 1.25rem, hiện ra dưới hàng thẻ khi người dùng bấm vào một nhóm
+ * (id `${uid}-row-N`, mặc định có thuộc tính `hidden`). Khi JS gỡ `hidden`, animation slideDown 0.28s chạy lại mỗi lần
+ * (display đổi từ none sang block sẽ khởi động lại animation).
+ */
+.expand-panel {
+	background: white;
+	border-radius: 1.25rem;
+	box-shadow: 0 8px 40px rgba(0, 20, 40, 0.12);
+	overflow: hidden;
+	animation: slideDown 0.28s ease;
+}
+
+/* @keyframes slideDown: từ trên trượt xuống 10px + hiện dần (fade-in). */
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/*
+ * .lightbox: popup chi tiết sản phẩm (<div class="lightbox" data-lightbox> trong Catalog.astro, JS bật / tắt class
+ * `active`). Phủ kín màn hình (fixed, inset 0), z-index 9999 để nằm trên header (z-50) và contact panel (z-201).
+ * Mặc định display: none; khi `.active` thì flex (căn giữa hai chiều). Nền đen xanh 88% + blur 14px làm mờ nội dung
+ * phía sau; padding 20px giữ thẻ không sát mép màn hình nhỏ.
+ */
+.lightbox {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	background: rgba(4, 12, 20, 0.88);
+	backdrop-filter: blur(14px);
+}
+
+/*
+ * Trạng thái mở: flex và chạy lbFadeIn 0.2s. Dùng animation (không phải transition) vì display: none -> flex
+ * không thể transition.
+ */
+.lightbox.active {
+	display: flex;
+	animation: lbFadeIn 0.2s ease;
+}
+
+/* @keyframes lbFadeIn: lớp nền mờ dần 0 -> 1. */
+@keyframes lbFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/*
+ * .lb-card: thẻ thông tin bên trong lightbox, tối đa 580px; nền #0a1e30 (navy), viền sky-500 25%. Bóng 2 lớp: bóng
+ * sâu lớn (0 32px 80px, 60% đen) + vòng viền ngoài 1px sky-500 8% tạo độ dày. Animation lbPopIn 0.3s dùng
+ * cubic-bezier(0.34, 1.56, 0.64, 1): hàm "back-out" có y > 1 nên thẻ phóng quá kích thước một chút rồi về đúng
+ * chỗ (hiệu ứng nảy nhẹ).
+ */
+.lb-card {
+	width: 100%;
+	max-width: 580px;
+	overflow: hidden;
+	background: #0a1e30;
+	border: 1px solid rgba(14, 165, 233, 0.25);
+	border-radius: 22px;
+	box-shadow:
+		0 32px 80px rgba(0, 0, 0, 0.6),
+		0 0 0 1px rgba(14, 165, 233, 0.08);
+	animation: lbPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * @keyframes lbPopIn: từ thu nhỏ 0.88 + tụt xuống 12px + trong suốt -> kích thước thật (kết hợp với cubic-bezier overshoot).
+ */
+@keyframes lbPopIn {
+	from {
+		opacity: 0;
+		transform: scale(0.88) translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+/*
+ * .lb-img-side: cột ảnh bên trái thẻ (rộng 220px, cao tối thiểu 240px), flex-shrink 0 để không bị ép. Khi sản phẩm chưa
+ * có ảnh sẽ hiện emoji (span data-lb-emoji) cỡ 5.5rem; khi có ảnh, <img> được phủ tuyệt đối (xem rule tiếp theo).
+ * Nền gradient xanh biển 3 màu, background-size 200% để lbShimmer có chỗ di chuyển.
+ */
+.lb-img-side {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 220px;
+	min-height: 240px;
+	overflow: hidden;
+	font-size: 5.5rem;
+	background: linear-gradient(135deg, #0e3352, #1a4a6e, #0a2840);
+	background-size: 200%;
+	animation: lbShimmer 3s ease infinite;
+}
+
+/*
+ * Ảnh sản phẩm phủ kín cột (absolute, inset 0) và object-fit: cover để cắt gọn không méo tỷ lệ.
+ */
+.lb-img-side img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/*
+ * @keyframes lbShimmer: nền gradient di chuyển qua lại (0% -> 100% -> 0%) trong 3s ease, tạo ánh sáng loang nhẹ trên
+ * cột ảnh trong lúc chờ ảnh / hiện emoji. Lặp vô hạn.
+ */
+@keyframes lbShimmer {
+	0%,
+	100% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+}
+
+/*
+ * .lb-nav-btn: nút mũi tên Trước / Sau tròn 32px nằm đè lên cột ảnh (absolute, top 50% rồi dịch -50% để căn giữa dọc);
+ * vị trí ngang do class Tailwind left-2.5 / right-2.5 trong Catalog.astro. Nền kính trắng 12%, viền trắng 20%.
+ * `transition: all 0.2s` ở đây là cách viết gọn cho hover (đổi nền + viền).
+ */
+.lb-nav-btn {
+	position: absolute;
+	top: 50%;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	transform: translateY(-50%);
+	color: white;
+	font-size: 0.85rem;
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	transition: all 0.2s;
+}
+
+.lb-nav-btn:hover {
+	background: rgba(14, 165, 233, 0.4);
+	border-color: #38bdf8;
+}
+
+/*
+ * .lb-dot: chấm chỉ thị sản phẩm hiện tại trong nhóm (JS tạo class `lb-dot` + `active`). Chấm 6px; khi active giãn
+ * thành viên thuốc 16px màu sky-400 (width và border-radius đều có transition 0.2s).
+ */
+.lb-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	transition: all 0.2s;
+}
+
+.lb-dot.active {
+	width: 16px;
+	border-radius: 99px;
+	background: #38bdf8;
+}
+
+/*
+ * Màn hình hẹp (<= 540px): thẻ 580px bị ép nên đổi bố cục hàng `lb-top` từ hàng ngang sang cột dọc: cột ảnh lên trên,
+ * rộng 100%, thấp hơn (160px) và emoji nhỏ lại 4rem; nội dung chữ ở dưới. 540px là điểm cột ảnh 220px + cột chữ bắt
+ * đầu quá chật (xấp xỉ bề rộng thẻ trừ padding).
+ */
+@media (max-width: 540px) {
+	.lb-top {
+		flex-direction: column;
+	}
+
+	.lb-img-side {
+		width: 100%;
+		min-height: 160px;
+		font-size: 4rem;
+	}
+}
+
+/*
+ * [11] CONTACT SLIDE-OVER - panel liên hệ trượt từ bên phải
+ * Cấu trúc nằm ở cuối <body> trong Base.astro: <div class="contact-overlay"> + <aside class="contact-panel">.
+ * Script thêm class `contact-open` lên <html> (document.documentElement) khi bấm nút liên hệ (data-contact-open)
+ * hoặc link tới #contact, và gỡ khi bấm overlay / nút đóng / phím Esc. Khi mở, JS cũng khóa cuộn trang
+ * (body overflow hidden) và trả focus về phần tử trước đó khi đóng.
+ */
+/* Contact slide-over */
+/*
+ * .contact-overlay: lớp phủ tối 55% + blur 4px sau panel, z-index 200 (cao hơn header z-50). Mặc định display: none,
+ * chỉ đổi sang block khi `.contact-open`. Lưu ý: vì display đổi đồng thời với opacity nên transition opacity 0.3s trên
+ * thực tế không tạo hiệu ứng fade (không có khung hình khởi đầu); lớp phủ hiện / ẩn tức thì.
+ */
+.contact-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 200;
+	display: none;
+	background: rgba(0, 0, 0, 0.55);
+	backdrop-filter: blur(4px);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+/*
+ * .contact-panel: panel cố định bám mép phải, z-index 201 (trên overlay), cột flex, cao 100%, rộng min(440px, 100vw)
+ * (tối đa 440px, nhưng trên điện thoại nhỏ hơn thì chiếm trọn chiều rộng). overflow-y: auto để form dài vẫn cuộn được
+ * bên trong panel. Nền gradient navy -> #0c2340 -> navy, viền trái sky-400 18% và bóng lệch trái (-8px 0 48px) để tách
+ * khỏi trang.
+ */
+.contact-panel {
+	position: fixed;
+	top: 0;
+	right: 0;
+	z-index: 201;
+	display: flex;
+	flex-direction: column;
+	width: min(440px, 100vw);
+	height: 100%;
+	overflow-y: auto;
+	background: linear-gradient(160deg, #071525 0%, #0c2340 60%, #071525 100%);
+	border-left: 1px solid rgba(56, 189, 248, 0.18);
+	box-shadow: -8px 0 48px rgba(0, 0, 0, 0.5);
+	/*
+	 * Trạng thái đóng: đẩy panel ra ngoài màn hình (translateX(100%)) VÀ visibility: hidden để các input / nút bên trong
+	 * không thể Tab tới và không bị trình đọc màn hình đọc. Transition `visibility 0s linear 0.4s` = trễ 0.4s (bằng thời gian
+	 * trượt) rồi mới ẩn, để panel trượt ra xong mới biến mất. Easing cubic-bezier(0.16, 1, 0.3, 1) kiểu ease-out-expo:
+	 * vào nhanh, hạ cánh mềm; 0.4s đủ chậm để mượt.
+	 */
+	transform: translateX(100%);
+	visibility: hidden;
+	transition:
+		transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0s linear 0.4s;
+}
+
+/*
+ * Trạng thái mở: hiện overlay; đưa panel về translateX(0); visibility: visible NGAY LẬP TỨC (0s, không trễ) - nếu không,
+ * panel trượt vào trong khi vẫn `hidden` nên sẽ không thấy gì.
+ */
+.contact-open .contact-overlay {
+	display: block;
+	opacity: 1;
+}
+
+.contact-open .contact-panel {
+	transform: translateX(0);
+	visibility: visible;
+	transition:
+		transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0s;
+}
+
+/*
+ * .contact-field: dùng chung cho input / textarea trong form liên hệ (Base.astro). Nền trắng 5%, viền sky 18%, chữ
+ * slate-200 (#e2e8f0), cỡ chữ 0.88rem. outline: none được thay bằng đổi màu viền khi focus (alpha 0.5) - lưu ý độ tương
+ * phản của viền focus khá nhẹ. Placeholder dùng slate-500 (#64748b).
+ */
+.contact-field {
+	width: 100%;
+	padding: 0.6rem 0.8rem;
+	color: #e2e8f0;
+	font-size: 0.88rem;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(56, 189, 248, 0.18);
+	border-radius: 0.5rem;
+	outline: none;
+	transition: border-color 0.2s;
+}
+
+.contact-field:focus {
+	border-color: rgba(56, 189, 248, 0.5);
+}
+
+.contact-field::placeholder {
+	color: #64748b;
+}
+
+/*
+ * [12] PREFERS-REDUCED-MOTION (lần 1: reset toàn cục)
+ * Người dùng bật "giảm chuyển động" ở hệ điều hành -> rút mọi animation / transition xuống 0.01ms. Chọn 0.01ms thay vì 0
+ * hoặc `none` để các sự kiện animationend / transitionend vẫn được phát và các animation có fill-mode (both,
+ * backwards) vẫn về đúng trạng thái cuối, không dừng giữa chừng. iteration-count: 1 chặn các vòng lặp vô hạn.
+ * !important để thắng mọi class / inline style khác. Có cả ::before / ::after vì nhiều hiệu ứng nằm ở pseudo-element.
+ */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	::before,
+	::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	/*
+	 * Ngoại lệ: `.reveal` phải hiện sẵn (opacity 1, không dịch chuyển). Reset ở trên chỉ rút ngắn thời gian, còn trạng thái
+	 * đầu `.js .reveal` (opacity 0, tụt 24px) sẽ giữ nội dung ẩn cho tới khi observer đặt `revealed`; ở đây ta cho hiện
+	 * ngay để người dùng giảm chuyển động không bao giờ thấy nội dung bị ẩn hay nhấp nháy.
+	 */
+	.js .reveal {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/*
+ * [13] CERTIFICATIONS PAGE MOTION + HERO "glow"
+ * Phần này gồm keyframes và class chuyển động của trang Certifications: Hero layout "glow" (Hero.astro), thẻ chứng chỉ
+ * (Certs.astro), bảng tổng quan (CertTable.astro) và khối FDA Spotlight (Spotlight.astro). Các biến --d (delay, giây) và
+ * --i (chỉ số phần tử) được component truyền vào bằng inline style để tạo hiệu ứng xuất hiện lần lượt (stagger).
+ */
+/* ------------------------------------------------------------------ */
+/* Certifications page motion. Every rule is disabled under            */
+/* prefers-reduced-motion by the global reset at the end of this file. */
+/* ------------------------------------------------------------------ */
+
+/*
+ * @keyframes rise: hiện dần + từ dưới (28px) đi lên. Dùng chung cho .rise (Hero), thẻ chứng chỉ, tag thị trường.
+ */
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(28px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/*
+ * @keyframes rise-side: hiện dần + trượt từ trái sang (-16px). Chỉ dùng cho các hàng của .cert-table.
+ */
+@keyframes rise-side {
+	from {
+		opacity: 0;
+		transform: translateX(-16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/*
+ * .rise: hiệu ứng vào của các phần tử Hero layout "glow" (badge --d:0.1s, h1 0.25s, mô tả 0.45s, các stat-tile
+ * 0.65s + index*0.12s). 0.8s với cubic-bezier(0.16, 1, 0.3, 1) (ease-out-expo) cho cảm giác trượt lên rồi dừng mềm.
+ * `both` = áp trạng thái đầu (opacity 0) trong lúc chờ delay VÀ giữ trạng thái cuối -> không bị chớp hiện-rồi-ẩn trước
+ * khi bắt đầu. animation-delay đọc từ biến --d, mặc định 0s nếu không đặt.
+ */
+/* Hero entrance, staggered with --d. */
+.rise {
+	animation: rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation-delay: var(--d, 0s);
+}
+
+/*
+ * @keyframes grid-drift: chỉ khai báo điểm `to`; điểm `from` lấy theo giá trị hiện có của phần tử. Dịch nền đến 48px 48px
+ * cho CẢ HAI lớp gradient (hai giá trị cách nhau dấu phẩy) = đúng bằng một ô lưới (background-size của .bg-grid), nên
+ * vòng lặp hoàn toàn liền mạch.
+ */
+@keyframes grid-drift {
+	to {
+		background-position:
+			48px 48px,
+			48px 48px;
+	}
+}
+
+/*
+ * .animate-grid: lưới trôi chéo chậm 10s, linear (tốc độ đều để không thấy "nhịp"), vô hạn. Đi cùng .bg-grid trên Hero.
+ */
+.animate-grid {
+	animation: grid-drift 10s linear infinite;
+}
+
+/*
+ * @keyframes glow-pulse: độ trong suốt dao động 0.55 <-> 1 (không tắt hẳn) để vầng sáng "thở".
+ */
+@keyframes glow-pulse {
+	0%,
+	100% {
+		opacity: 0.55;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+/*
+ * .animate-glow: vầng sáng phía sau nội dung Hero layout "glow", nhịp 5s ease-in-out vô hạn (chậm để thư giãn).
+ */
+.animate-glow {
+	animation: glow-pulse 5s ease-in-out infinite;
+}
+
+/*
+ * Hai orb mờ (blur) trôi sau nội dung hero. width / height 22rem = 352px, filter blur(70px) đủ lớn để biến thành đám
+ * sáng không có viền; pointer-events: none để không chặn chuột. Hai orb là <span class="orb orb-a"> và
+ * <span class="orb orb-b"> trong Hero.astro (layout glow).
+ */
+/* Two soft blurred orbs drifting behind the hero text. */
+.orb {
+	position: absolute;
+	width: 22rem;
+	height: 22rem;
+	border-radius: 9999px;
+	filter: blur(70px);
+	pointer-events: none;
+}
+
+/* orb-a: góc trên-trái (thò ra ngoài khung), sky-400 alpha 18%, chu kỳ 14s. */
+.orb-a {
+	top: -6rem;
+	left: -4rem;
+	background: rgba(56, 189, 248, 0.18);
+	animation: orb-a 14s ease-in-out infinite;
+}
+
+/*
+ * orb-b: góc dưới-phải, xanh ngọc đậm (14,116,144) alpha 28%, chu kỳ 17s. Hai chu kỳ 14s và 17s khác nhau (lệch nhau)
+ * nên hai orb không bao giờ đồng bộ -> chuyển động tự nhiên, không lặp lại rõ rệt.
+ */
+.orb-b {
+	right: -5rem;
+	bottom: -8rem;
+	background: rgba(14, 116, 144, 0.28);
+	animation: orb-b 17s ease-in-out infinite;
+}
+
+/*
+ * Các keyframes orb chỉ khai báo 50%: điểm đầu / cuối tự lấy theo trạng thái gốc (không transform), nên vòng lặp đi rồi về
+ * chỗ cũ mượt mà. orb-a dịch (5rem, 3rem) và phóng 1.15; orb-b dịch ngược (-6rem, -2rem) và phóng 1.2.
+ */
+@keyframes orb-a {
+	50% {
+		transform: translate(5rem, 3rem) scale(1.15);
+	}
+}
+
+@keyframes orb-b {
+	50% {
+		transform: translate(-6rem, -2rem) scale(1.2);
+	}
+}
+
+/*
+ * .shimmer-text: chữ headline_accent ánh kim loại (Hero layout "glow", <span class="shimmer-text">). Gradient sky-400 ->
+ * sky-100 -> sky-400 (đầu và cuối cùng màu), background-size 200% auto (rộng gấp đôi chữ) + background-clip: text (kèm
+ * -webkit- cho Safari) + color: transparent để gradient lộ ra qua nét chữ. Animation shimmer 4s linear vô hạn.
+ */
+.shimmer-text {
+	background: linear-gradient(90deg, #38bdf8, #e0f2fe, #38bdf8);
+	background-size: 200% auto;
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	animation: shimmer 4s linear infinite;
+}
+
+/*
+ * @keyframes shimmer: dịch background-position đến 200% = đúng bằng một chu kỳ gradient (ảnh rộng 200% chiều rộng chữ nên
+ * dịch 200% tương đương một lần chiều rộng ảnh) -> vòng lặp liền mạch, không thấy điểm nối.
+ */
+@keyframes shimmer {
+	to {
+		background-position: 200% center;
+	}
+}
+
+/*
+ * @keyframes twinkle: nhấp nháy: phóng 1.35 + xoay 25deg + mờ 0.4 ở giữa chu kỳ rồi về lại.
+ */
+@keyframes twinkle {
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1) rotate(0);
+	}
+	50% {
+		opacity: 0.4;
+		transform: scale(1.35) rotate(25deg);
+	}
+}
+
+/*
+ * .twinkle: ngôi sao đầu badge Hero (<span class="twinkle">). display: inline-block là BẮT BUỘC vì transform
+ * (scale / rotate) không áp dụng cho phần tử inline thường. 2.4s ease-in-out vô hạn.
+ */
+.twinkle {
+	display: inline-block;
+	animation: twinkle 2.4s ease-in-out infinite;
+}
+
+/*
+ * .stat-tile: thẻ số liệu thủy tinh trong Hero glow (class `rise stat-tile`). Hover đổi viền sky-400 40% và nền sky 8%;
+ * transition 0.3s. LƯU Ý: vì đi cùng `.rise` (animation fill-mode `both` giữ transform cuối của keyframes),
+ * translateY(-4px) khi hover có thể bị animation ghi đè, nên thực tế có thể chỉ còn hiệu ứng đổi màu viền / nền.
+ */
+.stat-tile {
+	transition:
+		transform 0.3s,
+		border-color 0.3s,
+		background-color 0.3s;
+}
+
+.stat-tile:hover {
+	transform: translateY(-4px);
+	border-color: rgba(56, 189, 248, 0.4);
+	background-color: rgba(56, 189, 248, 0.08);
+}
+
+/*
+ * Gạch dưới tiêu đề "lớn ra" khi cuộn tới: khi nằm trong khối .reveal, .section-line bắt đầu rộng 0 và giãn ra 48px
+ * (cùng giá trị mặc định ở trên) trong 0.9s, trễ 0.25s để xuất hiện SAU khi tiêu đề đã hiện. Chỉ hoạt động khi có class
+ * `js`, nên không bao giờ bị ẩn nếu không có JavaScript.
+ */
+/* The accent underline under a section title grows when it scrolls in. */
+.js .reveal .section-line {
+	width: 0;
+	transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+}
+
+.js .reveal.revealed .section-line {
+	width: 48px;
+}
+
+/*
+ * Thẻ chứng chỉ: xuất hiện lần lượt (stagger) theo --i, sau đó hover bình thường. Bản thân thẻ là `.reveal` (ẩn cho đến
+ * khi `revealed`), nhưng ở đây ta: (1) ghi đè transition của `.reveal` về transition hover (chỉ transform / box-shadow /
+ * border-color 0.25s) vì việc xuất hiện đã do animation `rise` đảm nhiệm, tránh hai cơ chế chồng nhau; (2) khi
+ * `revealed` chạy `rise` 0.75s với delay = --i x 90ms (thẻ thứ i vào sau 90ms * i). fill-mode `backwards` (không phải both)
+ * CHỈ áp trạng thái đầu trong lúc trễ, không giữ trạng thái cuối -> khi xong thẻ trả quyền lại cho CSS thường nên
+ * .cert-card:hover { transform } vẫn hoạt động.
+ */
+/* Certification cards: staggered entrance by --i, then a plain hover lift. */
+.js .cert-card.reveal {
+	transition:
+		transform 0.25s,
+		box-shadow 0.25s,
+		border-color 0.25s;
+}
+
+.js .cert-card.reveal.revealed {
+	animation: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+	animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/*
+ * ::after = tia sáng quét qua thẻ khi hover: dải gradient chéo 105deg (trong suốt -> trắng 9% ở giữa -> trong suốt, dải rộng
+ * từ 38% đến 62%), đặt bên trái ngoài thẻ (-110%) và quét sang phải (110%) trong 0.9s khi hover. pointer-events: none
+ * để không chặn click.
+ */
+.cert-card::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.09) 50%, transparent 62%);
+	transform: translateX(-110%);
+	transition: transform 0.9s ease;
+}
+
+.cert-card:hover::after {
+	transform: translateX(110%);
+}
+
+/*
+ * Hover thẻ -> icon tile (.float-el) trôi nhanh hơn (4s xuống 1.4s) như "phấn khích".
+ */
+.cert-card:hover .float-el {
+	animation-duration: 1.4s;
+}
+
+/*
+ * @keyframes pop: tick "bật" lên: 0 -> 1.5 (quá cỡ, ở 70%) -> 1; nảy vọt rồi gọn lại tạo cảm giác dấu xác nhận.
+ */
+@keyframes pop {
+	0% {
+		transform: scale(0);
+	}
+	70% {
+		transform: scale(1.5);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+/*
+ * Dấu tick xanh (.check-pop trong Certs.astro): bật lên sau khi thẻ vào (delay = --i x 90ms + 0.55s: lúc thẻ sắp xong
+ * 0.75s `rise`). `backwards` giữ tick ẩn (scale 0) trong lúc chờ.
+ */
+.js .cert-card.revealed .check-pop {
+	animation: pop 0.5s ease-out backwards;
+	animation-delay: calc(var(--i, 0) * 90ms + 0.55s);
+}
+
+/*
+ * FDA spotlight (Spotlight.astro): vòng sóng tỏa quanh huy hiệu và các tag thị trường bật lên lần lượt.
+ */
+/* FDA spotlight: pulsing rings around the badge and tags popping in. */
+/*
+ * .pulse-ring: huy hiệu tròn (<div class="pulse-ring ...">) -> dùng 2 pseudo-element làm hai vòng sóng lan tỏa.
+ */
+.pulse-ring {
+	position: relative;
+}
+
+/*
+ * Hai vòng ::before / ::after: viền 2px sky-400 45%, inset -2px (ngay ngoài mép huy hiệu), bo tròn, chạy animation
+ * ring 2.6s ease-out vô hạn; pointer-events: none.
+ */
+.pulse-ring::before,
+.pulse-ring::after {
+	content: "";
+	position: absolute;
+	inset: -2px;
+	border-radius: 9999px;
+	border: 2px solid rgba(56, 189, 248, 0.45);
+	animation: ring 2.6s ease-out infinite;
+	pointer-events: none;
+}
+
+/*
+ * Vòng thứ hai lệch nửa chu kỳ (1.3s = 2.6s / 2) nên luôn có một vòng đang tỏa ra -> nhịp đều, liên tục.
+ */
+.pulse-ring::after {
+	animation-delay: 1.3s;
+}
+
+/*
+ * @keyframes ring: vòng to dần 1 -> 1.7 lần và mờ từ 0.7 -> 0 (tỏa ra rồi tan đi).
+ */
+@keyframes ring {
+	from {
+		transform: scale(1);
+		opacity: 0.7;
+	}
+	to {
+		transform: scale(1.7);
+		opacity: 0;
+	}
+}
+
+/*
+ * Tag thị trường (.market-tag, Spotlight.astro): khi khối cha `.reveal` đã `revealed`, từng tag bật lên bằng `rise` 0.5s
+ * với delay = --i x 70ms + 0.3s (chờ khối hiện trước). `backwards` để transform hover (bên dưới) không bị ghi đè.
+ */
+.js .reveal.revealed .market-tag {
+	animation: rise 0.5s ease-out backwards;
+	animation-delay: calc(var(--i, 0) * 70ms + 0.3s);
+}
+
+/* Hover tag: nâng 2px và phóng 1.05, nền đậm lên 20%. */
+.market-tag {
+	transition:
+		transform 0.2s,
+		background-color 0.2s;
+}
+
+.market-tag:hover {
+	transform: translateY(-2px) scale(1.05);
+	background-color: rgba(56, 189, 248, 0.2);
+}
+
+/*
+ * Bảng tổng quan: khi `.cert-table` có `revealed`, các hàng <tr style="--i:index"> trượt vào lần lượt bằng rise-side 0.5s,
+ * delay = --i x 60ms + 0.2s (nhanh hơn thẻ vì bảng nhiều hàng). `backwards`: như trên.
+ */
+/* Overview table: rows slide in one after another. */
+.js .cert-table.revealed tbody tr {
+	animation: rise-side 0.5s ease-out backwards;
+	animation-delay: calc(var(--i, 0) * 60ms + 0.2s);
+}
+
+/*
+ * Đổi nền ô khi hover hàng (rule .cert-table tbody tr:hover td phía trên) trong 0.2s cho mượt.
+ */
+.cert-table tbody tr td {
+	transition: background-color 0.2s;
+}
+
+/*
+ * [14] PREFERS-REDUCED-MOTION (lần 2: tắt hẳn các vòng lặp ambient)
+ * Khối [12] chỉ rút ngắn và dừng vòng lặp sau 1 lần chạy; ở đây tắt hoàn toàn (animation: none !important) các hiệu ứng
+ * trang trí chạy liên tục: orb, lưới trôi, vầng sáng, shimmer chữ, ngôi sao, vòng sóng. Đặt SAU khối [12] nên được ưu tiên
+ * theo thứ tự. Hai pseudo-element của .pulse-ring khi đó chỉ còn là viền tĩnh.
+ */
+/* Stronger than the reset above so the ambient loops also stop. */
+@media (prefers-reduced-motion: reduce) {
+	.orb,
+	.animate-grid,
+	.animate-glow,
+	.shimmer-text,
+	.twinkle,
+	.pulse-ring::before,
+	.pulse-ring::after {
+		animation: none !important;
+	}
+
+	/*
+	 * Gạch dưới tiêu đề có vai trò không chuyển động: cho nó về ngay 48px thay vì bắt đầu từ 0 (animation / transition bị
+	 * tắt ở trên nên không còn gì kéo chiều rộng lên).
+	 */
+	.js .reveal .section-line {
+		width: 48px;
+	}
+}

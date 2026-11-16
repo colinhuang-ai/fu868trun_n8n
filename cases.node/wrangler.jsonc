@@ -1,0 +1,70 @@
+// ============================================================================
+// wrangler.jsonc — Cấu hình deploy Cloudflare Worker cho website CASES
+// ============================================================================
+// Wrangler (CLI của Cloudflare) đọc file này khi chạy `pnpm deploy`
+// (= `astro build && wrangler deploy`). File là JSONC nên được phép có comment
+// và dấu phẩy cuối dòng.
+//
+// Các binding ở đây phải KHỚP với tên được dùng trong astro.config.mjs
+// (d1({ binding: "DB" }) và r2({ binding: "MEDIA" })).
+//
+// LƯU Ý (xem "Known gaps" trong AGENTS.md): chưa có `database_id` cho D1 và
+// bucket R2 thật chưa được tạo. Trước khi deploy: `pnpm wrangler login`, tạo
+// database/bucket rồi điền `database_id` vào bên dưới.
+{
+	// Gợi ý schema để editor (VS Code) tự động gợi ý/ kiểm tra khóa cấu hình.
+	"$schema": "node_modules/wrangler/config-schema.json",
+
+	// Tên Worker trên Cloudflare (ảnh hưởng URL <name>.<subdomain>.workers.dev).
+	"name": "cases",
+
+	// Entry point của Worker — src/worker.ts dùng handler `fetch` của
+	// @emdash-cms/cloudflare/worker, export thêm PluginBridge và gắn handler
+	// `scheduled` (createScheduledHandler) để xử lý cron bên dưới.
+	"main": "./src/worker.ts",
+
+	// Ngày "đóng băng" hành vi runtime của Workers: runtime sẽ hành xử đúng như
+	// ở ngày này, tránh bị thay đổi ngầm khi Cloudflare cập nhật. Chỉ nâng ngày
+	// này khi đã test lại.
+	"compatibility_date": "2026-02-24",
+
+	// nodejs_compat: bật các API Node.js (Buffer, crypto, async_hooks...) mà
+	// Astro, EmDash và các dependency cần khi chạy trong Workers.
+	"compatibility_flags": ["nodejs_compat"],
+
+	// Database D1 (SQLite serverless): lưu schema, nội dung các collection
+	// (pages, products, certifications, plants, news...), menu, user admin.
+	"d1_databases": [
+		{
+			// Tên biến truy cập trong code: env.DB. Khớp với cấu hình EmDash ở astro.config.mjs.
+			"binding": "DB",
+			// Tên database trên Cloudflare. Cần thêm "database_id": "<uuid>" sau khi
+			// chạy `wrangler d1 create cases`.
+			"database_name": "cases",
+		},
+	],
+
+	// R2 (object storage tương thích S3): chứa ảnh/tệp upload qua trang admin
+	// (ảnh sản phẩm, nhà máy, công nghệ...).
+	"r2_buckets": [
+		{
+			// Truy cập trong code: env.MEDIA. Khớp với r2({ binding: "MEDIA" }).
+			"binding": "MEDIA",
+			// Bucket phải được tạo trước: `wrangler r2 bucket create cases-media`.
+			"bucket_name": "cases-media",
+		},
+	],
+
+	// Sandboxed plugins require Worker Loader, available on Workers paid plans. Uncomment to enable:
+	// (Plugin của EmDash chạy trong sandbox cần "Worker Loader" — chỉ có ở gói Workers trả phí.
+	//  Site hiện chưa dùng plugin sandbox nên để tắt.)
+	// "worker_loaders": [{ "binding": "LOADER" }],
+
+	// General maintenance cron trigger
+	// Cron chạy mỗi phút ("* * * * *"): Worker nhận sự kiện `scheduled` để EmDash
+	// thực hiện các tác vụ nền (ví dụ: xuất bản bài hẹn giờ, dọn dẹp, job bảo trì).
+	// Có thể giảm tần suất nếu muốn tiết kiệm số lần gọi.
+	"triggers": {
+		"crons": ["* * * * *"],
+	},
+}

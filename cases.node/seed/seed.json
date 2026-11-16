@@ -1,0 +1,4166 @@
+{
+	"$schema": "https://emdashcms.com/seed.schema.json",
+	"version": "1",
+	"meta": {
+		"name": "CASES",
+		"description": "Corporate site for CaMau Seafood Processing and Service JSC, in English and Vietnamese",
+		"author": "CASES"
+	},
+	"settings": {
+		"title": "CASES",
+		"tagline": "Ca Mau Seafood",
+		"seo": {
+			"titleSeparator": "—"
+		}
+	},
+	"blockTypes": [
+		{
+			"slug": "cases_hero",
+			"label": "Hero",
+			"description": "Page introduction on the navy background",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "headline_accent",
+							"label": "Second line (highlighted)",
+							"type": "string"
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "subheadline",
+							"label": "Introduction",
+							"type": "text"
+						},
+						{
+							"slug": "layout",
+							"label": "Layout (center: home with logo watermark · split: logo on the right · glow: grid and stat cards · banner: rounded catalog banner)",
+							"type": "select",
+							"required": true,
+							"defaultValue": "center",
+							"validation": {
+								"options": [
+									"center",
+									"split",
+									"glow",
+									"banner"
+								]
+							}
+						},
+						{
+							"slug": "primary_cta_label",
+							"label": "Primary button text",
+							"type": "string"
+						},
+						{
+							"slug": "primary_cta_url",
+							"label": "Primary button link (starts with /, https://, mailto:, tel: or #)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "secondary_cta_label",
+							"label": "Secondary button text",
+							"type": "string"
+						},
+						{
+							"slug": "secondary_cta_url",
+							"label": "Secondary button link (starts with /, https://, mailto:, tel: or #)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "stats",
+							"label": "Key figures",
+							"type": "repeater",
+							"validation": {
+								"maxItems": 4,
+								"subFields": [
+									{
+										"slug": "value",
+										"label": "Value",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "unit",
+										"label": "Unit (small, after the value)",
+										"type": "string"
+									},
+									{
+										"slug": "label",
+										"label": "Label",
+										"type": "string",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_codes",
+			"label": "Export codes",
+			"description": "A row of certified export codes",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string"
+						},
+						{
+							"slug": "codes",
+							"label": "Codes",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 12,
+								"subFields": [
+									{
+										"slug": "code",
+										"label": "Code",
+										"type": "string",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_reach",
+			"label": "Global reach",
+			"description": "Key figures and export markets",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "figures",
+							"label": "Key figures",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 3,
+								"subFields": [
+									{
+										"slug": "value",
+										"label": "Value",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "label",
+										"label": "Label",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "caption",
+										"label": "Caption",
+										"type": "string"
+									},
+									{
+										"slug": "highlight",
+										"label": "Highlight",
+										"type": "boolean",
+										"defaultValue": false
+									}
+								]
+							}
+						},
+						{
+							"slug": "markets",
+							"label": "Markets",
+							"type": "repeater",
+							"validation": {
+								"maxItems": 12,
+								"subFields": [
+									{
+										"slug": "name",
+										"label": "Market",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "flag",
+										"label": "Flag emoji",
+										"type": "string"
+									},
+									{
+										"slug": "value",
+										"label": "Turnover",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "volume",
+										"label": "Volume",
+										"type": "string"
+									},
+									{
+										"slug": "share",
+										"label": "Bar length (0–100)",
+										"type": "number"
+									},
+									{
+										"slug": "muted",
+										"label": "Show in grey",
+										"type": "boolean",
+										"defaultValue": false
+									}
+								]
+							}
+						},
+						{
+							"slug": "total_label",
+							"label": "Total: label",
+							"type": "string"
+						},
+						{
+							"slug": "total_value",
+							"label": "Total: value",
+							"type": "string"
+						},
+						{
+							"slug": "total_caption",
+							"label": "Total: caption",
+							"type": "string"
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_features",
+			"label": "Advantages",
+			"description": "Icon cards with an optional call-to-action card",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "features",
+							"label": "Cards",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 9,
+								"subFields": [
+									{
+										"slug": "icon",
+										"label": "Icon (a Material Symbols name such as factory, public, verified)",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "title",
+										"label": "Title",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "description",
+										"label": "Description",
+										"type": "text",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "cta_title",
+							"label": "Call-to-action card: title",
+							"type": "string"
+						},
+						{
+							"slug": "cta_body",
+							"label": "Call-to-action card: text",
+							"type": "text"
+						},
+						{
+							"slug": "cta_label",
+							"label": "Call-to-action card: button text",
+							"type": "string"
+						},
+						{
+							"slug": "cta_url",
+							"label": "Call-to-action card: button link (starts with /, https://, mailto:, tel: or #)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_timeline",
+			"label": "Timeline",
+			"description": "Milestones down a centre line",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "milestones",
+							"label": "Milestones",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 10,
+								"subFields": [
+									{
+										"slug": "year",
+										"label": "Year",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "title",
+										"label": "Title",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "body",
+										"label": "Text",
+										"type": "text"
+									},
+									{
+										"slug": "icon",
+										"label": "Icon (a Material Symbols name such as factory, public, verified)",
+										"type": "string"
+									},
+									{
+										"slug": "note",
+										"label": "Side note",
+										"type": "string"
+									},
+									{
+										"slug": "highlight",
+										"label": "Highlight",
+										"type": "boolean",
+										"defaultValue": false
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_values",
+			"label": "Mission and values",
+			"description": "Mission and vision cards with a quote panel",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "quote",
+							"label": "Quote (large, in the dark panel)",
+							"type": "string"
+						},
+						{
+							"slug": "quote_body",
+							"label": "Text under the quote",
+							"type": "text"
+						},
+						{
+							"slug": "cards",
+							"label": "Cards",
+							"type": "repeater",
+							"validation": {
+								"maxItems": 4,
+								"subFields": [
+									{
+										"slug": "icon",
+										"label": "Icon (a Material Symbols name such as factory, public, verified)",
+										"type": "string"
+									},
+									{
+										"slug": "title",
+										"label": "Title",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "body",
+										"label": "Text",
+										"type": "text",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "primary_cta_label",
+							"label": "Primary button text",
+							"type": "string"
+						},
+						{
+							"slug": "primary_cta_url",
+							"label": "Primary button link (starts with /, https://, mailto:, tel: or #)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "secondary_cta_label",
+							"label": "Secondary button text",
+							"type": "string"
+						},
+						{
+							"slug": "secondary_cta_url",
+							"label": "Secondary button link (starts with /, https://, mailto:, tel: or #)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_plants",
+			"label": "Processing plants",
+			"description": "Plants from the Plants collection, grouped by line",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "groups",
+							"label": "Groups",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 4,
+								"subFields": [
+									{
+										"slug": "line",
+										"label": "Product line",
+										"type": "select",
+										"required": true,
+										"options": [
+											"shrimp",
+											"surimi",
+											"cephalopod",
+											"fishmeal"
+										]
+									},
+									{
+										"slug": "label",
+										"label": "Group label",
+										"type": "string",
+										"required": true
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_tech",
+			"label": "Technology",
+			"description": "Photo cards on the navy background",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "items",
+							"label": "Cards",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 8,
+								"subFields": [
+									{
+										"slug": "title",
+										"label": "Title",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "description",
+										"label": "Description",
+										"type": "text"
+									},
+									{
+										"slug": "image",
+										"label": "Photo",
+										"type": "image"
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_certs",
+			"label": "Certification group",
+			"description": "Cards from the Certifications collection",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "group",
+							"label": "Group to show",
+							"type": "select",
+							"required": true,
+							"validation": {
+								"options": [
+									"food_safety",
+									"aquaculture",
+									"specialist"
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_spotlight",
+			"label": "Spotlight",
+			"description": "A wide feature panel with tags and a round badge",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "eyebrow",
+							"label": "Label above the headline",
+							"type": "string"
+						},
+						{
+							"slug": "body",
+							"label": "Text",
+							"type": "text"
+						},
+						{
+							"slug": "tags",
+							"label": "Tags (one per line)",
+							"type": "text"
+						},
+						{
+							"slug": "badge_icon",
+							"label": "Badge emoji",
+							"type": "string"
+						},
+						{
+							"slug": "badge_title",
+							"label": "Badge title",
+							"type": "string"
+						},
+						{
+							"slug": "badge_caption",
+							"label": "Badge caption",
+							"type": "string"
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_cert_table",
+			"label": "Certification table",
+			"description": "Every certification in one table",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_catalog",
+			"label": "Product catalog",
+			"description": "Category cards that open into products",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "hint",
+							"label": "Hint under the cards",
+							"type": "string"
+						},
+						{
+							"slug": "categories",
+							"label": "Categories",
+							"type": "repeater",
+							"required": true,
+							"validation": {
+								"minItems": 1,
+								"maxItems": 12,
+								"subFields": [
+									{
+										"slug": "key",
+										"label": "Category (matches the product's category)",
+										"type": "select",
+										"required": true,
+										"options": [
+											"btp",
+											"van",
+											"vap_btp",
+											"vap_van",
+											"surimi",
+											"cephalopod"
+										]
+									},
+									{
+										"slug": "code",
+										"label": "Short code (large, e.g. BTP)",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "subtitle",
+										"label": "Small line under the code",
+										"type": "string"
+									},
+									{
+										"slug": "name",
+										"label": "Name",
+										"type": "string",
+										"required": true
+									},
+									{
+										"slug": "caption",
+										"label": "Caption under the name",
+										"type": "string"
+									},
+									{
+										"slug": "emoji",
+										"label": "Emoji (product popup)",
+										"type": "string"
+									},
+									{
+										"slug": "color",
+										"label": "Colour",
+										"type": "select",
+										"required": true,
+										"options": [
+											"sky",
+											"cyan",
+											"red",
+											"orange",
+											"teal",
+											"slate"
+										]
+									}
+								]
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"slug": "cases_cta",
+			"label": "Call to action",
+			"description": "A gradient panel with one button",
+			"category": "CASES",
+			"currentVersion": 1,
+			"versions": [
+				{
+					"version": 1,
+					"fields": [
+						{
+							"slug": "headline",
+							"label": "Headline",
+							"type": "string",
+							"required": true
+						},
+						{
+							"slug": "body",
+							"label": "Text",
+							"type": "text"
+						},
+						{
+							"slug": "icon",
+							"label": "Icon (a Material Symbols name such as factory, public, verified)",
+							"type": "string"
+						},
+						{
+							"slug": "cta_label",
+							"label": "Button text",
+							"type": "string"
+						},
+						{
+							"slug": "cta_url",
+							"label": "Button link (starts with /, https://, mailto:, tel: or #)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|(?:https?://|mailto:|tel:|/(?!/)|#).+)$"
+							}
+						},
+						{
+							"slug": "anchor_id",
+							"label": "Section ID (lowercase, for links like /#markets)",
+							"type": "string",
+							"validation": {
+								"pattern": "^(?:$|[a-z][a-z0-9_-]*)$"
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"collections": [
+		{
+			"slug": "pages",
+			"label": "Pages",
+			"labelSingular": "Page",
+			"urlPattern": "/{slug}",
+			"supports": [
+				"drafts",
+				"revisions",
+				"preview",
+				"seo"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true
+				},
+				{
+					"slug": "content",
+					"label": "Content",
+					"type": "blocks",
+					"validation": {
+						"allowedTypes": [
+							"cases_hero",
+							"cases_codes",
+							"cases_reach",
+							"cases_features",
+							"cases_timeline",
+							"cases_values",
+							"cases_plants",
+							"cases_tech",
+							"cases_certs",
+							"cases_spotlight",
+							"cases_cert_table",
+							"cases_catalog",
+							"cases_cta"
+						],
+						"maxItems": 20
+					}
+				}
+			]
+		},
+		{
+			"slug": "products",
+			"label": "Products",
+			"labelSingular": "Product",
+			"supports": [
+				"drafts",
+				"revisions",
+				"search"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Product name",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "category",
+					"label": "Category",
+					"type": "select",
+					"required": true,
+					"translatable": false,
+					"validation": {
+						"options": [
+							"btp",
+							"van",
+							"vap_btp",
+							"vap_van",
+							"surimi",
+							"cephalopod"
+						]
+					}
+				},
+				{
+					"slug": "image",
+					"label": "Photo",
+					"type": "image",
+					"translatable": false
+				},
+				{
+					"slug": "size",
+					"label": "Size range",
+					"type": "string"
+				},
+				{
+					"slug": "packing",
+					"label": "Pack form",
+					"type": "string",
+					"translatable": false
+				},
+				{
+					"slug": "origin",
+					"label": "Origin",
+					"type": "string"
+				},
+				{
+					"slug": "glaze",
+					"label": "Glaze",
+					"type": "string",
+					"translatable": false
+				},
+				{
+					"slug": "description",
+					"label": "Description",
+					"type": "text",
+					"searchable": true
+				},
+				{
+					"slug": "sort_order",
+					"label": "Order",
+					"type": "integer",
+					"translatable": false
+				}
+			]
+		},
+		{
+			"slug": "certifications",
+			"label": "Certifications",
+			"labelSingular": "Certification",
+			"supports": [
+				"drafts",
+				"revisions"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Name",
+					"type": "string",
+					"required": true
+				},
+				{
+					"slug": "group",
+					"label": "Group (other: table only)",
+					"type": "select",
+					"required": true,
+					"translatable": false,
+					"validation": {
+						"options": [
+							"food_safety",
+							"aquaculture",
+							"specialist",
+							"other"
+						]
+					}
+				},
+				{
+					"slug": "icon",
+					"label": "Emoji",
+					"type": "string",
+					"translatable": false
+				},
+				{
+					"slug": "tone",
+					"label": "Icon colour",
+					"type": "select",
+					"translatable": false,
+					"validation": {
+						"options": [
+							"blue",
+							"green",
+							"amber",
+							"purple"
+						]
+					}
+				},
+				{
+					"slug": "badge",
+					"label": "Badge text",
+					"type": "string"
+				},
+				{
+					"slug": "badge_tone",
+					"label": "Badge colour",
+					"type": "select",
+					"translatable": false,
+					"validation": {
+						"options": [
+							"blue",
+							"green",
+							"amber",
+							"purple"
+						]
+					}
+				},
+				{
+					"slug": "description",
+					"label": "Description",
+					"type": "text"
+				},
+				{
+					"slug": "note",
+					"label": "Footnote",
+					"type": "string"
+				},
+				{
+					"slug": "issuer",
+					"label": "Issuing body",
+					"type": "string"
+				},
+				{
+					"slug": "scope",
+					"label": "Scope",
+					"type": "string"
+				},
+				{
+					"slug": "cert_status",
+					"label": "Status",
+					"type": "string"
+				},
+				{
+					"slug": "show_in_table",
+					"label": "Show in the overview table",
+					"type": "boolean",
+					"defaultValue": true,
+					"translatable": false
+				},
+				{
+					"slug": "sort_order",
+					"label": "Order",
+					"type": "integer",
+					"translatable": false
+				}
+			]
+		},
+		{
+			"slug": "plants",
+			"label": "Plants",
+			"labelSingular": "Plant",
+			"supports": [
+				"drafts",
+				"revisions"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Plant name",
+					"type": "string",
+					"required": true
+				},
+				{
+					"slug": "code",
+					"label": "Export code (e.g. DL 113)",
+					"type": "string",
+					"required": true,
+					"translatable": false
+				},
+				{
+					"slug": "line",
+					"label": "Product line",
+					"type": "select",
+					"required": true,
+					"translatable": false,
+					"validation": {
+						"options": [
+							"shrimp",
+							"surimi",
+							"cephalopod",
+							"fishmeal"
+						]
+					}
+				},
+				{
+					"slug": "location",
+					"label": "Short location (footer)",
+					"type": "string"
+				},
+				{
+					"slug": "province",
+					"label": "Province",
+					"type": "string"
+				},
+				{
+					"slug": "address",
+					"label": "Address",
+					"type": "string"
+				},
+				{
+					"slug": "image",
+					"label": "Photo",
+					"type": "image",
+					"translatable": false
+				},
+				{
+					"slug": "sort_order",
+					"label": "Order",
+					"type": "integer",
+					"translatable": false
+				}
+			]
+		},
+		{
+			"slug": "posts",
+			"label": "News",
+			"labelSingular": "Article",
+			"urlPattern": "/news/{slug}",
+			"supports": [
+				"drafts",
+				"revisions",
+				"preview",
+				"scheduling",
+				"search",
+				"seo"
+			],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "excerpt",
+					"label": "Summary (shown on the news list and in search results)",
+					"type": "text",
+					"searchable": true
+				},
+				{
+					"slug": "featured_image",
+					"label": "Cover photo",
+					"type": "image",
+					"translatable": false
+				},
+				{
+					"slug": "content",
+					"label": "Article",
+					"type": "portableText",
+					"searchable": true
+				}
+			]
+		}
+	],
+	"menus": [
+		{
+			"id": "primary-en",
+			"name": "primary",
+			"locale": "en",
+			"label": "Primary Navigation",
+			"items": [
+				{
+					"id": "primary-en-0",
+					"type": "custom",
+					"label": "Home",
+					"url": "/"
+				},
+				{
+					"id": "primary-en-1",
+					"type": "custom",
+					"label": "About Us",
+					"url": "/about"
+				},
+				{
+					"id": "primary-en-2",
+					"type": "custom",
+					"label": "Products",
+					"url": "/products"
+				},
+				{
+					"id": "primary-en-3",
+					"type": "custom",
+					"label": "Infrastructure",
+					"url": "/infrastructure"
+				},
+				{
+					"id": "primary-en-4",
+					"type": "custom",
+					"label": "Certifications",
+					"url": "/certifications"
+				},
+				{
+					"id": "primary-en-5",
+					"type": "custom",
+					"label": "News",
+					"url": "/news"
+				}
+			]
+		},
+		{
+			"id": "primary-vi",
+			"name": "primary",
+			"locale": "vi",
+			"translationOf": "primary-en",
+			"label": "Điều Hướng Chính",
+			"items": [
+				{
+					"id": "primary-vi-0",
+					"translationOf": "primary-en-0",
+					"type": "custom",
+					"label": "Trang Chủ",
+					"url": "/vi/"
+				},
+				{
+					"id": "primary-vi-1",
+					"translationOf": "primary-en-1",
+					"type": "custom",
+					"label": "Về Chúng Tôi",
+					"url": "/vi/about"
+				},
+				{
+					"id": "primary-vi-2",
+					"translationOf": "primary-en-2",
+					"type": "custom",
+					"label": "Sản Phẩm",
+					"url": "/vi/products"
+				},
+				{
+					"id": "primary-vi-3",
+					"translationOf": "primary-en-3",
+					"type": "custom",
+					"label": "Cơ Sở Hạ Tầng",
+					"url": "/vi/infrastructure"
+				},
+				{
+					"id": "primary-vi-4",
+					"translationOf": "primary-en-4",
+					"type": "custom",
+					"label": "Chứng Nhận",
+					"url": "/vi/certifications"
+				},
+				{
+					"id": "primary-vi-5",
+					"translationOf": "primary-en-5",
+					"type": "custom",
+					"label": "Tin Tức",
+					"url": "/vi/news"
+				}
+			]
+		},
+		{
+			"id": "footer-en",
+			"name": "footer",
+			"locale": "en",
+			"label": "Footer Links",
+			"items": [
+				{
+					"id": "footer-en-0",
+					"type": "custom",
+					"label": "Sustainability",
+					"url": "/certifications#aquaculture"
+				},
+				{
+					"id": "footer-en-1",
+					"type": "custom",
+					"label": "Export Policy",
+					"url": "/certifications#overview"
+				}
+			]
+		},
+		{
+			"id": "footer-vi",
+			"name": "footer",
+			"locale": "vi",
+			"translationOf": "footer-en",
+			"label": "Liên Kết Chân Trang",
+			"items": [
+				{
+					"id": "footer-vi-0",
+					"translationOf": "footer-en-0",
+					"type": "custom",
+					"label": "Phát Triển Bền Vững",
+					"url": "/vi/certifications#aquaculture"
+				},
+				{
+					"id": "footer-vi-1",
+					"translationOf": "footer-en-1",
+					"type": "custom",
+					"label": "Chính Sách Xuất Khẩu",
+					"url": "/vi/certifications#overview"
+				}
+			]
+		}
+	],
+	"content": {
+		"pages": [
+			{
+				"id": "home",
+				"slug": "home",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Home",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "center",
+							"eyebrow": "Premium Seafood Export · Est. 1996",
+							"headline": "Delivering the Oceans' Best",
+							"headline_accent": "to the World",
+							"subheadline": "Specializing in Premium Black Tiger & Vannamei Shrimp — from Cà Mau, Vietnam to global markets.",
+							"primary_cta_label": "Explore Products",
+							"primary_cta_url": "/products",
+							"secondary_cta_label": "Our Certifications",
+							"secondary_cta_url": "/certifications"
+						},
+						{
+							"_type": "cases_codes",
+							"_version": 1,
+							"_key": "codes",
+							"headline": "Certified European Union Export Codes",
+							"codes": [
+								{
+									"code": "DL 113"
+								},
+								{
+									"code": "DL 809"
+								},
+								{
+									"code": "DL 51"
+								},
+								{
+									"code": "DL 295"
+								},
+								{
+									"code": "DL 835"
+								},
+								{
+									"code": "DL 684"
+								}
+							]
+						},
+						{
+							"_type": "cases_reach",
+							"_version": 1,
+							"_key": "reach",
+							"anchor_id": "markets",
+							"eyebrow": "Performance & Export Reach",
+							"headline": "Our Global Reach",
+							"figures": [
+								{
+									"value": "29,024",
+									"label": "Tons Exported",
+									"caption": "2024 Total Volume"
+								},
+								{
+									"value": "$184M",
+									"label": "Export Turnover",
+									"caption": "2024 Revenue",
+									"highlight": true
+								},
+								{
+									"value": "6+",
+									"label": "Certifications",
+									"caption": "HACCP · ISO · BRC · BAP · ASC · HALAL"
+								}
+							],
+							"markets": [
+								{
+									"flag": "🇪🇺",
+									"name": "EU",
+									"value": "$56.6M",
+									"volume": "7,638 tons",
+									"share": 100,
+									"muted": false
+								},
+								{
+									"flag": "🇦🇺",
+									"name": "Australia",
+									"value": "$34.5M",
+									"volume": "3,536 tons",
+									"share": 61,
+									"muted": false
+								},
+								{
+									"flag": "🇰🇷",
+									"name": "Korea",
+									"value": "$29.9M",
+									"volume": "3,913 tons",
+									"share": 53,
+									"muted": false
+								},
+								{
+									"flag": "🇺🇸",
+									"name": "USA",
+									"value": "$15.1M",
+									"volume": "695 tons",
+									"share": 27,
+									"muted": false
+								},
+								{
+									"flag": "🇯🇵",
+									"name": "Japan",
+									"value": "$2.2M",
+									"volume": "135 tons",
+									"share": 4,
+									"muted": false
+								},
+								{
+									"flag": "🇦🇪",
+									"name": "UAE",
+									"value": "$5.6M",
+									"volume": "675 tons",
+									"share": 10,
+									"muted": false
+								},
+								{
+									"flag": "🇨🇦",
+									"name": "Canada",
+									"value": "$3.5M",
+									"volume": "140 tons",
+									"share": 6,
+									"muted": false
+								},
+								{
+									"flag": "🇹🇼",
+									"name": "Taiwan",
+									"value": "$2.3M",
+									"volume": "210 tons",
+									"share": 4,
+									"muted": false
+								},
+								{
+									"flag": "🌏",
+									"name": "Others",
+									"value": "$13.2M",
+									"volume": "1,827 tons",
+									"share": 23,
+									"muted": true
+								}
+							],
+							"total_label": "Total 2024",
+							"total_value": "$184M",
+							"total_caption": "29,024 tons · 9 markets"
+						},
+						{
+							"_type": "cases_features",
+							"_version": 1,
+							"_key": "advantages",
+							"anchor_id": "advantages",
+							"eyebrow": "Our Advantages",
+							"headline": "Why Choose CASES?",
+							"features": [
+								{
+									"icon": "factory",
+									"title": "6 Processing Plants",
+									"description": "Strategically located across Ca Mau, An Giang & Song Doc — with IQF machines, blast freezers & metal detectors ensuring premium output."
+								},
+								{
+									"icon": "workspace_premium",
+									"title": "Top-Tier Certifications",
+									"description": "HACCP · ISO 22000 · BRC · HALAL · BAP · ASC — meeting the strictest food safety standards for EU, Japan, USA & global buyers."
+								},
+								{
+									"icon": "diversity_3",
+									"title": "Full Product Range",
+									"description": "Black Tiger Prawn, Vannamei Shrimp, Surimi, Cephalopods & Fish Meal — raw, cooked, value-added, and custom spec available."
+								},
+								{
+									"icon": "verified_user",
+									"title": "29+ Years Experience",
+									"description": "Founded 1996. Nearly three decades of expertise in frozen seafood processing, export compliance and international logistics."
+								},
+								{
+									"icon": "public",
+									"title": "9 Export Markets",
+									"description": "Trusted by buyers across EU, Japan, Korea, Australia, USA, UAE and more — with $184M turnover and 29,024 tons shipped in 2024."
+								}
+							],
+							"cta_title": "Ready to Partner?",
+							"cta_body": "Contact our sales team for product specs, pricing and custom orders.",
+							"cta_label": "Contact Us",
+							"cta_url": "#contact"
+						}
+					]
+				}
+			},
+			{
+				"id": "home-vi",
+				"slug": "home",
+				"locale": "vi",
+				"translationOf": "home",
+				"status": "published",
+				"data": {
+					"title": "Trang Chủ",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "center",
+							"eyebrow": "Xuất Khẩu Thủy Sản Cao Cấp · Thành Lập 1996",
+							"headline": "Mang Tinh Hoa Đại Dương",
+							"headline_accent": "Ra Thế Giới",
+							"subheadline": "Chuyên xuất khẩu Tôm Sú và Tôm Thẻ chân trắng cao cấp — từ Cà Mau, Việt Nam ra thị trường toàn cầu.",
+							"primary_cta_label": "Xem Sản Phẩm",
+							"primary_cta_url": "/products",
+							"secondary_cta_label": "Chứng Nhận Của Chúng Tôi",
+							"secondary_cta_url": "/certifications"
+						},
+						{
+							"_type": "cases_codes",
+							"_version": 1,
+							"_key": "codes",
+							"headline": "Mã Xuất Khẩu Liên Minh Châu Âu",
+							"codes": [
+								{
+									"code": "DL 113"
+								},
+								{
+									"code": "DL 809"
+								},
+								{
+									"code": "DL 51"
+								},
+								{
+									"code": "DL 295"
+								},
+								{
+									"code": "DL 835"
+								},
+								{
+									"code": "DL 684"
+								}
+							]
+						},
+						{
+							"_type": "cases_reach",
+							"_version": 1,
+							"_key": "reach",
+							"anchor_id": "markets",
+							"eyebrow": "Năng Lực & Thị Trường Xuất Khẩu",
+							"headline": "Tầm Vươn Toàn Cầu",
+							"figures": [
+								{
+									"value": "29,024",
+									"label": "Tấn Xuất Khẩu",
+									"caption": "Tổng Sản Lượng 2024"
+								},
+								{
+									"value": "$184M",
+									"label": "Kim Ngạch Xuất Khẩu",
+									"caption": "Doanh Thu 2024",
+									"highlight": true
+								},
+								{
+									"value": "6+",
+									"label": "Chứng Nhận",
+									"caption": "HACCP · ISO · BRC · BAP · ASC · HALAL"
+								}
+							],
+							"markets": [
+								{
+									"flag": "🇪🇺",
+									"name": "EU",
+									"value": "$56.6M",
+									"volume": "7,638 tấn",
+									"share": 100,
+									"muted": false
+								},
+								{
+									"flag": "🇦🇺",
+									"name": "Úc",
+									"value": "$34.5M",
+									"volume": "3,536 tấn",
+									"share": 61,
+									"muted": false
+								},
+								{
+									"flag": "🇰🇷",
+									"name": "Hàn Quốc",
+									"value": "$29.9M",
+									"volume": "3,913 tấn",
+									"share": 53,
+									"muted": false
+								},
+								{
+									"flag": "🇺🇸",
+									"name": "Mỹ",
+									"value": "$15.1M",
+									"volume": "695 tấn",
+									"share": 27,
+									"muted": false
+								},
+								{
+									"flag": "🇯🇵",
+									"name": "Nhật Bản",
+									"value": "$2.2M",
+									"volume": "135 tấn",
+									"share": 4,
+									"muted": false
+								},
+								{
+									"flag": "🇦🇪",
+									"name": "UAE",
+									"value": "$5.6M",
+									"volume": "675 tấn",
+									"share": 10,
+									"muted": false
+								},
+								{
+									"flag": "🇨🇦",
+									"name": "Canada",
+									"value": "$3.5M",
+									"volume": "140 tấn",
+									"share": 6,
+									"muted": false
+								},
+								{
+									"flag": "🇹🇼",
+									"name": "Đài Loan",
+									"value": "$2.3M",
+									"volume": "210 tấn",
+									"share": 4,
+									"muted": false
+								},
+								{
+									"flag": "🌏",
+									"name": "Khác",
+									"value": "$13.2M",
+									"volume": "1,827 tấn",
+									"share": 23,
+									"muted": true
+								}
+							],
+							"total_label": "Tổng 2024",
+							"total_value": "$184M",
+							"total_caption": "29.024 tấn · 9 thị trường"
+						},
+						{
+							"_type": "cases_features",
+							"_version": 1,
+							"_key": "advantages",
+							"anchor_id": "advantages",
+							"eyebrow": "Lợi Thế Của Chúng Tôi",
+							"headline": "Tại Sao Chọn CASES?",
+							"features": [
+								{
+									"icon": "factory",
+									"title": "6 Nhà Máy Chế Biến",
+									"description": "Tọa lạc chiến lược tại Cà Mau, An Giang & Sông Đốc — trang bị máy IQF, tủ đông gió và máy dò kim loại đảm bảo chất lượng đầu ra cao cấp."
+								},
+								{
+									"icon": "workspace_premium",
+									"title": "Chứng Nhận Hàng Đầu",
+									"description": "HACCP · ISO 22000 · BRC · HALAL · BAP · ASC — đáp ứng tiêu chuẩn ATTP nghiêm ngặt nhất cho EU, Nhật Bản, Mỹ & người mua toàn cầu."
+								},
+								{
+									"icon": "diversity_3",
+									"title": "Đa Dạng Sản Phẩm",
+									"description": "Tôm Sú, Tôm Thẻ, Surimi, Nhuyễn thể & Bột cá — dạng sống, chín, chế biến sâu và theo yêu cầu riêng."
+								},
+								{
+									"icon": "verified_user",
+									"title": "29+ Năm Kinh Nghiệm",
+									"description": "Thành lập 1996. Gần ba thập kỷ kinh nghiệm chế biến thủy sản đông lạnh, tuân thủ xuất khẩu và logistics quốc tế."
+								},
+								{
+									"icon": "public",
+									"title": "9 Thị Trường Xuất Khẩu",
+									"description": "Được tin dùng bởi nhà mua hàng tại EU, Nhật, Hàn, Úc, Mỹ, UAE và nhiều hơn — doanh thu 184 triệu USD và 29.024 tấn xuất khẩu năm 2024."
+								}
+							],
+							"cta_title": "Sẵn Sàng Hợp Tác?",
+							"cta_body": "Liên hệ đội ngũ kinh doanh để biết thông số sản phẩm, báo giá và đơn hàng theo yêu cầu.",
+							"cta_label": "Liên Hệ",
+							"cta_url": "#contact"
+						}
+					]
+				}
+			},
+			{
+				"id": "about",
+				"slug": "about",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "About Us",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "split",
+							"eyebrow": "Est. 1996 · Cà Mau, Vietnam",
+							"headline": "Our Story, Our Ocean.",
+							"subheadline": "From a state-owned enterprise in the Mekong Delta to a global seafood powerhouse — nearly 3 decades of excellence."
+						},
+						{
+							"_type": "cases_timeline",
+							"_version": 1,
+							"_key": "story",
+							"anchor_id": "story",
+							"eyebrow": "Our Journey",
+							"headline": "The CASES Story",
+							"milestones": [
+								{
+									"year": "1996",
+									"icon": "corporate_fare",
+									"title": "Founded as State-Owned Enterprise",
+									"body": "CaMau Seafood Processing and Service Corp established in Cà Mau — Vietnam's southernmost province and seafood capital of the Mekong Delta.",
+									"note": "Began with shrimp processing for domestic & early export markets"
+								},
+								{
+									"year": "2000s",
+									"icon": "workspace_premium",
+									"title": "Expansion & Certification",
+									"body": "Invested in IQF technology, blast freezers and metal detectors. Obtained HACCP, ISO 22000 and BRC certifications — opening doors to EU and Japanese markets.",
+									"note": "First EU export certifications secured · Global reach begins"
+								},
+								{
+									"year": "2016",
+									"icon": "trending_up",
+									"title": "Equitization to Joint-Stock",
+									"body": "Under government policy, CASES transitioned from state-owned to joint-stock company — unlocking capital for modernisation and accelerating global expansion.",
+									"note": "Joint-stock model · Trade name \"CASES\" officially adopted"
+								},
+								{
+									"year": "Today",
+									"icon": "public",
+									"highlight": true,
+									"title": "Top-Tier Global Exporter",
+									"body": "6 processing plants across Ca Mau & An Giang. $184M export turnover in 2024. Supplying EU, Japan, Korea, Australia, USA and more with premium frozen seafood.",
+									"note": "$184M turnover · 29,024 tons · 9 export markets · 2024"
+								}
+							]
+						},
+						{
+							"_type": "cases_values",
+							"_version": 1,
+							"_key": "values",
+							"anchor_id": "mission",
+							"cards": [
+								{
+									"icon": "flag",
+									"title": "Our Mission",
+									"body": "“To deliver the finest frozen seafood from Vietnam's richest waters to the world's most discerning buyers — with uncompromising quality, traceability and service.”"
+								},
+								{
+									"icon": "visibility",
+									"title": "Our Vision",
+									"body": "“To be Vietnam's most trusted seafood export partner — recognised globally for sustainable practices, premium products and long-term buyer relationships.”"
+								}
+							],
+							"quote": "“Quality is Life”",
+							"quote_body": "'Quality is Life' — the founding principle that has guided every decision at CASES for nearly three decades.",
+							"primary_cta_label": "View Our Products",
+							"primary_cta_url": "/products",
+							"secondary_cta_label": "Contact Sales Team",
+							"secondary_cta_url": "#contact"
+						}
+					]
+				}
+			},
+			{
+				"id": "about-vi",
+				"slug": "about",
+				"locale": "vi",
+				"translationOf": "about",
+				"status": "published",
+				"data": {
+					"title": "Về Chúng Tôi",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "split",
+							"eyebrow": "Thành Lập 1996 · Cà Mau, Việt Nam",
+							"headline": "Câu Chuyện Của Chúng Tôi, Đại Dương Của Chúng Tôi.",
+							"subheadline": "Từ doanh nghiệp nhà nước ở đồng bằng sông Cửu Long đến cường quốc thủy sản toàn cầu — gần 3 thập kỷ xuất sắc."
+						},
+						{
+							"_type": "cases_timeline",
+							"_version": 1,
+							"_key": "story",
+							"anchor_id": "story",
+							"eyebrow": "Hành Trình Phát Triển",
+							"headline": "Hành Trình CASES",
+							"milestones": [
+								{
+									"year": "1996",
+									"icon": "corporate_fare",
+									"title": "Thành Lập Doanh Nghiệp Nhà Nước",
+									"body": "Công ty Chế biến Thủy sản Cà Mau thành lập tại Cà Mau — tỉnh cực nam Việt Nam và thủ đô thủy sản đồng bằng sông Cửu Long.",
+									"note": "Bắt đầu chế biến tôm phục vụ thị trường trong nước & xuất khẩu ban đầu"
+								},
+								{
+									"year": "2000s",
+									"icon": "workspace_premium",
+									"title": "Mở Rộng & Chứng Nhận",
+									"body": "Đầu tư công nghệ IQF, tủ đông gió và máy dò kim loại. Đạt chứng nhận HACCP, ISO 22000 và BRC — mở cửa thị trường EU và Nhật Bản.",
+									"note": "Đạt mã xuất khẩu EU đầu tiên · Bắt đầu vươn ra thị trường quốc tế"
+								},
+								{
+									"year": "2016",
+									"icon": "trending_up",
+									"title": "Cổ Phần Hóa",
+									"body": "Theo chính sách nhà nước, CASES chuyển đổi từ doanh nghiệp nhà nước sang công ty cổ phần — mở khóa vốn để hiện đại hóa và đẩy nhanh mở rộng toàn cầu.",
+									"note": "Mô hình cổ phần · Tên thương mại \"CASES\" được chính thức đặt"
+								},
+								{
+									"year": "Hôm Nay",
+									"icon": "public",
+									"highlight": true,
+									"title": "Nhà Xuất Khẩu Hàng Đầu Toàn Cầu",
+									"body": "6 nhà máy chế biến tại Cà Mau & An Giang. Doanh thu xuất khẩu 184 triệu USD năm 2024. Cung cấp thủy sản đông lạnh cao cấp cho EU, Nhật, Hàn, Úc, Mỹ và nhiều hơn.",
+									"note": "184 triệu USD · 29.024 tấn · 9 thị trường xuất khẩu · 2024"
+								}
+							]
+						},
+						{
+							"_type": "cases_values",
+							"_version": 1,
+							"_key": "values",
+							"anchor_id": "mission",
+							"cards": [
+								{
+									"icon": "flag",
+									"title": "Sứ Mệnh",
+									"body": "“Mang tinh hoa thủy sản đông lạnh từ vùng biển giàu có nhất Việt Nam đến tay khách hàng khó tính nhất thế giới — với chất lượng không thỏa hiệp, truy xuất nguồn gốc và dịch vụ tận tâm.”"
+								},
+								{
+									"icon": "visibility",
+									"title": "Tầm Nhìn",
+									"body": "“Trở thành đối tác xuất khẩu thủy sản uy tín nhất Việt Nam — được công nhận toàn cầu vì thực hành bền vững, sản phẩm cao cấp và quan hệ lâu dài với người mua.”"
+								}
+							],
+							"quote": "“Chất Lượng Là Sự Sống Còn”",
+							"quote_body": "'Chất lượng là sự sống còn' — nguyên tắc sáng lập đã định hướng mọi quyết định tại CASES trong gần ba thập kỷ.",
+							"primary_cta_label": "Xem Sản Phẩm",
+							"primary_cta_url": "/products",
+							"secondary_cta_label": "Liên Hệ Đội Bán Hàng",
+							"secondary_cta_url": "#contact"
+						}
+					]
+				}
+			},
+			{
+				"id": "products",
+				"slug": "products",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Products",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "banner",
+							"eyebrow": "Full Product Catalog",
+							"headline": "Ocean Premium,",
+							"headline_accent": "Delivered Globally",
+							"subheadline": "Click a category to see its products."
+						},
+						{
+							"_type": "cases_catalog",
+							"_version": 1,
+							"_key": "catalog",
+							"anchor_id": "catalog",
+							"categories": [
+								{
+									"key": "btp",
+									"code": "BTP",
+									"subtitle": "Black Tiger",
+									"name": "Black Tiger Prawn",
+									"emoji": "🦐",
+									"color": "sky"
+								},
+								{
+									"key": "van",
+									"code": "VAN",
+									"subtitle": "Vannamei",
+									"name": "Vannamei Shrimp",
+									"emoji": "🦐",
+									"color": "cyan"
+								},
+								{
+									"key": "vap_btp",
+									"code": "VAP",
+									"subtitle": "BTP",
+									"name": "Value-Added · BTP",
+									"emoji": "🍤",
+									"color": "red"
+								},
+								{
+									"key": "vap_van",
+									"code": "VAP",
+									"subtitle": "Vannamei",
+									"name": "Value-Added · Vannamei",
+									"emoji": "🍤",
+									"color": "orange"
+								},
+								{
+									"key": "surimi",
+									"code": "SRM",
+									"subtitle": "Surimi",
+									"name": "Frozen Surimi & Fish Meal",
+									"emoji": "🐟",
+									"color": "teal"
+								},
+								{
+									"key": "cephalopod",
+									"code": "CPD",
+									"subtitle": "Cephalopod",
+									"name": "Cephalopod",
+									"emoji": "🐙",
+									"color": "slate"
+								}
+							]
+						},
+						{
+							"_type": "cases_cta",
+							"_version": 1,
+							"_key": "cta",
+							"headline": "Interested in Our Products?",
+							"body": "Contact our sales team for product specifications, pricing, and export inquiries.",
+							"icon": "mail",
+							"cta_label": "salesmanager@cases.com.vn",
+							"cta_url": "mailto:salesmanager@cases.com.vn"
+						}
+					]
+				}
+			},
+			{
+				"id": "products-vi",
+				"slug": "products",
+				"locale": "vi",
+				"translationOf": "products",
+				"status": "published",
+				"data": {
+					"title": "Sản Phẩm",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "banner",
+							"eyebrow": "Danh Mục Sản Phẩm",
+							"headline": "Tinh Hoa Đại Dương,",
+							"headline_accent": "Xuất Khẩu Toàn Cầu",
+							"subheadline": "Bấm vào từng danh mục để xem chi tiết sản phẩm."
+						},
+						{
+							"_type": "cases_catalog",
+							"_version": 1,
+							"_key": "catalog",
+							"anchor_id": "catalog",
+							"categories": [
+								{
+									"key": "btp",
+									"code": "BTP",
+									"subtitle": "Black Tiger",
+									"name": "Tôm Sú",
+									"caption": "Black Tiger Prawn",
+									"emoji": "🦐",
+									"color": "sky"
+								},
+								{
+									"key": "van",
+									"code": "VAN",
+									"subtitle": "Vannamei",
+									"name": "Tôm Thẻ",
+									"caption": "Vannamei Shrimp",
+									"emoji": "🦐",
+									"color": "cyan"
+								},
+								{
+									"key": "vap_btp",
+									"code": "VAP",
+									"subtitle": "BTP",
+									"name": "Sản phẩm GTGT · Tôm Sú",
+									"caption": "Value-Added · BTP",
+									"emoji": "🍤",
+									"color": "red"
+								},
+								{
+									"key": "vap_van",
+									"code": "VAP",
+									"subtitle": "Vannamei",
+									"name": "Sản phẩm GTGT · Tôm Thẻ",
+									"caption": "Value-Added · Vannamei",
+									"emoji": "🍤",
+									"color": "orange"
+								},
+								{
+									"key": "surimi",
+									"code": "SRM",
+									"subtitle": "Surimi",
+									"name": "Surimi & Bột Cá",
+									"caption": "Frozen Surimi & Fish Meal",
+									"emoji": "🐟",
+									"color": "teal"
+								},
+								{
+									"key": "cephalopod",
+									"code": "CPD",
+									"subtitle": "Cephalopod",
+									"name": "Nhuyễn Thể",
+									"caption": "Cephalopod",
+									"emoji": "🐙",
+									"color": "slate"
+								}
+							]
+						},
+						{
+							"_type": "cases_cta",
+							"_version": 1,
+							"_key": "cta",
+							"headline": "Quan Tâm Đến Sản Phẩm?",
+							"body": "Liên hệ đội ngũ kinh doanh để biết thông số sản phẩm, báo giá và yêu cầu xuất khẩu.",
+							"icon": "mail",
+							"cta_label": "salesmanager@cases.com.vn",
+							"cta_url": "mailto:salesmanager@cases.com.vn"
+						}
+					]
+				}
+			},
+			{
+				"id": "infrastructure",
+				"slug": "infrastructure",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Infrastructure",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "split",
+							"eyebrow": "Processing Infrastructure",
+							"headline": "Where Quality Begins.",
+							"subheadline": "5 processing plants · Cà Mau & An Giang · State-of-the-art IQF technology",
+							"stats": [
+								{
+									"value": "20,000",
+									"unit": "t/yr",
+									"label": "Shrimp"
+								},
+								{
+									"value": "20,000",
+									"unit": "t/yr",
+									"label": "Surimi"
+								},
+								{
+									"value": "3,000",
+									"unit": "t/yr",
+									"label": "Cephalopod"
+								},
+								{
+									"value": "8,000",
+									"unit": "t/yr",
+									"label": "Fishmeal"
+								}
+							]
+						},
+						{
+							"_type": "cases_plants",
+							"_version": 1,
+							"_key": "plants",
+							"anchor_id": "plants",
+							"eyebrow": "Our Facilities",
+							"headline": "Processing Plants",
+							"groups": [
+								{
+									"line": "shrimp",
+									"label": "Shrimp · 18,000–20,000 t/yr"
+								},
+								{
+									"line": "surimi",
+									"label": "Surimi · 18,000–20,000 t/yr"
+								}
+							]
+						},
+						{
+							"_type": "cases_tech",
+							"_version": 1,
+							"_key": "technology",
+							"anchor_id": "technology",
+							"eyebrow": "Core Technology",
+							"headline": "Processing Technology",
+							"items": [
+								{
+									"title": "IQF Freezing",
+									"description": "Super-speed Individually Quick Frozen lines — locking cellular integrity at −40°C for premium texture upon defrost."
+								},
+								{
+									"title": "Blast Freezer",
+									"description": "Air blast freezing for block and semi-block products — rapid cycles preserve quality for long-haul international export."
+								},
+								{
+									"title": "Metal Detector & QC",
+									"description": "100% product scanning at every stage. Zero-tolerance policy before packaging — meeting EU and international food safety standards."
+								},
+								{
+									"title": "Cold Storage",
+									"description": "Temperature-controlled cold chain from processing to container loading — maintained at −18°C to −22°C throughout."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "infrastructure-vi",
+				"slug": "infrastructure",
+				"locale": "vi",
+				"translationOf": "infrastructure",
+				"status": "published",
+				"data": {
+					"title": "Cơ Sở Hạ Tầng",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "split",
+							"eyebrow": "Cơ Sở Hạ Tầng Chế Biến",
+							"headline": "Nơi Chất Lượng Khởi Nguồn.",
+							"subheadline": "5 nhà máy chế biến · Cà Mau & An Giang · Công nghệ IQF tiên tiến hàng đầu",
+							"stats": [
+								{
+									"value": "20,000",
+									"unit": "tấn/năm",
+									"label": "Tôm"
+								},
+								{
+									"value": "20,000",
+									"unit": "tấn/năm",
+									"label": "Surimi"
+								},
+								{
+									"value": "3,000",
+									"unit": "tấn/năm",
+									"label": "Nhuyễn Thể"
+								},
+								{
+									"value": "8,000",
+									"unit": "tấn/năm",
+									"label": "Bột Cá"
+								}
+							]
+						},
+						{
+							"_type": "cases_plants",
+							"_version": 1,
+							"_key": "plants",
+							"anchor_id": "plants",
+							"eyebrow": "Cơ Sở Của Chúng Tôi",
+							"headline": "Nhà Máy Chế Biến",
+							"groups": [
+								{
+									"line": "shrimp",
+									"label": "Tôm · 18.000–20.000 tấn/năm"
+								},
+								{
+									"line": "surimi",
+									"label": "Surimi · 18.000–20.000 tấn/năm"
+								}
+							]
+						},
+						{
+							"_type": "cases_tech",
+							"_version": 1,
+							"_key": "technology",
+							"anchor_id": "technology",
+							"eyebrow": "Công Nghệ Cốt Lõi",
+							"headline": "Công Nghệ Chế Biến",
+							"items": [
+								{
+									"title": "Đông Lạnh IQF",
+									"description": "Dây chuyền đông lạnh IQF tốc độ cao — khóa độ toàn vẹn tế bào ở −40°C để giữ kết cấu cao cấp sau khi rã đông."
+								},
+								{
+									"title": "Tủ Đông Gió",
+									"description": "Đông lạnh gió cho sản phẩm block và semi-block — chu kỳ nhanh bảo toàn chất lượng cho xuất khẩu quốc tế đường dài."
+								},
+								{
+									"title": "Máy Dò Kim Loại & QC",
+									"description": "Quét 100% sản phẩm tại mọi công đoạn. Chính sách không khoan nhượng trước đóng gói — đáp ứng tiêu chuẩn ATTP EU và quốc tế."
+								},
+								{
+									"title": "Kho Lạnh",
+									"description": "Chuỗi lạnh kiểm soát nhiệt độ từ chế biến đến xếp container — duy trì −18°C đến −22°C xuyên suốt."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "certifications",
+				"slug": "certifications",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Certifications",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "glow",
+							"eyebrow": "International Certifications",
+							"headline": "Quality",
+							"headline_accent": "Recognised Worldwide",
+							"subheadline": "CASES holds the seafood industry's most respected certifications — from HACCP, ISO 22000 and BRC to BAP, ASC, HALAL and ORGANIC — demonstrating our unwavering commitment to food safety and sustainability.",
+							"stats": [
+								{
+									"value": "10+",
+									"label": "Certifications"
+								},
+								{
+									"value": "30+",
+									"label": "Years Experience"
+								},
+								{
+									"value": "9+",
+									"label": "Export Markets"
+								}
+							]
+						},
+						{
+							"_type": "cases_certs",
+							"_version": 1,
+							"_key": "food-safety",
+							"anchor_id": "food-safety",
+							"group": "food_safety",
+							"eyebrow": "Certification Group",
+							"headline": "Food Safety & Quality"
+						},
+						{
+							"_type": "cases_certs",
+							"_version": 1,
+							"_key": "aquaculture",
+							"anchor_id": "aquaculture",
+							"group": "aquaculture",
+							"eyebrow": "Certification Group",
+							"headline": "Sustainable Aquaculture"
+						},
+						{
+							"_type": "cases_certs",
+							"_version": 1,
+							"_key": "specialist",
+							"anchor_id": "specialist",
+							"group": "specialist",
+							"eyebrow": "Certification Group",
+							"headline": "Specialist Markets"
+						},
+						{
+							"_type": "cases_spotlight",
+							"_version": 1,
+							"_key": "fda",
+							"anchor_id": "fda",
+							"eyebrow": "🇺🇸 USA Market",
+							"headline": "US FDA Registration",
+							"body": "CASES is registered with the US Food & Drug Administration — a prerequisite for seafood exports into the American market. Combined with our HACCP standard, this ensures full FDA import-regulation compliance.",
+							"tags": "🇺🇸 USA\n🇪🇺 EU\n🇯🇵 Japan\n🇰🇷 Korea\n🇦🇺 Australia\n🇨🇦 Canada\n🇦🇪 UAE",
+							"badge_icon": "🏛️",
+							"badge_title": "FDA Registered",
+							"badge_caption": "Registrar Corp"
+						},
+						{
+							"_type": "cases_cert_table",
+							"_version": 1,
+							"_key": "overview",
+							"anchor_id": "overview",
+							"headline": "Full Certification Overview"
+						}
+					]
+				}
+			},
+			{
+				"id": "certifications-vi",
+				"slug": "certifications",
+				"locale": "vi",
+				"translationOf": "certifications",
+				"status": "published",
+				"data": {
+					"title": "Chứng Nhận",
+					"content": [
+						{
+							"_type": "cases_hero",
+							"_version": 1,
+							"_key": "hero",
+							"layout": "glow",
+							"eyebrow": "Chứng Nhận Quốc Tế",
+							"headline": "Chất Lượng",
+							"headline_accent": "Được Công Nhận Toàn Cầu",
+							"subheadline": "CASES tự hào đạt các chứng nhận uy tín nhất ngành thủy sản — từ HACCP, ISO 22000, BRC đến BAP, ASC, HALAL và ORGANIC — khẳng định cam kết không thỏa hiệp về an toàn thực phẩm và phát triển bền vững.",
+							"stats": [
+								{
+									"value": "10+",
+									"label": "Chứng Nhận"
+								},
+								{
+									"value": "30+",
+									"label": "Năm Kinh Nghiệm"
+								},
+								{
+									"value": "9+",
+									"label": "Thị Trường XK"
+								}
+							]
+						},
+						{
+							"_type": "cases_certs",
+							"_version": 1,
+							"_key": "food-safety",
+							"anchor_id": "food-safety",
+							"group": "food_safety",
+							"eyebrow": "Nhóm Chứng Nhận",
+							"headline": "An Toàn Thực Phẩm & Chất Lượng"
+						},
+						{
+							"_type": "cases_certs",
+							"_version": 1,
+							"_key": "aquaculture",
+							"anchor_id": "aquaculture",
+							"group": "aquaculture",
+							"eyebrow": "Nhóm Chứng Nhận",
+							"headline": "Nuôi Trồng Bền Vững"
+						},
+						{
+							"_type": "cases_certs",
+							"_version": 1,
+							"_key": "specialist",
+							"anchor_id": "specialist",
+							"group": "specialist",
+							"eyebrow": "Nhóm Chứng Nhận",
+							"headline": "Thị Trường Đặc Thù"
+						},
+						{
+							"_type": "cases_spotlight",
+							"_version": 1,
+							"_key": "fda",
+							"anchor_id": "fda",
+							"eyebrow": "🇺🇸 Thị Trường Hoa Kỳ",
+							"headline": "Đăng Ký FDA Hoa Kỳ",
+							"body": "CASES được Cục Quản lý Thực phẩm và Dược phẩm Hoa Kỳ (FDA) đăng ký — điều kiện tiên quyết để xuất khẩu thủy sản vào thị trường Mỹ. Kết hợp với tiêu chuẩn HACCP, điều này đảm bảo tuân thủ đầy đủ quy định nhập khẩu của FDA.",
+							"tags": "🇺🇸 Mỹ\n🇪🇺 EU\n🇯🇵 Nhật Bản\n🇰🇷 Hàn Quốc\n🇦🇺 Úc\n🇨🇦 Canada\n🇦🇪 UAE",
+							"badge_icon": "🏛️",
+							"badge_title": "Đã Đăng Ký FDA",
+							"badge_caption": "Registrar Corp"
+						},
+						{
+							"_type": "cases_cert_table",
+							"_version": 1,
+							"_key": "overview",
+							"anchor_id": "overview",
+							"headline": "Tổng Hợp Chứng Nhận"
+						}
+					]
+				}
+			}
+		],
+		"products": [
+			{
+				"id": "product-btp-pd-tail-on",
+				"slug": "btp-pd-tail-on",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "PD Tail On",
+					"category": "btp",
+					"size": "6/8 – 31/40",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Black Tiger Prawn – PD Tail On. Peeled and deveined with the tail left on. Popular in the US and EU for shrimp cocktail.",
+					"sort_order": 10
+				}
+			},
+			{
+				"id": "product-btp-pd-tail-on-vi",
+				"slug": "btp-pd-tail-on",
+				"locale": "vi",
+				"translationOf": "product-btp-pd-tail-on",
+				"status": "published",
+				"data": {
+					"title": "PD Tail On",
+					"category": "btp",
+					"size": "6/8 – 31/40",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Black Tiger Prawn – PD Tail On. Bóc vỏ, bỏ chỉ, còn đuôi. Phổ biến tại thị trường Mỹ, EU cho món cocktail shrimp.",
+					"sort_order": 10
+				}
+			},
+			{
+				"id": "product-btp-pd",
+				"slug": "btp-pd",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "PD",
+					"category": "btp",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Black Tiger Prawn – PD. Peeled & Deveined, with shell and back vein fully removed. HACCP export standard.",
+					"sort_order": 20
+				}
+			},
+			{
+				"id": "product-btp-pd-vi",
+				"slug": "btp-pd",
+				"locale": "vi",
+				"translationOf": "product-btp-pd",
+				"status": "published",
+				"data": {
+					"title": "PD",
+					"category": "btp",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Black Tiger Prawn – PD. Peeled & Deveined, bỏ hoàn toàn vỏ và chỉ lưng. Chuẩn xuất khẩu HACCP.",
+					"sort_order": 20
+				}
+			},
+			{
+				"id": "product-btp-head-on-shell-on",
+				"slug": "btp-head-on-shell-on",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Head On Shell On",
+					"category": "btp",
+					"size": "16/20 – 51/60",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "12%",
+					"description": "Black Tiger Prawn – Head On Shell On. Whole prawn with head and shell intact for a natural, fresh flavour.",
+					"sort_order": 30
+				}
+			},
+			{
+				"id": "product-btp-head-on-shell-on-vi",
+				"slug": "btp-head-on-shell-on",
+				"locale": "vi",
+				"translationOf": "product-btp-head-on-shell-on",
+				"status": "published",
+				"data": {
+					"title": "Head On Shell On",
+					"category": "btp",
+					"size": "16/20 – 51/60",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "12%",
+					"description": "Black Tiger Prawn – Head On Shell On. Tôm nguyên con, giữ nguyên đầu và vỏ. Hương vị tự nhiên tươi ngon.",
+					"sort_order": 30
+				}
+			},
+			{
+				"id": "product-btp-headless-shell-on",
+				"slug": "btp-headless-shell-on",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Headless Shell On",
+					"category": "btp",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Black Tiger Prawn – Headless Shell On (HLSO). Head removed, shell on. A favourite export to Japan and Korea.",
+					"sort_order": 40
+				}
+			},
+			{
+				"id": "product-btp-headless-shell-on-vi",
+				"slug": "btp-headless-shell-on",
+				"locale": "vi",
+				"translationOf": "product-btp-headless-shell-on",
+				"status": "published",
+				"data": {
+					"title": "Headless Shell On",
+					"category": "btp",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Black Tiger Prawn – Headless Shell On (HLSO). Bỏ đầu, còn vỏ. Phổ biến xuất khẩu sang Nhật, Hàn Quốc.",
+					"sort_order": 40
+				}
+			},
+			{
+				"id": "product-btp-nobashi",
+				"slug": "btp-nobashi",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Nobashi",
+					"category": "btp",
+					"size": "3L / 4L / 5L",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Nobashi. Stretched prawn, ideal for tempura and premium Japanese dishes.",
+					"sort_order": 50
+				}
+			},
+			{
+				"id": "product-btp-nobashi-vi",
+				"slug": "btp-nobashi",
+				"locale": "vi",
+				"translationOf": "product-btp-nobashi",
+				"status": "published",
+				"data": {
+					"title": "Nobashi",
+					"category": "btp",
+					"size": "3L / 4L / 5L",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Nobashi. Tôm kéo dài, thích hợp cho Tempura và các món ăn Nhật Bản cao cấp.",
+					"sort_order": 50
+				}
+			},
+			{
+				"id": "product-btp-head-on-body-peeled",
+				"slug": "btp-head-on-body-peeled",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Head On Body Peeled",
+					"category": "btp",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Head On Body Peeled. Head kept, body shell fully removed. Made for premium plating.",
+					"sort_order": 60
+				}
+			},
+			{
+				"id": "product-btp-head-on-body-peeled-vi",
+				"slug": "btp-head-on-body-peeled",
+				"locale": "vi",
+				"translationOf": "product-btp-head-on-body-peeled",
+				"status": "published",
+				"data": {
+					"title": "Head On Body Peeled",
+					"category": "btp",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Head On Body Peeled. Còn đầu nhưng bóc toàn bộ thân vỏ. Dùng cho trình bày món ăn cao cấp.",
+					"sort_order": 60
+				}
+			},
+			{
+				"id": "product-btp-easy-peeled",
+				"slug": "btp-easy-peeled",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Easy Peeled",
+					"category": "btp",
+					"size": "16/20 – 41/50",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Easy Peeled. Cut along the back for effortless peeling. Convenient for end consumers.",
+					"sort_order": 70
+				}
+			},
+			{
+				"id": "product-btp-easy-peeled-vi",
+				"slug": "btp-easy-peeled",
+				"locale": "vi",
+				"translationOf": "product-btp-easy-peeled",
+				"status": "published",
+				"data": {
+					"title": "Easy Peeled",
+					"category": "btp",
+					"size": "16/20 – 41/50",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Easy Peeled. Khía dọc sống lưng, bóc vỏ dễ dàng. Tiện lợi cho người tiêu dùng cuối.",
+					"sort_order": 70
+				}
+			},
+			{
+				"id": "product-btp-cooked-pdto",
+				"slug": "btp-cooked-pdto",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Cooked PDTO",
+					"category": "btp",
+					"size": "16/20 – 41/50",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Cooked PDTO. Cooked, peeled, deveined, tail on. For premium buffets and cocktails.",
+					"sort_order": 80
+				}
+			},
+			{
+				"id": "product-btp-cooked-pdto-vi",
+				"slug": "btp-cooked-pdto",
+				"locale": "vi",
+				"translationOf": "product-btp-cooked-pdto",
+				"status": "published",
+				"data": {
+					"title": "Cooked PDTO",
+					"category": "btp",
+					"size": "16/20 – 41/50",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Cooked PDTO. Tôm luộc, bóc vỏ, còn đuôi, bỏ chỉ lưng. Dùng cho buffet và cocktail cao cấp.",
+					"sort_order": 80
+				}
+			},
+			{
+				"id": "product-btp-skewer-pdto",
+				"slug": "btp-skewer-pdto",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Skewer PDTO",
+					"category": "btp",
+					"size": "21/25 – 36/40",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Skewer PDTO. Peeled tail-on prawns on skewers. Convenient for BBQ and foodservice.",
+					"sort_order": 90
+				}
+			},
+			{
+				"id": "product-btp-skewer-pdto-vi",
+				"slug": "btp-skewer-pdto",
+				"locale": "vi",
+				"translationOf": "product-btp-skewer-pdto",
+				"status": "published",
+				"data": {
+					"title": "Skewer PDTO",
+					"category": "btp",
+					"size": "21/25 – 36/40",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Skewer PDTO. Tôm xiên que, bóc vỏ còn đuôi. Tiện lợi cho BBQ và foodservice.",
+					"sort_order": 90
+				}
+			},
+			{
+				"id": "product-btp-cooked-pd",
+				"slug": "btp-cooked-pd",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Cooked PD",
+					"category": "btp",
+					"size": "31/40 – 71/90",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Cooked PD. Cooked and fully peeled. Ready to eat; exported to the EU and North America.",
+					"sort_order": 100
+				}
+			},
+			{
+				"id": "product-btp-cooked-pd-vi",
+				"slug": "btp-cooked-pd",
+				"locale": "vi",
+				"translationOf": "product-btp-cooked-pd",
+				"status": "published",
+				"data": {
+					"title": "Cooked PD",
+					"category": "btp",
+					"size": "31/40 – 71/90",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Black Tiger – Cooked PD. Tôm luộc, bóc hoàn toàn vỏ. Tiện dùng ngay, xuất EU và Bắc Mỹ.",
+					"sort_order": 100
+				}
+			},
+			{
+				"id": "product-van-hlso",
+				"slug": "van-hlso",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "HLSO",
+					"category": "van",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Vannamei – HLSO. Headless, shell on. A favourite export to Japan and Korea.",
+					"sort_order": 110
+				}
+			},
+			{
+				"id": "product-van-hlso-vi",
+				"slug": "van-hlso",
+				"locale": "vi",
+				"translationOf": "product-van-hlso",
+				"status": "published",
+				"data": {
+					"title": "HLSO",
+					"category": "van",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Vannamei – HLSO. Head Less Shell On, thân tôm bỏ đầu còn vỏ. Phổ biến xuất khẩu sang Nhật, Hàn Quốc.",
+					"sort_order": 110
+				}
+			},
+			{
+				"id": "product-van-nobashi",
+				"slug": "van-nobashi",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Nobashi",
+					"category": "van",
+					"size": "3L / 4L / 5L",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Nobashi. Stretched shrimp for tempura in the premium Japanese market.",
+					"sort_order": 120
+				}
+			},
+			{
+				"id": "product-van-nobashi-vi",
+				"slug": "van-nobashi",
+				"locale": "vi",
+				"translationOf": "product-van-nobashi",
+				"status": "published",
+				"data": {
+					"title": "Nobashi",
+					"category": "van",
+					"size": "3L / 4L / 5L",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Nobashi. Tôm kéo dài phù hợp cho Tempura tại thị trường Nhật Bản cao cấp.",
+					"sort_order": 120
+				}
+			},
+			{
+				"id": "product-van-head-on-shell-on",
+				"slug": "van-head-on-shell-on",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Head On Shell On",
+					"category": "van",
+					"size": "16/20 – 51/60",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "12%",
+					"description": "Vannamei – Head On Shell On. Whole shrimp with head and shell, keeping its full natural flavour.",
+					"sort_order": 130
+				}
+			},
+			{
+				"id": "product-van-head-on-shell-on-vi",
+				"slug": "van-head-on-shell-on",
+				"locale": "vi",
+				"translationOf": "product-van-head-on-shell-on",
+				"status": "published",
+				"data": {
+					"title": "Head On Shell On",
+					"category": "van",
+					"size": "16/20 – 51/60",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "12%",
+					"description": "Vannamei – Head On Shell On. Tôm nguyên con còn đầu còn vỏ. Giữ trọn hương vị tự nhiên.",
+					"sort_order": 130
+				}
+			},
+			{
+				"id": "product-van-skewer-pd",
+				"slug": "van-skewer-pd",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Skewer PD",
+					"category": "van",
+					"size": "21/25 – 36/40",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Skewer PD. Peeled shrimp on skewers. Convenient for BBQ restaurants and fast food in the US.",
+					"sort_order": 140
+				}
+			},
+			{
+				"id": "product-van-skewer-pd-vi",
+				"slug": "van-skewer-pd",
+				"locale": "vi",
+				"translationOf": "product-van-skewer-pd",
+				"status": "published",
+				"data": {
+					"title": "Skewer PD",
+					"category": "van",
+					"size": "21/25 – 36/40",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Skewer PD. Tôm xiên que đã bóc vỏ. Tiện lợi cho nhà hàng BBQ và fast food tại Mỹ.",
+					"sort_order": 140
+				}
+			},
+			{
+				"id": "product-van-cooked-pd",
+				"slug": "van-cooked-pd",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Cooked PD",
+					"category": "van",
+					"size": "31/40 – 71/90",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Cooked PD. Cooked, peeled and IQF frozen. Ready to eat; exported to Europe and North America.",
+					"sort_order": 150
+				}
+			},
+			{
+				"id": "product-van-cooked-pd-vi",
+				"slug": "van-cooked-pd",
+				"locale": "vi",
+				"translationOf": "product-van-cooked-pd",
+				"status": "published",
+				"data": {
+					"title": "Cooked PD",
+					"category": "van",
+					"size": "31/40 – 71/90",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Cooked PD. Tôm luộc bóc vỏ, đông IQF. Tiện dùng ngay, xuất châu Âu và Bắc Mỹ.",
+					"sort_order": 150
+				}
+			},
+			{
+				"id": "product-van-pd",
+				"slug": "van-pd",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "PD",
+					"category": "van",
+					"size": "16/20 – 61/70",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Vannamei – PD. Peeled & Deveined. EU export standard, HACCP certified.",
+					"sort_order": 160
+				}
+			},
+			{
+				"id": "product-van-pd-vi",
+				"slug": "van-pd",
+				"locale": "vi",
+				"translationOf": "product-van-pd",
+				"status": "published",
+				"data": {
+					"title": "PD",
+					"category": "van",
+					"size": "16/20 – 61/70",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–15%",
+					"description": "Vannamei – PD. Peeled & Deveined, bóc vỏ bỏ chỉ lưng. Chuẩn xuất khẩu EU, HACCP certified.",
+					"sort_order": 160
+				}
+			},
+			{
+				"id": "product-van-cooked-pdto",
+				"slug": "van-cooked-pdto",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Cooked PDTO",
+					"category": "van",
+					"size": "16/20 – 41/50",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Cooked PDTO. Cooked, peeled, deveined, tail on. For premium cocktails and buffets.",
+					"sort_order": 170
+				}
+			},
+			{
+				"id": "product-van-cooked-pdto-vi",
+				"slug": "van-cooked-pdto",
+				"locale": "vi",
+				"translationOf": "product-van-cooked-pdto",
+				"status": "published",
+				"data": {
+					"title": "Cooked PDTO",
+					"category": "van",
+					"size": "16/20 – 41/50",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Cooked PDTO. Tôm luộc bóc vỏ còn đuôi, bỏ chỉ lưng. Dùng cho cocktail và buffet cao cấp.",
+					"sort_order": 170
+				}
+			},
+			{
+				"id": "product-van-pdto",
+				"slug": "van-pdto",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "PDTO",
+					"category": "van",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–12%",
+					"description": "Vannamei – PDTO. Peeled, Deveined, Tail On. Popular in the US and Canada.",
+					"sort_order": 180
+				}
+			},
+			{
+				"id": "product-van-pdto-vi",
+				"slug": "van-pdto",
+				"locale": "vi",
+				"translationOf": "product-van-pdto",
+				"status": "published",
+				"data": {
+					"title": "PDTO",
+					"category": "van",
+					"size": "8/12 – 41/50",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10–12%",
+					"description": "Vannamei – PDTO. Peeled, Deveined, Tail On. Bóc vỏ còn đuôi. Phổ biến tại Mỹ và Canada.",
+					"sort_order": 180
+				}
+			},
+			{
+				"id": "product-van-skewer-pdto",
+				"slug": "van-skewer-pdto",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Skewer PDTO",
+					"category": "van",
+					"size": "21/25 – 36/40",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Skewer PDTO. Peeled tail-on shrimp on skewers. Ideal for BBQ and foodservice in Japan and the US.",
+					"sort_order": 190
+				}
+			},
+			{
+				"id": "product-van-skewer-pdto-vi",
+				"slug": "van-skewer-pdto",
+				"locale": "vi",
+				"translationOf": "product-van-skewer-pdto",
+				"status": "published",
+				"data": {
+					"title": "Skewer PDTO",
+					"category": "van",
+					"size": "21/25 – 36/40",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Vannamei – Skewer PDTO. Tôm xiên que bóc vỏ còn đuôi. Ideal cho BBQ, foodservice Nhật, Mỹ.",
+					"sort_order": 190
+				}
+			},
+			{
+				"id": "product-vap-btp-butterfly",
+				"slug": "vap-btp-butterfly",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Butterfly",
+					"category": "vap_btp",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Butterfly. Butterflied along the back. Typically used for breaded shrimp and restaurant presentation.",
+					"sort_order": 200
+				}
+			},
+			{
+				"id": "product-vap-btp-butterfly-vi",
+				"slug": "vap-btp-butterfly",
+				"locale": "vi",
+				"translationOf": "product-vap-btp-butterfly",
+				"status": "published",
+				"data": {
+					"title": "Butterfly",
+					"category": "vap_btp",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Butterfly. Tôm bướm, cắt dọc lưng mở rộng. Thường dùng cho breaded shrimp và trình bày nhà hàng.",
+					"sort_order": 200
+				}
+			},
+			{
+				"id": "product-vap-btp-coconut-torpedo",
+				"slug": "vap-btp-coconut-torpedo",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Coconut Torpedo",
+					"category": "vap_btp",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Coconut Torpedo. Torpedo-shaped shrimp in a coconut coating. A premium value-added product for the EU and US.",
+					"sort_order": 210
+				}
+			},
+			{
+				"id": "product-vap-btp-coconut-torpedo-vi",
+				"slug": "vap-btp-coconut-torpedo",
+				"locale": "vi",
+				"translationOf": "product-vap-btp-coconut-torpedo",
+				"status": "published",
+				"data": {
+					"title": "Coconut Torpedo",
+					"category": "vap_btp",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Coconut Torpedo. Tôm hình ngư lôi phủ dừa. Sản phẩm value-added cao cấp xuất EU, Mỹ.",
+					"sort_order": 210
+				}
+			},
+			{
+				"id": "product-vap-btp-sushi-ebi",
+				"slug": "vap-btp-sushi-ebi",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Sushi Ebi",
+					"category": "vap_btp",
+					"size": "3L / 4L / 5L",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "BTP – Sushi Ebi. Cooked, stretched shrimp for sushi. Exported to Japan and premium sushi markets.",
+					"sort_order": 220
+				}
+			},
+			{
+				"id": "product-vap-btp-sushi-ebi-vi",
+				"slug": "vap-btp-sushi-ebi",
+				"locale": "vi",
+				"translationOf": "product-vap-btp-sushi-ebi",
+				"status": "published",
+				"data": {
+					"title": "Sushi Ebi",
+					"category": "vap_btp",
+					"size": "3L / 4L / 5L",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "BTP – Sushi Ebi. Tôm luộc kéo dài dạng sushi. Xuất khẩu sang Nhật Bản và thị trường sushi cao cấp.",
+					"sort_order": 220
+				}
+			},
+			{
+				"id": "product-vap-btp-breaded-fried",
+				"slug": "vap-btp-breaded-fried",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Breaded Fried",
+					"category": "vap_btp",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Breaded Fried. Breaded, fried and IQF frozen. Convenient for foodservice and retail.",
+					"sort_order": 230
+				}
+			},
+			{
+				"id": "product-vap-btp-breaded-fried-vi",
+				"slug": "vap-btp-breaded-fried",
+				"locale": "vi",
+				"translationOf": "product-vap-btp-breaded-fried",
+				"status": "published",
+				"data": {
+					"title": "Breaded Fried",
+					"category": "vap_btp",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Breaded Fried. Tôm tẩm bột chiên giòn, đông lạnh IQF. Tiện lợi cho foodservice và retail.",
+					"sort_order": 230
+				}
+			},
+			{
+				"id": "product-vap-btp-tempura",
+				"slug": "vap-btp-tempura",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Tempura",
+					"category": "vap_btp",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Tempura. A thin, light tempura batter that keeps the shrimp's fresh texture. A Japanese export speciality.",
+					"sort_order": 240
+				}
+			},
+			{
+				"id": "product-vap-btp-tempura-vi",
+				"slug": "vap-btp-tempura",
+				"locale": "vi",
+				"translationOf": "product-vap-btp-tempura",
+				"status": "published",
+				"data": {
+					"title": "Tempura",
+					"category": "vap_btp",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "BTP – Tempura. Tôm tempura, lớp bột mỏng giòn nhẹ. Đặc sản xuất khẩu Nhật Bản, giữ kết cấu tôm tươi.",
+					"sort_order": 240
+				}
+			},
+			{
+				"id": "product-vap-van-breaded-crumb-butterfly",
+				"slug": "vap-van-breaded-crumb-butterfly",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Breaded Crumb Butterfly",
+					"category": "vap_van",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Breaded Crumb Butterfly. Butterfly shrimp in breadcrumbs. Suited to fried restaurant appetisers.",
+					"sort_order": 250
+				}
+			},
+			{
+				"id": "product-vap-van-breaded-crumb-butterfly-vi",
+				"slug": "vap-van-breaded-crumb-butterfly",
+				"locale": "vi",
+				"translationOf": "product-vap-van-breaded-crumb-butterfly",
+				"status": "published",
+				"data": {
+					"title": "Breaded Crumb Butterfly",
+					"category": "vap_van",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Breaded Crumb Butterfly. Tôm bướm phủ breadcrumb. Phù hợp fried appetizer tại nhà hàng.",
+					"sort_order": 250
+				}
+			},
+			{
+				"id": "product-vap-van-breaded-butterfly-fried",
+				"slug": "vap-van-breaded-butterfly-fried",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Breaded Butterfly Fried",
+					"category": "vap_van",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Breaded Butterfly Fried. Pre-fried breaded butterfly shrimp. Retail-ready for the EU and North America.",
+					"sort_order": 260
+				}
+			},
+			{
+				"id": "product-vap-van-breaded-butterfly-fried-vi",
+				"slug": "vap-van-breaded-butterfly-fried",
+				"locale": "vi",
+				"translationOf": "product-vap-van-breaded-butterfly-fried",
+				"status": "published",
+				"data": {
+					"title": "Breaded Butterfly Fried",
+					"category": "vap_van",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Breaded Butterfly Fried. Tôm bướm tẩm bột chiên sẵn. Retail-ready tại EU và Bắc Mỹ.",
+					"sort_order": 260
+				}
+			},
+			{
+				"id": "product-vap-van-tempura",
+				"slug": "vap-van-tempura",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Tempura",
+					"category": "vap_van",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Tempura. A light, crisp tempura batter. Popular in Japan and premium Asian markets.",
+					"sort_order": 270
+				}
+			},
+			{
+				"id": "product-vap-van-tempura-vi",
+				"slug": "vap-van-tempura",
+				"locale": "vi",
+				"translationOf": "product-vap-van-tempura",
+				"status": "published",
+				"data": {
+					"title": "Tempura",
+					"category": "vap_van",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Tempura. Lớp bột tempura nhẹ, giòn. Phổ biến tại Nhật Bản và thị trường châu Á cao cấp.",
+					"sort_order": 270
+				}
+			},
+			{
+				"id": "product-vap-van-coconut-butterfly",
+				"slug": "vap-van-coconut-butterfly",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Coconut Butterfly",
+					"category": "vap_van",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Coconut Butterfly. Butterfly shrimp in shredded coconut. A signature product for the US and Caribbean markets.",
+					"sort_order": 280
+				}
+			},
+			{
+				"id": "product-vap-van-coconut-butterfly-vi",
+				"slug": "vap-van-coconut-butterfly",
+				"locale": "vi",
+				"translationOf": "product-vap-van-coconut-butterfly",
+				"status": "published",
+				"data": {
+					"title": "Coconut Butterfly",
+					"category": "vap_van",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Coconut Butterfly. Tôm bướm phủ dừa bào. Sản phẩm đặc trưng cho thị trường Mỹ và Caribbean.",
+					"sort_order": 280
+				}
+			},
+			{
+				"id": "product-vap-van-coconut-torpedo",
+				"slug": "vap-van-coconut-torpedo",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Coconut Torpedo",
+					"category": "vap_van",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Coconut Torpedo. Torpedo shrimp in a coconut coating. Premium value-added for the US and EU.",
+					"sort_order": 290
+				}
+			},
+			{
+				"id": "product-vap-van-coconut-torpedo-vi",
+				"slug": "vap-van-coconut-torpedo",
+				"locale": "vi",
+				"translationOf": "product-vap-van-coconut-torpedo",
+				"status": "published",
+				"data": {
+					"title": "Coconut Torpedo",
+					"category": "vap_van",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Coconut Torpedo. Tôm hình ngư lôi phủ dừa. Value-added cao cấp, thị trường Mỹ và EU.",
+					"sort_order": 290
+				}
+			},
+			{
+				"id": "product-vap-van-breaded-torpedo",
+				"slug": "vap-van-breaded-torpedo",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Breaded Torpedo",
+					"category": "vap_van",
+					"size": "As required",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Breaded Torpedo. Torpedo shrimp in breadcrumbs. Uniform sizing for fast-food chains.",
+					"sort_order": 300
+				}
+			},
+			{
+				"id": "product-vap-van-breaded-torpedo-vi",
+				"slug": "vap-van-breaded-torpedo",
+				"locale": "vi",
+				"translationOf": "product-vap-van-breaded-torpedo",
+				"status": "published",
+				"data": {
+					"title": "Breaded Torpedo",
+					"category": "vap_van",
+					"size": "Theo yêu cầu",
+					"packing": "IQF",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Vannamei – Breaded Torpedo. Tôm ngư lôi tẩm breadcrumb. Kích thước đồng đều, phù hợp fast food chain.",
+					"sort_order": 300
+				}
+			},
+			{
+				"id": "product-surimi-frozen-surimi",
+				"slug": "surimi-frozen-surimi",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Frozen Surimi",
+					"category": "surimi",
+					"size": "As required",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Frozen Surimi. Finely minced fish frozen in blocks. Raw material for crabsticks and fishballs.",
+					"sort_order": 310
+				}
+			},
+			{
+				"id": "product-surimi-frozen-surimi-vi",
+				"slug": "surimi-frozen-surimi",
+				"locale": "vi",
+				"translationOf": "product-surimi-frozen-surimi",
+				"status": "published",
+				"data": {
+					"title": "Frozen Surimi",
+					"category": "surimi",
+					"size": "Theo yêu cầu",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Frozen Surimi. Thịt cá xay mịn đông lạnh dạng block. Nguyên liệu sản xuất crabstick, fishball xuất khẩu.",
+					"sort_order": 310
+				}
+			},
+			{
+				"id": "product-surimi-fish-meal",
+				"slug": "surimi-fish-meal",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Fish Meal",
+					"category": "surimi",
+					"size": "As required",
+					"packing": "Bulk",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Fish Meal. High-nutrition fish meal. Raw material for livestock and aquaculture feed, exported to many markets.",
+					"sort_order": 320
+				}
+			},
+			{
+				"id": "product-surimi-fish-meal-vi",
+				"slug": "surimi-fish-meal",
+				"locale": "vi",
+				"translationOf": "product-surimi-fish-meal",
+				"status": "published",
+				"data": {
+					"title": "Fish Meal",
+					"category": "surimi",
+					"size": "Theo yêu cầu",
+					"packing": "Bulk",
+					"origin": "Cà Mau, VN",
+					"glaze": "N/A",
+					"description": "Fish Meal. Bột cá dinh dưỡng cao. Nguyên liệu thức ăn chăn nuôi và thủy sản, xuất khẩu nhiều thị trường.",
+					"sort_order": 320
+				}
+			},
+			{
+				"id": "product-cephalopod-baby-octopus",
+				"slug": "cephalopod-baby-octopus",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Baby Octopus",
+					"category": "cephalopod",
+					"size": "As required",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Baby Octopus. Whole baby octopus, IQF frozen. Exported to Japan, Korea, the EU and the Mediterranean.",
+					"sort_order": 330
+				}
+			},
+			{
+				"id": "product-cephalopod-baby-octopus-vi",
+				"slug": "cephalopod-baby-octopus",
+				"locale": "vi",
+				"translationOf": "product-cephalopod-baby-octopus",
+				"status": "published",
+				"data": {
+					"title": "Baby Octopus",
+					"category": "cephalopod",
+					"size": "Theo yêu cầu",
+					"packing": "IQF / Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Baby Octopus. Bạch tuộc non nguyên con đông lạnh IQF. Xuất khẩu sang Nhật, Hàn Quốc, EU và Địa Trung Hải.",
+					"sort_order": 330
+				}
+			},
+			{
+				"id": "product-cephalopod-baby-octopus-block-frozen",
+				"slug": "cephalopod-baby-octopus-block-frozen",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Baby Octopus Block Frozen",
+					"category": "cephalopod",
+					"size": "As required",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Baby Octopus Block Frozen. Baby octopus frozen in blocks for easy shipping and long-term storage.",
+					"sort_order": 340
+				}
+			},
+			{
+				"id": "product-cephalopod-baby-octopus-block-frozen-vi",
+				"slug": "cephalopod-baby-octopus-block-frozen",
+				"locale": "vi",
+				"translationOf": "product-cephalopod-baby-octopus-block-frozen",
+				"status": "published",
+				"data": {
+					"title": "Baby Octopus Block Frozen",
+					"category": "cephalopod",
+					"size": "Theo yêu cầu",
+					"packing": "Block",
+					"origin": "Cà Mau, VN",
+					"glaze": "10%",
+					"description": "Baby Octopus Block Frozen. Bạch tuộc non đông lạnh dạng block. Tiện vận chuyển và bảo quản dài hạn.",
+					"sort_order": 340
+				}
+			}
+		],
+		"certifications": [
+			{
+				"id": "cert-haccp",
+				"slug": "haccp",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 10,
+					"title": "HACCP",
+					"group": "food_safety",
+					"icon": "🛡️",
+					"tone": "blue",
+					"badge": "Hazard Analysis",
+					"badge_tone": "blue",
+					"description": "Hazard Analysis and Critical Control Points — CASES' foundational food-safety management system since 2000, ensuring full processing-chain control from raw material to final product.",
+					"note": "Active · Full facility scope",
+					"issuer": "NAFIQAD",
+					"scope": "Full facility"
+				}
+			},
+			{
+				"id": "cert-haccp-vi",
+				"slug": "haccp",
+				"locale": "vi",
+				"translationOf": "cert-haccp",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 10,
+					"title": "HACCP",
+					"group": "food_safety",
+					"icon": "🛡️",
+					"tone": "blue",
+					"badge": "Phân Tích Mối Nguy",
+					"badge_tone": "blue",
+					"description": "Hệ thống phân tích mối nguy và kiểm soát điểm tới hạn — nền tảng quản lý an toàn thực phẩm của CASES từ năm 2000, đảm bảo kiểm soát toàn bộ chuỗi từ nguyên liệu đến thành phẩm.",
+					"note": "Hiệu lực · Toàn nhà máy",
+					"issuer": "NAFIQAD",
+					"scope": "Toàn nhà máy"
+				}
+			},
+			{
+				"id": "cert-iso-22000",
+				"slug": "iso-22000",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 20,
+					"title": "ISO 22000:2018",
+					"group": "food_safety",
+					"icon": "📋",
+					"tone": "blue",
+					"badge": "Food Safety Mgmt",
+					"badge_tone": "green",
+					"description": "International standard for Food Safety Management Systems — issued by NAFIQAD covering seafood processing and freezing operations at CASES facilities.",
+					"note": "TCVN ISO 22000:2018 · NAFIQAD",
+					"issuer": "NAFIQAD",
+					"scope": "Seafood processing"
+				}
+			},
+			{
+				"id": "cert-iso-22000-vi",
+				"slug": "iso-22000",
+				"locale": "vi",
+				"translationOf": "cert-iso-22000",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 20,
+					"title": "ISO 22000:2018",
+					"group": "food_safety",
+					"icon": "📋",
+					"tone": "blue",
+					"badge": "Quản Lý ATTP",
+					"badge_tone": "green",
+					"description": "Tiêu chuẩn quốc tế về hệ thống quản lý an toàn thực phẩm — do NAFIQAD cấp cho hoạt động chế biến và cấp đông thủy sản tại cơ sở CASES.",
+					"note": "TCVN ISO 22000:2018 · NAFIQAD",
+					"issuer": "NAFIQAD",
+					"scope": "Chế biến thủy sản"
+				}
+			},
+			{
+				"id": "cert-ifs-food",
+				"slug": "ifs-food",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 30,
+					"title": "IFS Food v8",
+					"group": "food_safety",
+					"icon": "🏆",
+					"tone": "amber",
+					"badge": "Retail Standard",
+					"badge_tone": "amber",
+					"description": "IFS Food Version 8 — the international retail standard awarded by Intertek, opening access to European supermarket chains with a high audit score.",
+					"note": "Intertek · EU Retail Markets",
+					"issuer": "Intertek",
+					"scope": "EU retail market"
+				}
+			},
+			{
+				"id": "cert-ifs-food-vi",
+				"slug": "ifs-food",
+				"locale": "vi",
+				"translationOf": "cert-ifs-food",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 30,
+					"title": "IFS Food v8",
+					"group": "food_safety",
+					"icon": "🏆",
+					"tone": "amber",
+					"badge": "Tiêu Chuẩn Bán Lẻ",
+					"badge_tone": "amber",
+					"description": "IFS Food phiên bản 8 — tiêu chuẩn bán lẻ quốc tế do Intertek cấp, mở cánh cửa vào chuỗi siêu thị châu Âu với điểm đánh giá cao.",
+					"note": "Intertek · Thị trường bán lẻ EU",
+					"issuer": "Intertek",
+					"scope": "Thị trường bán lẻ EU"
+				}
+			},
+			{
+				"id": "cert-bap",
+				"slug": "bap",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 40,
+					"title": "BAP ★★",
+					"group": "aquaculture",
+					"icon": "🐟",
+					"tone": "green",
+					"badge": "Best Aquaculture Practices",
+					"badge_tone": "green",
+					"description": "2-star BAP certification (plant + farm) from the Global Seafood Alliance — the highest-tier standard for responsible aquaculture, preferred by US and EU importers.",
+					"note": "GSA · Dam Doi Farm · Plant",
+					"issuer": "Global Seafood Alliance",
+					"scope": "Plant + farm"
+				}
+			},
+			{
+				"id": "cert-bap-vi",
+				"slug": "bap",
+				"locale": "vi",
+				"translationOf": "cert-bap",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 40,
+					"title": "BAP ★★",
+					"group": "aquaculture",
+					"icon": "🐟",
+					"tone": "green",
+					"badge": "Thực Hành Nuôi Trồng Tốt Nhất",
+					"badge_tone": "green",
+					"description": "Chứng nhận BAP 2 sao (nhà máy + trang trại) từ Global Seafood Alliance — tiêu chuẩn cao nhất về nuôi trồng thủy sản có trách nhiệm, được nhà nhập khẩu Mỹ và EU ưu tiên.",
+					"note": "GSA · Trại Dam Doi · Nhà máy",
+					"issuer": "Global Seafood Alliance",
+					"scope": "Nhà máy + trang trại"
+				}
+			},
+			{
+				"id": "cert-asc-coc",
+				"slug": "asc-coc",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 50,
+					"title": "ASC CoC",
+					"group": "aquaculture",
+					"icon": "🌊",
+					"tone": "green",
+					"badge": "Chain of Custody",
+					"badge_tone": "green",
+					"description": "ASC Chain of Custody — product traceability certification to Aquaculture Stewardship Council standards, enabling ASC labelling on exported products.",
+					"note": "Control Union · ASC-CoC-010639",
+					"issuer": "Control Union",
+					"scope": "Product traceability"
+				}
+			},
+			{
+				"id": "cert-asc-coc-vi",
+				"slug": "asc-coc",
+				"locale": "vi",
+				"translationOf": "cert-asc-coc",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 50,
+					"title": "ASC CoC",
+					"group": "aquaculture",
+					"icon": "🌊",
+					"tone": "green",
+					"badge": "Chuỗi Hành Trình",
+					"badge_tone": "green",
+					"description": "ASC Chain of Custody — chứng nhận truy xuất nguồn gốc theo tiêu chuẩn Hội đồng Quản lý Nuôi trồng, cho phép dán nhãn ASC trên sản phẩm xuất khẩu.",
+					"note": "Control Union · ASC-CoC-010639",
+					"issuer": "Control Union",
+					"scope": "Truy xuất nguồn gốc"
+				}
+			},
+			{
+				"id": "cert-global-gap",
+				"slug": "global-gap",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 60,
+					"title": "Global G.A.P",
+					"group": "aquaculture",
+					"icon": "🌱",
+					"tone": "green",
+					"badge": "Pond Farming",
+					"badge_tone": "blue",
+					"description": "Global Seafood Alliance Pond Farming standard awarded by Bureau Veritas for Dam Doi Farm — confirming raw-material control from the start of the supply chain.",
+					"note": "Bureau Veritas · Dam Doi Farm",
+					"issuer": "Bureau Veritas",
+					"scope": "Dam Doi Farm"
+				}
+			},
+			{
+				"id": "cert-global-gap-vi",
+				"slug": "global-gap",
+				"locale": "vi",
+				"translationOf": "cert-global-gap",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 60,
+					"title": "Global G.A.P",
+					"group": "aquaculture",
+					"icon": "🌱",
+					"tone": "green",
+					"badge": "Nuôi Ao",
+					"badge_tone": "blue",
+					"description": "Tiêu chuẩn nuôi ao của Global Seafood Alliance do Bureau Veritas cấp cho Trại Dam Doi — xác nhận kiểm soát nguyên liệu từ đầu chuỗi cung ứng.",
+					"note": "Bureau Veritas · Trại Dam Doi",
+					"issuer": "Bureau Veritas",
+					"scope": "Trại Dam Doi"
+				}
+			},
+			{
+				"id": "cert-halal",
+				"slug": "halal",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 70,
+					"title": "HALAL",
+					"group": "specialist",
+					"icon": "☪️",
+					"tone": "purple",
+					"badge": "Islamic Market",
+					"badge_tone": "purple",
+					"description": "HALAL certification ensuring products meet Islamic food requirements, expanding market access to UAE, Malaysia and Southeast Asian markets.",
+					"note": "Active · UAE, Malaysia, SE Asia",
+					"issuer": "—",
+					"scope": "UAE, Malaysia, SE Asia"
+				}
+			},
+			{
+				"id": "cert-halal-vi",
+				"slug": "halal",
+				"locale": "vi",
+				"translationOf": "cert-halal",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 70,
+					"title": "HALAL",
+					"group": "specialist",
+					"icon": "☪️",
+					"tone": "purple",
+					"badge": "Thị Trường Hồi Giáo",
+					"badge_tone": "purple",
+					"description": "Chứng nhận HALAL đảm bảo sản phẩm đáp ứng yêu cầu thực phẩm Hồi giáo, mở rộng thị trường sang UAE, Malaysia và các nước Đông Nam Á.",
+					"note": "Hiệu lực · UAE, Malaysia, Đông Nam Á",
+					"issuer": "—",
+					"scope": "UAE, Malaysia, Đông Nam Á"
+				}
+			},
+			{
+				"id": "cert-organic",
+				"slug": "organic",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 80,
+					"title": "ORGANIC",
+					"group": "specialist",
+					"icon": "🌿",
+					"tone": "green",
+					"badge": "Organic Certified",
+					"badge_tone": "green",
+					"description": "Organic certification — products farmed without synthetic chemicals, meeting premium-segment demand across EU and North American markets.",
+					"note": "Active · EU & North America",
+					"issuer": "—",
+					"scope": "EU, North America"
+				}
+			},
+			{
+				"id": "cert-organic-vi",
+				"slug": "organic",
+				"locale": "vi",
+				"translationOf": "cert-organic",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 80,
+					"title": "ORGANIC",
+					"group": "specialist",
+					"icon": "🌿",
+					"tone": "green",
+					"badge": "Hữu Cơ",
+					"badge_tone": "green",
+					"description": "Chứng nhận hữu cơ — sản phẩm nuôi trồng không dùng hóa chất tổng hợp, đáp ứng phân khúc cao cấp tại EU và Bắc Mỹ.",
+					"note": "Hiệu lực · EU & Bắc Mỹ",
+					"issuer": "—",
+					"scope": "EU, Bắc Mỹ"
+				}
+			},
+			{
+				"id": "cert-us-fda",
+				"slug": "us-fda",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"cert_status": "Active",
+					"show_in_table": true,
+					"sort_order": 90,
+					"title": "US FDA",
+					"group": "other",
+					"icon": "🏛️",
+					"tone": "blue",
+					"issuer": "Registrar Corp",
+					"scope": "US Market"
+				}
+			},
+			{
+				"id": "cert-us-fda-vi",
+				"slug": "us-fda",
+				"locale": "vi",
+				"translationOf": "cert-us-fda",
+				"status": "published",
+				"data": {
+					"cert_status": "Hiệu lực",
+					"show_in_table": true,
+					"sort_order": 90,
+					"title": "US FDA",
+					"group": "other",
+					"icon": "🏛️",
+					"tone": "blue",
+					"issuer": "Registrar Corp",
+					"scope": "Thị Trường Mỹ"
+				}
+			}
+		],
+		"plants": [
+			{
+				"id": "plant-dl-113",
+				"slug": "dl-113",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Camau Seafood Processing Corp",
+					"code": "DL 113",
+					"line": "shrimp",
+					"location": "Camau",
+					"province": "Camau Province",
+					"address": "04 Nguyen Cong Tru, Ly Van Lam Ward, Camau Province",
+					"sort_order": 10
+				}
+			},
+			{
+				"id": "plant-dl-113-vi",
+				"slug": "dl-113",
+				"locale": "vi",
+				"translationOf": "plant-dl-113",
+				"status": "published",
+				"data": {
+					"title": "Nhà Máy Chế Biến Thủy Sản Cà Mau",
+					"code": "DL 113",
+					"line": "shrimp",
+					"location": "Cà Mau",
+					"province": "Tỉnh Cà Mau",
+					"address": "04 Nguyễn Công Trứ, Phường Lý Văn Lâm, Tỉnh Cà Mau",
+					"sort_order": 10
+				}
+			},
+			{
+				"id": "plant-dl-809",
+				"slug": "dl-809",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Cangca II Frozen Seafood Factory",
+					"code": "DL 809",
+					"line": "shrimp",
+					"location": "Camau",
+					"province": "Camau Province",
+					"address": "04 Nguyen Cong Tru, Ly Van Lam Ward, Camau Province",
+					"sort_order": 20
+				}
+			},
+			{
+				"id": "plant-dl-809-vi",
+				"slug": "dl-809",
+				"locale": "vi",
+				"translationOf": "plant-dl-809",
+				"status": "published",
+				"data": {
+					"title": "Nhà Máy Đông Lạnh Cảng Cá II",
+					"code": "DL 809",
+					"line": "shrimp",
+					"location": "Cà Mau",
+					"province": "Tỉnh Cà Mau",
+					"address": "04 Nguyễn Công Trứ, Phường Lý Văn Lâm, Tỉnh Cà Mau",
+					"sort_order": 20
+				}
+			},
+			{
+				"id": "plant-dl-295",
+				"slug": "dl-295",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Songdoc Seafood Processing",
+					"code": "DL 295",
+					"line": "surimi",
+					"location": "Song Doc",
+					"province": "Camau Province",
+					"address": "Song Doc Commune, Camau Province",
+					"sort_order": 30
+				}
+			},
+			{
+				"id": "plant-dl-295-vi",
+				"slug": "dl-295",
+				"locale": "vi",
+				"translationOf": "plant-dl-295",
+				"status": "published",
+				"data": {
+					"title": "Chế Biến Thủy Sản Sông Đốc",
+					"code": "DL 295",
+					"line": "surimi",
+					"location": "Sông Đốc",
+					"province": "Tỉnh Cà Mau",
+					"address": "Xã Sông Đốc, Tỉnh Cà Mau",
+					"sort_order": 30
+				}
+			},
+			{
+				"id": "plant-dl-51",
+				"slug": "dl-51",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Tac Cau Seafood Processing",
+					"code": "DL 51",
+					"line": "surimi",
+					"location": "Tac Cau",
+					"province": "An Giang Province",
+					"address": "Tac Cau Industrial Zone, An Giang Province",
+					"sort_order": 40
+				}
+			},
+			{
+				"id": "plant-dl-51-vi",
+				"slug": "dl-51",
+				"locale": "vi",
+				"translationOf": "plant-dl-51",
+				"status": "published",
+				"data": {
+					"title": "Chế Biến Thủy Sản Tắc Cậu",
+					"code": "DL 51",
+					"line": "surimi",
+					"location": "Tắc Cậu",
+					"province": "Tỉnh An Giang",
+					"address": "Khu Công Nghiệp Tắc Cậu, Tỉnh An Giang",
+					"sort_order": 40
+				}
+			},
+			{
+				"id": "plant-dl-835",
+				"slug": "dl-835",
+				"locale": "en",
+				"status": "published",
+				"data": {
+					"title": "Ganh Hao Seafood Processing",
+					"code": "DL 835",
+					"line": "surimi",
+					"location": "Ganh Hao",
+					"province": "Camau Province",
+					"address": "Ganh Hao Commune, Camau Province",
+					"sort_order": 50
+				}
+			},
+			{
+				"id": "plant-dl-835-vi",
+				"slug": "dl-835",
+				"locale": "vi",
+				"translationOf": "plant-dl-835",
+				"status": "published",
+				"data": {
+					"title": "Chế Biến Thủy Sản Gành Hào",
+					"code": "DL 835",
+					"line": "surimi",
+					"location": "Gành Hào",
+					"province": "Tỉnh Cà Mau",
+					"address": "Xã Gành Hào, Tỉnh Cà Mau",
+					"sort_order": 50
+				}
+			}
+		]
+	}
+}

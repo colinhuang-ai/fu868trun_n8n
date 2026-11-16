@@ -1,0 +1,180 @@
+---
+/**
+ * Reach.astro - render block `cases_reach` (tên trong admin: "Global reach"): ba con số nổi bật + lưới thị trường
+ * xuất khẩu + ô tổng, trên nền navy tối.
+ *
+ * Nguồn dữ liệu: nằm hoàn toàn trong block (field `content` của entry `pages`), KHÔNG đọc collection nào. Dữ liệu mẫu:
+ * block("cases_reach", "reach", {...}) trong scripts/build-seed.mjs (trang chủ); sau đó editor sửa trong admin.
+ * Mỗi locale có một entry trang riêng (nối bằng translationOf) nên chữ trong `value` đã đúng ngôn ngữ, và component
+ * không cần locale (không có link CMS nào ở đây).
+ *
+ * Schema (blockType("cases_reach") trong build-seed.mjs):
+ * - headline : string, bắt buộc.      - eyebrow : string, tùy chọn (nhãn trên tiêu đề).      - anchor_id : id section.
+ * - figures[] : repeater bắt buộc, tối đa 3 (bố cục 3 cột): value (vd "US$ 160M"), label, caption (tùy chọn),
+ *                highlight (boolean: viền sáng + glow).
+ * - markets[] : repeater tùy chọn, tối đa 12: name, flag (emoji), value (doanh thu), volume (sản lượng, tùy chọn),
+ *                share (number 0-100: độ dài thanh tiến trình), muted (boolean: hiển thị màu xám thay vì sky).
+ * - total_label / total_value / total_caption : ô tổng cộng ở cuối lưới thị trường (chỉ hiện khi có total_value).
+ *
+ * Seed bỏ field rỗng/null (hàm resolve) nên field tùy chọn là undefined; template dùng `x && (...)` để không render rỗng.
+ */
+// Type-only: BlockComponentProps<T> = { value, index, blockKey }, props do <Blocks> (emdash/ui) truyền vào.
+import { type BlockComponentProps } from "emdash/ui";
+// Union kiểu mọi block, sinh vào emdash-env.d.ts bởi `npx emdash types`.
+import type { PageContentBlock } from "../../../emdash-env";
+
+// Thu hẹp union xuống block có _type = "cases_reach" để field có kiểu chính xác.
+type ReachBlock = Extract<PageContentBlock, { _type: "cases_reach" }>;
+// Props của component (chuẩn của mọi block).
+type Props = BlockComponentProps<ReachBlock>;
+
+// Chỉ cần `value`.
+const { value } = Astro.props;
+// `markets` là repeater KHÔNG bắt buộc (required: false trong schema) nên có thể undefined; chuẩn hóa về mảng rỗng
+// để dùng .length và .map an toàn. (`figures` bắt buộc, tối thiểu 1 nên dùng thẳng.)
+const markets = value.markets ?? [];
+// Kẹp `share` vào khoảng 0-100 và coi null/undefined là 0. Lý do: editor nhập số tự do trong admin (field number
+// không giới hạn), nhưng giá trị này đi thẳng vào CSS `width:%`; nếu vượt 100 thanh sẽ tràn ra ngoài khung.
+// Phải dùng style inline vì Tailwind không sinh được class cho số động (quy tắc dự án: class phải viết literal).
+const clamp = (n: number | null | undefined) => Math.max(0, Math.min(100, n ?? 0));
+---
+
+{/*
+	Section gốc. bg-navy-fade (global.css) = gradient dọc #071525 → #0d2137 → #071525 (navy đậm - nhạt - đậm).
+	relative + overflow-hidden để các khối trang trí absolute bên trong bị cắt gọn; id từ anchor_id (|| undefined
+	để không in id rỗng).
+*/}
+<section
+	id={value.anchor_id || undefined}
+	class="bg-navy-fade relative overflow-hidden py-14 md:py-24"
+>
+	{/*
+		Lớp họa tiết chấm (class bg-dots trong global.css: radial-gradient sky chấm 1px, ô 48px) phủ kín section ở độ mờ 4%.
+		pointer-events-none để lớp trang trí không chặn click vào nội dung.
+	*/}
+	<div class="bg-dots pointer-events-none absolute inset-0 opacity-[0.04]"></div>
+	{/*
+		Hai quầng sáng sky mờ (bg-sky-500/10 + blur-[80px]) ở 1/4 bên trái và 1/4 bên phải, căn giữa dọc bằng
+		top-1/2 -translate-y-1/2, tạo chiều sâu cho nền tối. Thuần trang trí nên cũng pointer-events-none.
+	*/}
+	<div
+		class="pointer-events-none absolute top-1/2 left-1/4 h-96 w-96 -translate-y-1/2 rounded-full bg-sky-500/10 blur-[80px]"
+	>
+	</div>
+	<div
+		class="pointer-events-none absolute top-1/2 right-1/4 h-96 w-96 -translate-y-1/2 rounded-full bg-sky-500/10 blur-[80px]"
+	>
+	</div>
+	{/*
+		Lớp nội dung: relative z-10 để nằm trên các lớp trang trí absolute ở trên; container chuẩn max-w-7xl.
+	*/}
+	<div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+		{/*
+			Khối tiêu đề canh giữa. Class reveal: hiện dần khi cuộn tới (CSS .js .reveal trong global.css + IntersectionObserver
+			thêm class revealed trong layouts/Base.astro). Chữ trắng/sky-400 vì nền tối; h2 dùng font-display (Playfair Display).
+		*/}
+		<div class="reveal mb-12 text-center">
+			{
+				value.eyebrow && (
+					<span class="mb-4 block text-sm font-bold tracking-[0.3em] text-sky-400 uppercase">
+						{value.eyebrow}
+					</span>
+				)
+			}
+			<h2 class="mb-4 font-display text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+				{value.headline}
+			</h2>
+			<div class="mx-auto mb-6 h-1 w-20 rounded-full bg-linear-to-r from-sky-400 to-sky-600"></div>
+		</div>
+
+		{/*
+			Lưới ba thẻ số liệu: md trở lên 3 cột, mobile xếp 1 cột. Mỗi thẻ nền kính mờ (bg-white/5, hover tăng lên /10) và
+			viền border-white/10; figure.highlight thì viền sky-400/30 kèm bóng sáng tùy ý shadow-[0_0_40px_rgba(56,189,248,0.08)]
+			(dấu gạch dưới trong giá trị tùy ý của Tailwind = khoảng trắng). Số lớn text-5xl font-black: hai thẻ đầu (index nhỏ hơn 2) màu
+			sky-300, thẻ thứ ba màu trắng (chọn theo VỊ TRÍ, không theo highlight). Nhãn nhỏ uppercase mờ 50%, caption (nếu có) đậm hơn bên dưới.
+		*/}
+		<div class="reveal mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+			{
+				value.figures.map((figure, index) => (
+					<div
+						class:list={[
+							"rounded-2xl border bg-white/5 p-7 text-center transition-all hover:bg-white/10",
+							figure.highlight
+								? "border-sky-400/30 shadow-[0_0_40px_rgba(56,189,248,0.08)]"
+								: "border-white/10",
+						]}
+					>
+						<div
+							class:list={[
+								"mb-2 text-5xl font-black",
+								index < 2 ? "text-sky-300" : "text-white",
+							]}
+						>
+							{figure.value}
+						</div>
+						<div class="mb-1 text-xs tracking-widest text-white/50 uppercase">{figure.label}</div>
+						{figure.caption && <div class="font-semibold text-white">{figure.caption}</div>}
+					</div>
+				))
+			}
+		</div>
+
+		{/*
+			Lưới thị trường: chỉ render khi có ít nhất một thị trường. Lưu ý ô tổng (total) nằm TRONG danh sách này nên nếu
+			markets rỗng thì ô tổng cũng không hiện dù có total_value. Dùng ul/li vì đây là danh sách các mục.
+			Cột: 2 (mobile) → 3 (sm) → 5 (lg).
+		*/}
+		{
+			markets.length > 0 && (
+				<ul class="reveal mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+					{/*
+						Mỗi thị trường: emoji cờ (trang trí, aria-hidden), tên, doanh thu (text-sky-300, hoặc text-slate-300 nếu muted),
+						sản lượng nhỏ mờ, và thanh tiến trình: ô nền mờ bg-white/10 (role=presentation vì thuần minh họa) chứa thanh con có
+						độ rộng = share% đã kẹp qua clamp(); thanh có màu sky-400 hoặc slate-400 nếu muted.
+						cursor-default + hover:border-sky-400/40 chỉ là phản hồi trực quan, ô không phải link.
+					*/}
+					{markets.map((market) => (
+						<li class="cursor-default rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:border-sky-400/40 hover:bg-white/10">
+							{market.flag && (
+								<div class="mb-2 text-2xl" aria-hidden="true">
+									{market.flag}
+								</div>
+							)}
+							<div class="mb-1 text-sm font-bold text-white">{market.name}</div>
+							<div
+								class:list={["text-lg font-black", market.muted ? "text-slate-300" : "text-sky-300"]}
+							>
+								{market.value}
+							</div>
+							{market.volume && <div class="text-xs text-white/40">{market.volume}</div>}
+							<div class="mt-2 h-0.5 rounded-full bg-white/10" role="presentation">
+								<div
+									class:list={["h-full rounded-full", market.muted ? "bg-slate-400" : "bg-sky-400"]}
+									style={`width:${clamp(market.share)}%`}
+								/>
+							</div>
+						</li>
+					))}
+					{/*
+						Ô tổng cộng: hiện khi có total_value. Nền gradient dùng style inline với mã hex ghi cứng (#0369a1 sky-700 → #065f46
+						emerald-800) để tách biệt với các ô kính mờ; label/caption là tùy chọn.
+					*/}
+					{value.total_value && (
+						<li
+							class="flex flex-col justify-center rounded-xl p-4"
+							style="background:linear-gradient(135deg,#0369a1,#065f46)"
+						>
+							{value.total_label && (
+								<div class="mb-1 text-xs tracking-widest text-white/60 uppercase">
+									{value.total_label}
+								</div>
+							)}
+							<div class="text-2xl font-black text-white">{value.total_value}</div>
+							{value.total_caption && <div class="text-xs text-sky-200">{value.total_caption}</div>}
+						</li>
+					)}
+				</ul>
+			)
+		}
+	</div>
+</section>

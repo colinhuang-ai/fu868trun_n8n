@@ -1,0 +1,21 @@
+---
+/**
+ * Route: GET /news  (danh sách tin tức tiếng Anh, có phân trang bằng ?cursor=).
+ *
+ * File route này cố ý rất mỏng: toàn bộ logic (truy vấn collection `posts`,
+ * phân trang cursor, SEO, nút chuyển EN | VI) nằm trong component dùng chung
+ * src/components/news/NewsList.astro. NewsList tự xác định ngôn ngữ bằng
+ * toLocale(Astro.currentLocale): Astro suy ra "en" từ URL không có prefix.
+ *
+ * Bản tiếng Việt: src/pages/vi/news/index.astro (URL /vi/news) render đúng
+ * component này; chỉ khác đường dẫn nên currentLocale = "vi". Hai file tồn tại
+ * riêng vì EN không prefix còn VI dưới /vi (xem src/pages/index.astro).
+ *
+ * Không có getStaticPaths(): output "server", danh sách đọc lúc request.
+ */
+import NewsList from "../../components/news/NewsList.astro";
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - Không truyền props: NewsList tự đọc locale và cursor từ Astro.currentLocale / Astro.url.
+---
+
+<NewsList />

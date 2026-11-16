@@ -1,0 +1,87 @@
+---
+/**
+ * PhotoSlot.astro - ô ảnh dùng chung: hiện ảnh thật nếu đã upload, nếu chưa thì hiện khung nét đứt
+ * "photo placeholder" (xem AGENTS.md: ảnh sản phẩm, nhà máy, công nghệ ban đầu chưa có ảnh).
+ *
+ * Không phải block type; đây là component con được dùng bởi blocks/Plants.astro, blocks/Tech.astro
+ * và components/news/NewsCard.astro.
+ *
+ * Props:
+ * - image : giá trị field kiểu `image` của EmDash ({ id, src, alt, width, height, ... }) hoặc
+ *           null/undefined khi editor chưa chọn ảnh trong admin (Media library, lưu ở R2).
+ * - label : chữ hiện trong khung placeholder và dùng làm aria-label (vd "DL 113 - Tên nhà máy").
+ * - class : class Tailwind do nơi gọi truyền vào, THƯỜNG chứa chiều cao (h-44, h-36...). Component
+ *           không tự đặt kích thước vì placeholder không có kích thước tự nhiên như ảnh.
+ * - dark  : true khi đặt trên nền navy (Tech) để placeholder đổi sang kiểu kính mờ; false cho nền sáng.
+ *
+ * Quy tắc dự án: field ảnh là object, phải render bằng <Image image={...} /> của "emdash/ui"
+ * (không tự ghép thẻ <img>) để EmDash lo src/alt/kích thước.
+ */
+// Component ảnh chính thức của EmDash: nhận object ảnh và tự render <img> với src/alt/width/height đúng.
+import { Image } from "emdash/ui";
+
+// Props của PhotoSlot. Astro tự đọc interface `Props` để kiểm tra kiểu ở nơi dùng component.
+interface Props {
+	// Kiểu của `image` được lấy thẳng từ prop `image` của <Image> (Parameters<typeof Image>[0] là object props
+	// của component) để luôn khớp với EmDash, khỏi tự khai báo lại cấu trúc ảnh. `| null` cho phép
+	// truyền thẳng `plant.data.image` / `item.image` (có thể thiếu hoặc null).
+	/** An EmDash image value, or empty to show the placeholder. */
+	image?: Parameters<typeof Image>[0]["image"] | null;
+	// Nhãn hiển thị trong placeholder; cũng là tên truy cập (aria-label) của khung. Không truyền thì khung
+	// không có tên cho trình đọc màn hình (xem phần template).
+	label?: string;
+	// Class mở rộng từ bên ngoài (chiều cao, margin...). Được trộn bằng `class:list` ở template.
+	class?: string;
+	dark?: boolean;
+}
+
+// `class` là từ khóa dành riêng của JS nên không thể destructure trực tiếp: đổi tên thành `className`.
+// `dark` mặc định false (nền sáng).
+const { image, label, class: className, dark = false } = Astro.props;
+---
+
+{/*
+	Gốc template là một biểu thức điều kiện hai nhánh. Nhánh 1 (có image): bọc Image trong div
+	overflow-hidden rounded-xl để bo góc cắt ảnh; className từ nơi gọi cho div này kích thước, còn Image
+	dùng h-full w-full object-cover để lấp đầy và cắt tỉ lệ (không méo). Thuộc tính sizes là gợi ý cho trình duyệt
+	chọn bản ảnh phù hợp: rộng bằng viewport dưới 768px, còn lại khoảng 600px.
+	Nhánh 2 (chưa có ảnh): khung placeholder nét đứt, cũng có rounded-xl để cùng hình dạng với ảnh thật nên
+	layout không nhảy khi sau này editor upload ảnh.
+*/}
+{/*
+	Placeholder. Class cố định: flex-col căn giữa icon + chữ, border-2 border-dashed, text-slate-400.
+	Hai bảng màu theo dark: nền sáng dùng border-slate-300 + bg-slate-100; nền navy dùng border-white/15 + bg-white/5
+	(trong suốt để lộ gradient navy phía sau). class:list lọc giá trị falsy nên className undefined vô hại.
+	role=img + aria-label làm khung được đọc như một ảnh có tên; svg bên trong là trang trí nên aria-hidden.
+*/}
+{
+	image ? (
+		<div class:list={["overflow-hidden rounded-xl", className]}>
+			<Image image={image} class="h-full w-full object-cover" sizes="(max-width: 768px) 100vw, 600px" />
+		</div>
+	) : (
+		<div
+			class:list={[
+				"flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed text-slate-400",
+				dark ? "border-white/15 bg-white/5" : "border-slate-300 bg-slate-100",
+				className,
+			]}
+			role="img"
+			aria-label={label}
+		>
+			{/*
+				Icon ảnh (khung, mặt trời, núi) vẽ bằng SVG inline. Màu stroke/fill ghi cứng #94a3b8 (slate-400) vì thuộc tính SVG
+				không đi qua Tailwind; số 32 là kích thước cố định, không phụ thuộc chữ.
+			*/}
+			<svg width="32" height="32" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+				<rect x="3" y="3" width="18" height="18" rx="3" stroke="#94a3b8" stroke-width="1.5" />
+				<circle cx="8.5" cy="8.5" r="1.5" fill="#94a3b8" />
+				<path d="M21 15l-5-5L5 21" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" />
+			</svg>
+			{/*
+				Chữ chú thích chỉ hiện khi có label; px-2 + text-center để nhãn dài xuống dòng gọn trong khung hẹp.
+			*/}
+			{label && <span class="px-2 text-center text-xs font-medium">{label}</span>}
+		</div>
+	)
+}

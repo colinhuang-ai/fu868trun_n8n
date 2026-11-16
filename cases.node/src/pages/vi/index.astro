@@ -1,0 +1,58 @@
+---
+/**
+ * Route: GET /vi/  (trang chủ tiếng Việt).
+ *
+ * Bản "vi" của src/pages/index.astro: logic giống hệt, chỉ khác locale hard-code
+ * là "vi" và import có thêm một cấp "../" vì file nằm trong thư mục vi/.
+ * (Lý do tách file theo locale thay vì dùng route động [locale]: xem header của
+ * src/pages/index.astro. Tóm tắt: i18n để defaultLocale "en" không prefix,
+ * "vi" nằm dưới /vi, và không được bật prefixDefaultLocale vì làm hỏng
+ * /_emdash/admin.)
+ *
+ * Dữ liệu: loadPage(Astro, "home", "vi") đọc bản dịch tiếng Việt của trang
+ * "home" trong collection `pages`. Trong seed, bản VI là một entry riêng liên
+ * kết với bản EN qua `translationOf`; slug lưu trong DB là "home" còn entry.id
+ * có dạng "vi/home" (có tiền tố locale). Nếu chưa có bản VI đã publish, EmDash
+ * đi theo chuỗi fallback của cấu hình i18n (`fallback: { vi: "en" }`) và trả
+ * về bản tiếng Anh.
+ *
+ * Không có getStaticPaths(): output là "server", nội dung đọc lúc request.
+ */
+import PageShell from "../../components/PageShell.astro";
+import Base from "../../layouts/Base.astro";
+import { loadPage } from "../../utils/load-page";
+import { useTranslations } from "../../i18n/ui";
+
+// Hàm dịch chuỗi UI cố định cho tiếng Việt (src/i18n/ui.ts).
+const t = useTranslations("vi");
+// null nếu không có trang "home" ở bất kỳ locale nào trong chuỗi fallback.
+const result = await loadPage(Astro, "home", "vi");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - Có dữ liệu: render trang CMS đầy đủ (rải page/title/description/canonical/robots/alternates vào PageShell).
+// - Không có dữ liệu: placeholder tối giản trên layout Base, không trả 404 cho trang chủ.
+---
+
+{
+	result ? (
+		<PageShell {...result} />
+	) : (
+		<Base>
+			<section class="mx-auto max-w-3xl px-4 py-24 text-center text-white">
+				<h1 class="font-jakarta text-4xl font-black">CASES</h1>
+				{/* Chỉ hiện gợi ý tạo trang khi người xem đã đăng nhập admin (Astro.locals.user do EmDash gắn). */}
+				{Astro.locals.user && (
+					<>
+						<p class="mt-4 text-sky-100/70">{t("page.createHome")}</p>
+						{/* Liên kết admin giữ nguyên, không thêm /vi: admin nằm ngoài hệ thống locale của site. */}
+						<a
+							href="/_emdash/admin/content/pages/new"
+							class="mt-6 inline-block rounded-full bg-sky-700 px-8 py-3 font-bold text-white hover:bg-sky-600"
+						>
+							{t("page.create")}
+						</a>
+					</>
+				)}
+			</section>
+		</Base>
+	)
+}

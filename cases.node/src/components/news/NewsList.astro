@@ -1,0 +1,124 @@
+---
+/**
+ * NewsList: trang danh sách tin tức, dùng chung cho /news (EN) và /vi/news (VI).
+ * Hai route chỉ render <NewsList /> không props; mọi thứ tự suy ra từ request.
+ *
+ * Luồng dữ liệu:
+ *   Astro.currentLocale -> toLocale() -> "en" | "vi"
+ *   Astro.url ?cursor=...  -> cursor của trang hiện tại
+ *   getEmDashCollection("posts", { locale, orderBy, limit, cursor })
+ *     -> { entries, nextCursor, cacheHint }
+ *
+ * Phân trang bằng CURSOR (không dùng số trang): EmDash trả nextCursor là chuỗi
+ * mờ đánh dấu vị trí cuối trang; ta truyền nó qua query ?cursor=. Giá trị
+ * này do EmDash mã hoá/giải mã, giao diện không cần (và không nên) hiểu nội dung
+ * của nó, chỉ cần chuyển tiếp đúng nguyên xi (xem encodeURIComponent bên dưới).
+ */
+import { getEmDashCollection } from "emdash";
+import Base from "../../layouts/Base.astro";
+import NewsCard from "./NewsCard.astro";
+import { LOCALES, type Locale, toLocale, useTranslations } from "../../i18n/ui";
+import { newsPath } from "../../utils/news";
+
+// Số bài mỗi trang. Chia hết cho 3 (lưới lg:3 cột) và 2 (sm:2 cột) nên hàng cuối không lẻ.
+const PAGE_SIZE = 12;
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+// null (không có ?cursor) => `?? undefined` để getEmDashCollection hiểu là "trang đầu".
+const cursor = Astro.url.searchParams.get("cursor") ?? undefined;
+
+// Luôn truyền `locale`: nếu thiếu, truy vấn có thể trả lẫn bài của cả hai ngôn ngữ.
+// published_at desc: bài mới nhất lên đầu. Chỉ bài đã publish được trả ra cho khách.
+const { entries: posts, nextCursor, cacheHint } = await getEmDashCollection("posts", {
+	locale,
+	orderBy: { published_at: "desc" },
+	limit: PAGE_SIZE,
+	cursor,
+});
+// cacheHint mô tả tag/thời hạn cache của kết quả; chuyển cho cache của Astro nếu
+// route caching đang bật (Astro.cache có thể undefined) để khi bài được sửa/publish
+// thì cache của trang này bị vô hiệu đúng lúc.
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+// URL trang đầu của danh sách trong locale hiện tại (dùng cho "Latest news" và "Older news").
+const listPath = newsPath(locale);
+// Bản đồ locale -> URL danh sách tin ({ en: "/news", vi: "/vi/news" }) để nút EN | VI
+// của Base nhảy giữa hai danh sách. Object.fromEntries trả kiểu rộng nên ép về Record<Locale, string>.
+const alternates = Object.fromEntries(LOCALES.map((code) => [code, newsPath(code)])) as Record<
+	Locale,
+	string
+>;
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - title/description cho <head> (Base tự nối thêm tên site vào title). robots: các trang cursor (từ trang 2) là noindex để tránh lập chỉ mục trùng/mỏng nhưng vẫn "follow" để bot đi tiếp tới bài; trang đầu dùng mặc định (undefined).
+---
+
+<Base
+	title={t("news.title")}
+	description={t("news.intro")}
+	alternates={alternates}
+	robots={cursor ? "noindex, follow" : undefined}
+>
+	{/* Header tối: eyebrow, tiêu đề, gạch trang trí và đoạn giới thiệu. */}
+	<header class="mx-auto max-w-7xl px-4 py-14 sm:px-8 lg:px-12">
+		<span class="mb-2 block text-xs font-bold tracking-[0.3em] text-sky-400 uppercase">
+			{t("news.eyebrow")}
+		</span>
+		<h1 class="font-jakarta text-4xl font-black text-white sm:text-5xl">{t("news.title")}</h1>
+		<div class="mt-4 h-0.5 w-12 rounded-full bg-sky-400"></div>
+		<p class="mt-4 max-w-2xl text-sky-100/70">{t("news.intro")}</p>
+	</header>
+
+	{/* Khối nền trắng chứa lưới thẻ và thanh phân trang. */}
+	<section class="bg-white py-12 sm:py-16">
+		<div class="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
+			{/* Có bài: lưới 1/2/3 cột. Không có bài: thông báo rỗng (+ nút viết bài cho admin). */}
+			{
+				posts.length > 0 ? (
+					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+						{posts.map((post) => (
+							<NewsCard post={post} />
+						))}
+					</div>
+				) : (
+					<div class="py-16 text-center">
+						<p class="text-slate-500">{t("news.empty")}</p>
+						{/* Chỉ người đã đăng nhập admin (Astro.locals.user) thấy nút tạo bài mới; link admin không có prefix locale. */}
+						{Astro.locals.user && (
+							<a
+								href="/_emdash/admin/content/posts/new"
+								class="mt-6 inline-block rounded-full bg-sky-700 px-8 py-3 font-bold text-white hover:bg-sky-600"
+							>
+								{t("news.write")}
+							</a>
+						)}
+					</div>
+				)
+			}
+			{/* Thanh phân trang chỉ hiện khi đang ở trang sau (có cursor) hoặc còn trang kế (có nextCursor). */}
+			{
+				(cursor || nextCursor) && (
+					<nav class="mt-12 flex items-center justify-between gap-4 border-t border-slate-100 pt-8 text-sm font-bold">
+						{/* Bên trái: "Latest news" về trang đầu khi đang ở trang sau; ngược lại <span /> rỗng giữ chỗ để nút phải vẫn nằm bên phải (justify-between). */}
+						{cursor ? (
+							<a href={listPath} class="text-sky-700 hover:text-sky-600">
+								← {t("news.newest")}
+							</a>
+						) : (
+							<span />
+						)}
+						{/* Bên phải: "Older news" tới trang kế. encodeURIComponent vì cursor là chuỗi mờ có thể chứa ký tự đặc biệt trong URL. */}
+						{nextCursor && (
+							<a
+								href={`${listPath}?cursor=${encodeURIComponent(nextCursor)}`}
+								class="rounded-full bg-sky-700 px-6 py-2.5 text-white hover:bg-sky-600"
+							>
+								{t("news.older")} →
+							</a>
+						)}
+					</nav>
+				)
+			}
+		</div>
+	</section>
+</Base>

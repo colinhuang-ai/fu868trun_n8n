@@ -1,0 +1,15 @@
+---
+/**
+ * Route: GET /vi/news  (danh sách tin tức tiếng Việt, phân trang bằng ?cursor=).
+ *
+ * Bản "vi" của src/pages/news/index.astro: chỉ render component dùng chung
+ * NewsList. Locale "vi" được NewsList suy ra từ Astro.currentLocale (Astro
+ * nhận ra tiền tố /vi theo cấu hình i18n), nên file này không truyền gì. Chỉ
+ * cần import đi thêm một cấp "../" vì nằm sâu hơn một thư mục.
+ */
+import NewsList from "../../../components/news/NewsList.astro";
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - Không có props: locale và cursor do NewsList tự lấy.
+---
+
+<NewsList />

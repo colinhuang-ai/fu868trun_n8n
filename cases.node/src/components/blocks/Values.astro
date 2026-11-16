@@ -1,0 +1,119 @@
+---
+/**
+ * Values.astro - render block `cases_values` (tên trong admin: "Mission and values"): hai (tối đa bốn) thẻ giá trị như
+ * Mission/Vision, và bên dưới là một panel trích dẫn lớn trên nền navy kèm tối đa hai nút kêu gọi hành động. Seed dùng ở
+ * trang About (block key "values").
+ *
+ * Nguồn dữ liệu: hoàn toàn trong block (field `content` của entry `pages`), không đọc collection. Dữ liệu mẫu nằm ở
+ * block("cases_values", "values", {...}) trong scripts/build-seed.mjs. Mỗi locale có entry trang riêng (translationOf),
+ * nên chữ đã đúng ngôn ngữ; `locale` ở đây chỉ để thêm tiền tố /vi cho link của hai nút.
+ *
+ * Schema (blockType("cases_values") trong build-seed.mjs). KHÔNG có headline/eyebrow; mọi field đều tùy chọn:
+ * - quote : string (câu trích dẫn lớn). quote_body : text (đoạn bên dưới câu trích).
+ * - cards[] : repeater tùy chọn, tối đa 4: icon (tên Material Symbols, tùy chọn), title (bắt buộc), body (bắt buộc).
+ * - primary_cta_label + primary_cta_url, secondary_cta_label + secondary_cta_url : hai nút trong panel trích dẫn.
+ * - anchor_id : id section.
+ *
+ * Lưu ý hành vi: hai nút chỉ nằm TRONG panel trích dẫn, nên nếu để trống `quote` thì nút không hiện dù đã cấu hình.
+ */
+// Type-only: kiểu props (value, index, blockKey) do <Blocks> truyền vào.
+import { type BlockComponentProps } from "emdash/ui";
+// Union kiểu mọi block (sinh vào emdash-env.d.ts).
+import type { PageContentBlock } from "../../../emdash-env";
+// Chuẩn hóa Astro.currentLocale về "en" | "vi".
+import { toLocale } from "../../i18n/ui";
+// Link do editor nhập qua CMS: sanitizeHref chặn URL không an toàn, localizePath thêm tiền tố /vi cho đường dẫn gốc ở bản
+// tiếng Việt (link https://, mailto:, tel:, #anchor giữ nguyên). Trả về undefined nếu URL rỗng hoặc không hợp lệ.
+import { resolveHref } from "../../utils/links";
+
+// Thu hẹp union xuống block có _type = "cases_values".
+type ValuesBlock = Extract<PageContentBlock, { _type: "cases_values" }>;
+// Props chuẩn của component block.
+type Props = BlockComponentProps<ValuesBlock>;
+
+// Chỉ cần `value`.
+const { value } = Astro.props;
+// Locale của request ("en" không có tiền tố URL, "vi" dưới /vi/). Quy tắc dự án: dùng toLocale(Astro.currentLocale).
+const locale = toLocale(Astro.currentLocale);
+// Href đã làm sạch + bản địa hóa cho hai nút; undefined nếu không có URL hợp lệ. Template kiểm tra cả href lẫn label
+// để không in nút thiếu chữ hoặc thiếu đích.
+const primary = resolveHref(value.primary_cta_url, locale);
+const secondary = resolveHref(value.secondary_cta_url, locale);
+// `cards` là repeater KHÔNG bắt buộc (required: false) nên có thể undefined; chuẩn hóa về mảng rỗng để dùng .length/.map.
+const cards = value.cards ?? [];
+---
+
+{/*
+	Section nền slate-50 (xám rất nhạt) để xen kẽ với các block nền trắng (Features, Timeline, Plants). id từ anchor_id
+	(|| undefined để không in id rỗng).
+*/}
+<section id={value.anchor_id || undefined} class="bg-slate-50 py-14 md:py-24">
+	<div class="mx-auto max-w-7xl px-4 sm:px-8">
+		{/*
+			Lưới thẻ giá trị: chỉ render khi có thẻ. 1 cột (mobile) → 2 cột (md). reveal để hiện dần. Mỗi thẻ: nền trắng, viền slate-100,
+			bo rounded-2xl, shadow-sm nâng lên shadow-md khi hover; ô icon (sky-100) tùy chọn nếu thẻ có icon (tên Material Symbols);
+			tiêu đề text-2xl; nội dung text-lg chữ nghiêng (italic) như lời tuyên bố sứ mệnh.
+		*/}
+		{
+			cards.length > 0 && (
+				<div class="reveal mb-14 grid grid-cols-1 gap-8 md:grid-cols-2">
+					{cards.map((card) => (
+						<div class="rounded-2xl border border-slate-100 bg-white p-10 shadow-sm transition-all hover:shadow-md">
+							{card.icon && (
+								<div class="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100">
+									<span class="material-symbols-outlined text-2xl text-sky-600" aria-hidden="true">
+										{card.icon}
+									</span>
+								</div>
+							)}
+							<h3 class="mb-4 text-2xl font-bold text-slate-900">{card.title}</h3>
+							<p class="text-lg leading-relaxed text-slate-500 italic">{card.body}</p>
+						</div>
+					))}
+				</div>
+			)
+		}
+		{/*
+			Panel trích dẫn: chỉ render khi có quote. Nền gradient inline #071525 → #0d2137 (navy → navy-2 theo token global.css) ghi bằng
+			style vì chỉ dùng ở đây. Bên trong: icon format_quote (Material Symbols), câu trích lớn (font-jakarta font-black italic), đoạn
+			quote_body tùy chọn (text-sky-100/60 dịu hơn), rồi hàng nút: flex-col trên mobile, sm:flex-row từ sm.
+			Nút chính (bg-sky-700 đặc) và nút phụ (viền trắng mờ, trong suốt) chỉ render khi vừa có href hợp lệ vừa có label.
+		*/}
+		{
+			value.quote && (
+				<div
+					class="reveal rounded-2xl p-10 text-center"
+					style="background:linear-gradient(135deg,#071525,#0d2137)"
+				>
+					<span class="material-symbols-outlined mb-4 block text-4xl text-sky-400" aria-hidden="true">
+						format_quote
+					</span>
+					<p class="mb-4 font-jakarta text-3xl font-black text-white italic md:text-4xl">
+						{value.quote}
+					</p>
+					{value.quote_body && (
+						<p class="mx-auto max-w-2xl text-lg text-sky-100/60">{value.quote_body}</p>
+					)}
+					<div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+						{primary && value.primary_cta_label && (
+							<a
+								href={primary}
+								class="inline-flex items-center justify-center gap-2 rounded-full bg-sky-700 px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-sky-600"
+							>
+								{value.primary_cta_label}
+							</a>
+						)}
+						{secondary && value.secondary_cta_label && (
+							<a
+								href={secondary}
+								class="rounded-full border border-white/20 px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-white/10"
+							>
+								{value.secondary_cta_label}
+							</a>
+						)}
+					</div>
+				</div>
+			)
+		}
+	</div>
+</section>

@@ -1,0 +1,67 @@
+# CASES website — local WordPress stack (latest WordPress + MariaDB)
+# Start:  docker compose up -d
+# Setup:  bash scripts/setup.sh
+name: cases-wp
+
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: ${DB_PASSWORD:-wp_local_pass}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_local_pass}
+    ports:
+      # Host access for GUI clients. 3306 is taken by the local MySQL, so use 3307.
+      # Bound to loopback only: the database is not reachable from the network.
+      - "127.0.0.1:${DB_PORT:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    image: wordpress:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8088}:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wp_local_pass}
+      WORDPRESS_DEBUG: "1"
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ENVIRONMENT_TYPE', 'local');
+        define('DISALLOW_FILE_EDIT', true);
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content/themes/cases:/var/www/html/wp-content/themes/cases
+      - ./scripts:/scripts:ro
+
+  wpcli:
+    image: wordpress:cli
+    profiles: ["tools"]
+    user: "33:33"
+    depends_on:
+      - wordpress
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:-wp_local_pass}
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content/themes/cases:/var/www/html/wp-content/themes/cases
+      - ./scripts:/scripts:ro
+
+volumes:
+  db_data:
+  wp_data:

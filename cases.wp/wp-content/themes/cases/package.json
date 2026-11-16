@@ -1,0 +1,14 @@
+{
+  "name": "cases-theme",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CASES WordPress theme — Tailwind build",
+  "scripts": {
+    "build": "tailwindcss -c tailwind.config.js -i src/input.css -o assets/css/app.css --minify",
+    "watch": "tailwindcss -c tailwind.config.js -i src/input.css -o assets/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "tailwindcss": "^3.4.17"
+  }
+}

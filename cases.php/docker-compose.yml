@@ -1,0 +1,40 @@
+# ============================================================================
+#  docker-compose.yml – CHẠY WEBSITE BẰNG DOCKER (không cần cài PHP lên máy)
+# ============================================================================
+# Lệnh chạy:      docker-compose up -d      (hoặc: docker compose up -d)
+# Mở trình duyệt: http://localhost:8000     – quản trị: http://localhost:8000/admin
+# Dừng:           docker-compose down
+# Xem log:        docker logs -f cases-cms
+
+# Danh sách các "service" (container) – dự án chỉ cần một: web.
+services:
+  # Tên service (dùng trong các lệnh docker-compose, vd. docker-compose restart web).
+  web:
+    # Image PHP 8.3 bản dòng lệnh chính thức từ Docker Hub.
+    # Đã có sẵn PDO SQLite, mbstring, fileinfo – đủ cho dự án, không cần cài thêm extension.
+    image: php:8.3-cli
+    # Tên container cố định để dễ gõ lệnh (vd. docker exec cases-cms php /app/database/reset.php).
+    container_name: cases-cms
+    # Thư mục làm việc bên trong container (nơi mã nguồn được gắn vào, xem volumes).
+    working_dir: /app
+    # Lệnh khởi động: chạy PHP built-in web server.
+    #   -d upload_max_filesize=8M : cho phép upload file tối đa 8MB (mặc định PHP chỉ 2MB)
+    #   -d post_max_size=10M      : tổng dung lượng 1 request POST (phải lớn hơn upload_max_filesize)
+    #   -S 0.0.0.0:8000           : lắng nghe cổng 8000 trên mọi địa chỉ mạng của container
+    #                               (phải là 0.0.0.0 thì máy host mới truy cập được)
+    #   -t public                 : thư mục gốc web là public/ (app/, storage/... không truy cập được)
+    #   public/router.php         : script định tuyến – file tĩnh trả thẳng, còn lại chuyển vào index.php
+    # Ký hiệu ">" của YAML: gộp các dòng bên dưới thành MỘT dòng lệnh
+    # (vì vậy KHÔNG được chèn comment vào giữa 2 dòng lệnh đó).
+    command: >
+      php -d upload_max_filesize=8M -d post_max_size=10M
+      -S 0.0.0.0:8000 -t public public/router.php
+    # Ánh xạ cổng "máy host:container" → mở http://localhost:8000 trên máy bạn.
+    # Muốn dùng cổng khác (vd. 8080) thì sửa thành "8080:8000".
+    ports:
+      - "8000:8000"
+    # Gắn thư mục dự án trên máy (./) vào /app trong container.
+    # Nhờ vậy sửa code trên máy là có hiệu lực ngay, không cần build lại;
+    # file database.sqlite và ảnh upload cũng nằm ngay trên máy (không mất khi xoá container).
+    volumes:
+      - ./:/app

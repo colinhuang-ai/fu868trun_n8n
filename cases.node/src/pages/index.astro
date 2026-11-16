@@ -1,0 +1,70 @@
+---
+/**
+ * Route: GET /  (trang chủ tiếng Anh).
+ *
+ * Mục đích: hiển thị trang CMS có slug "home" của collection `pages` bằng
+ * ngôn ngữ "en". Nội dung (các block `cases_*`) do editor soạn trong EmDash
+ * admin, file này chỉ lấy dữ liệu rồi giao cho <PageShell> render.
+ *
+ * Luồng dữ liệu:
+ *   loadPage(Astro, "home", "en")      (src/utils/load-page.ts)
+ *     -> getEmDashEntry("pages", "home", { locale: "en" })   // đọc D1 lúc request
+ *     -> trả về { page, title, description, canonical, alternates, ... } hoặc null
+ *   null  -> hiện màn hình "chưa có trang chủ" (xem template bên dưới)
+ *   khác  -> <PageShell {...result} /> (Base layout + PageView + CasesBlocks)
+ *
+ * Vì sao có CẢ src/pages/index.astro VÀ src/pages/vi/index.astro (và các cặp
+ * [slug], 404, news/*) thay vì một route động kiểu [locale]/...?
+ *   - Cấu hình i18n trong astro.config.mjs: defaultLocale "en" KHÔNG có prefix
+ *     (/ , /about), còn "vi" nằm dưới /vi (/vi/, /vi/about). Không bao giờ bật
+ *     prefixDefaultLocale vì sẽ làm hỏng /_emdash/admin.
+ *   - Một route động [locale]/[slug] sẽ buộc mọi URL (kể cả EN) phải có đoạn
+ *     locale ở đầu, trái với việc EN không có prefix. Tách file cho mỗi locale
+ *     giữ URL EN sạch, cho Astro tự suy ra Astro.currentLocale từ đường dẫn,
+ *     và mỗi file chỉ hard-code đúng một locale ("en"/"vi") truyền xuống loader.
+ *
+ * Không có getStaticPaths(): site chạy `output: "server"` (SSR trên
+ * Cloudflare Workers), nội dung CMS được đọc tại thời điểm request nên editor
+ * publish xong là thấy ngay, không cần build lại.
+ */
+import PageShell from "../components/PageShell.astro";
+import Base from "../layouts/Base.astro";
+import { loadPage } from "../utils/load-page";
+import { useTranslations } from "../i18n/ui";
+
+// Hàm dịch cho chuỗi UI cố định (chrome) của ngôn ngữ EN. Nội dung trang thật
+// nằm trong CMS, chỉ các câu như "Create page" mới lấy từ src/i18n/ui.ts.
+const t = useTranslations("en");
+// Tải trang "home" (ngôn ngữ "en" được truyền cứng vì file này chỉ phục vụ EN).
+// Kết quả là null khi trang chưa tồn tại/chưa publish; khi đó template dưới
+// đây hiển thị placeholder thay vì trả 404 (trang chủ không bao giờ được 404).
+const result = await loadPage(Astro, "home", "en");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - Có dữ liệu: render trang CMS đầy đủ. {...result} rải page/title/description/canonical/robots/alternates... vào PageShell.
+// - Không có dữ liệu: dùng layout Base trần với một placeholder tối giản (không rewrite sang 404).
+---
+
+{
+	result ? (
+		<PageShell {...result} />
+	) : (
+		<Base>
+			<section class="mx-auto max-w-3xl px-4 py-24 text-center text-white">
+				<h1 class="font-jakarta text-4xl font-black">CASES</h1>
+				{/* Astro.locals.user do auth middleware của EmDash gắn khi có session đăng nhập (soft check, không chặn request); khách vãng lai chỉ thấy tiêu đề CASES. */}
+				{Astro.locals.user && (
+					<>
+						<p class="mt-4 text-sky-100/70">{t("page.createHome")}</p>
+						{/* Nút dẫn thẳng tới form tạo trang mới trong EmDash admin (đường dẫn admin không có prefix locale). */}
+						<a
+							href="/_emdash/admin/content/pages/new"
+							class="mt-6 inline-block rounded-full bg-sky-700 px-8 py-3 font-bold text-white hover:bg-sky-600"
+						>
+							{t("page.create")}
+						</a>
+					</>
+				)}
+			</section>
+		</Base>
+	)
+}

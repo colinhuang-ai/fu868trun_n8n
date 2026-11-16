@@ -1,0 +1,15 @@
+# ============================================================================
+#  .gitignore – các file KHÔNG đưa vào Git
+# ============================================================================
+
+# File database SQLite và các file phụ của nó (database.sqlite, -wal, -shm, -journal).
+# Đây là DỮ LIỆU THẬT (tài khoản, bài viết, yêu cầu của khách) – không commit lên kho mã.
+# Máy khác clone về sẽ tự tạo database mới kèm dữ liệu mẫu ở lần chạy đầu.
+/storage/*.sqlite*
+
+# Toàn bộ ảnh do admin upload (cũng là dữ liệu, có thể rất nặng).
+/public/uploads/*
+# ...nhưng GIỮ LẠI file .htaccess bảo vệ thư mục upload (dấu ! = ngoại lệ, vẫn commit).
+!/public/uploads/.htaccess
+# ...và file .gitkeep rỗng để Git giữ được thư mục uploads/ (Git không lưu thư mục trống).
+!/public/uploads/.gitkeep

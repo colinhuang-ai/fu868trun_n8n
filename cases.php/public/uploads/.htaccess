@@ -1,0 +1,19 @@
+# ============================================================================
+#  public/uploads/.htaccess – BẢO VỆ THƯ MỤC ẢNH UPLOAD
+# ============================================================================
+# Thư mục này chứa file do admin tải lên, nên phải đề phòng: nếu bằng cách nào đó
+# kẻ xấu tải được file .php lên đây rồi gọi URL tới nó, Apache sẽ THỰC THI file đó
+# → chiếm quyền máy chủ.
+# Lớp bảo vệ thứ nhất nằm ở code: store_upload() trong app/helpers.php chỉ nhận ảnh
+# JPG/PNG/WEBP/GIF, kiểm tra nội dung thật bằng finfo và đặt tên file ngẫu nhiên.
+# File này là lớp bảo vệ thứ hai ở phía web server.
+
+# Chặn truy cập (403 Forbidden) mọi file có đuôi script:
+# PHP (.php, .phtml, .phar), Perl (.pl), Python (.py), CGI (.cgi), shell (.sh).
+# "\." = dấu chấm thật, "$" = đuôi nằm ở cuối tên file.
+<FilesMatch "\.(php|phtml|phar|pl|py|cgi|sh)$">
+    # Cú pháp Apache 2.4: từ chối tất cả.
+    Require all denied
+</FilesMatch>
+# Không liệt kê danh sách file trong thư mục (tránh người ngoài duyệt hết ảnh đã upload).
+Options -Indexes

@@ -1,0 +1,33 @@
+---
+/**
+ * Route: trang 404 tiếng Việt. Phục vụ ở GET /vi/404 và là đích của
+ * `Astro.rewrite("/vi/404")` trong src/pages/vi/[slug].astro và
+ * src/pages/vi/news/[slug].astro khi không tìm thấy nội dung.
+ *
+ * Bản "vi" của src/pages/404.astro (xem giải thích đầy đủ ở đó về rewrite và
+ * lý do phải tự đặt status 404). Khác biệt: locale "vi" và liên kết về "/vi/".
+ */
+import Base from "../../layouts/Base.astro";
+import { localizePath, useTranslations } from "../../i18n/ui";
+
+// Đặt tường minh 404 (dù truy cập trực tiếp hay qua rewrite) để tránh "soft 404" (HTTP 200).
+Astro.response.status = 404;
+const t = useTranslations("vi");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - robots="noindex" để trang lỗi không bị lập chỉ mục.
+---
+
+<Base title={t("notFound.title")} robots="noindex">
+	<section class="mx-auto max-w-3xl px-4 py-24 text-center text-white">
+		<p class="font-jakarta text-7xl font-black text-sky-400">404</p>
+		<h1 class="mt-4 font-jakarta text-3xl font-black">{t("notFound.title")}</h1>
+		<p class="mt-3 text-sky-100/70">{t("notFound.body")}</p>
+		{/* localizePath("/", "vi") = "/vi/": đưa khách về trang chủ tiếng Việt. */}
+		<a
+			href={localizePath("/", "vi")}
+			class="mt-8 inline-block rounded-full bg-sky-700 px-8 py-3 font-bold text-white hover:bg-sky-600"
+		>
+			{t("notFound.home")}
+		</a>
+	</section>
+</Base>

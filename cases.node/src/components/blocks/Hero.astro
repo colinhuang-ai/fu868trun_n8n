@@ -1,0 +1,403 @@
+---
+/**
+ * Hero.astro — block `cases_hero` (phần giới thiệu / banner đầu trang).
+ *
+ * ĐƯỢC ĐĂNG KÝ Ở ĐÂU
+ *   `src/components/CasesBlocks.astro` map `cases_hero: Hero` trong
+ *   `defineBlockComponents`. Mỗi page (home, about, products, infrastructure,
+ *   certifications) đặt đúng 1 block hero làm block đầu tiên của trường
+ *   `content` (kiểu `blocks`) trong collection `pages`.
+ *
+ * DỮ LIỆU (props `value`) — schema nằm trong `scripts/build-seed.mjs`
+ * (blockType("cases_hero", ...)), nội dung mẫu được seed một lần, sau đó editor
+ * sửa trong admin (`/_emdash/admin`). Mọi text là copy do CMS quản lý, KHÔNG
+ * hard-code trong component (xem AGENTS.md → Rules):
+ *   - headline           (string, bắt buộc)  tiêu đề h1
+ *   - headline_accent    (string)            dòng thứ 2 của h1, được tô nổi bật
+ *   - eyebrow            (string)            nhãn nhỏ phía trên h1 (dạng "pill")
+ *   - subheadline        (text)              đoạn giới thiệu bên dưới h1
+ *   - layout             (select, bắt buộc)  "center" | "split" | "glow" | "banner"
+ *   - primary_cta_label / primary_cta_url    nút chính (chỉ layout "center" dùng)
+ *   - secondary_cta_label / secondary_cta_url nút phụ (chỉ layout "center" dùng)
+ *   - stats              (repeater, tối đa 4) [{ value, unit?, label }] số liệu nổi bật
+ *   - anchor_id          (string)            id của <section> để link kiểu /#markets
+ *
+ * 4 LAYOUT (mỗi trang chọn một, xem seed):
+ *   - center : trang chủ — logo làm watermark mờ ở giữa, h1 Playfair Display
+ *              (font-display), 2 nút CTA. KHÔNG hiển thị stats.
+ *   - split  : trang About / Infrastructure — nền navy, logo mờ bên phải,
+ *              h1 Plus Jakarta Sans, lưới stats 2/4 cột. Không dùng headline_accent.
+ *   - glow   : trang Certifications — nền lưới + orb + vầng sáng có animation,
+ *              stats dạng thẻ kính, số được đếm tăng dần bởi <script> cuối file.
+ *   - banner : trang Products — băng rộng bo góc trên nền slate-50, thấp (260/320px),
+ *              đứng ngay trên catalog.
+ *
+ * Không đọc collection nào lúc request; chỉ dùng `Astro.currentLocale` để chuẩn
+ * hoá link CTA (thêm tiền tố /vi cho tiếng Việt). Bản dịch VI là một entry
+ * `pages` riêng (liên kết bằng `translationOf`), nên headline… đã là tiếng Việt
+ * khi `locale === "vi"`.
+ */
+
+// Kiểu props chuẩn của EmDash cho một block component: `{ value, blockKey?, ... }`.
+import { type BlockComponentProps } from "emdash/ui";
+// Kiểu sinh tự động (`npx emdash types`) mô tả mọi block của field `content`.
+import type { PageContentBlock } from "../../../emdash-env";
+// `company.logo` = đường dẫn logo (/cases-logo.svg), dùng làm watermark.
+import { company } from "../../site.config";
+// `toLocale` ép giá trị `Astro.currentLocale` về "en" | "vi" (mặc định "en").
+import { toLocale } from "../../i18n/ui";
+// `resolveHref` làm sạch link do CMS nhập (chặn javascript:, v.v.) và thêm /vi.
+import { resolveHref } from "../../utils/links";
+
+// Thu hẹp union `PageContentBlock` về đúng block `cases_hero` để `value` có kiểu chính xác.
+type HeroBlock = Extract<PageContentBlock, { _type: "cases_hero" }>;
+type Props = BlockComponentProps<HeroBlock>;
+
+const { value } = Astro.props;
+// Locale của request hiện tại (en ở "/", vi ở "/vi/..."). Phải truyền xuống mọi
+// hàm cần locale (AGENTS.md → Rules).
+const locale = toLocale(Astro.currentLocale);
+// `layout` là trường required có defaultValue "center", nhưng block cũ/không có
+// giá trị vẫn rơi về "center" thay vì render rỗng.
+const layout = value.layout ?? "center";
+// Link CTA: `resolveHref` trả `undefined` khi URL trống hoặc không an toàn, và
+// thêm tiền tố `/vi` cho link nội bộ khi đang ở tiếng Việt. Dưới template, nút
+// chỉ render khi có CẢ href lẫn label.
+const primary = resolveHref(value.primary_cta_url, locale);
+const secondary = resolveHref(value.secondary_cta_url, locale);
+// `stats` là repeater tuỳ chọn, có thể là undefined -> chuẩn hoá thành mảng rỗng
+// để `.length` / `.map` ở dưới luôn an toàn.
+const stats = value.stats ?? [];
+---
+
+{/*
+	Mỗi layout là một khối điều kiện độc lập (`layout === "..." && (section)`);
+	chỉ một khối được render. Comment đặt NGOÀI các khối biểu thức để không phá cú pháp.
+	Mọi section đều gắn `id = anchor_id`: chuỗi rỗng → `undefined`
+	nên Astro bỏ hẳn attribute id (không xuất id="").
+
+	LAYOUT "center" (trang chủ):
+	- `hero-gradient` (global.css): gradient navy-teal bán trong suốt, nằm trên ảnh nền/body.
+	- Chiều cao responsive: min-h 420 → 550 (sm), cố định 700px từ md để hero choán màn hình.
+	- `overflow-hidden` để watermark logo to hơn khung không gây cuộn ngang.
+	- `text-white`: toàn bộ chữ trong hero là trắng trên nền tối.
+*/}
+{
+	layout === "center" && (
+		<section
+			id={value.anchor_id || undefined}
+			class="hero-gradient relative flex min-h-[420px] items-center justify-center overflow-hidden text-white sm:min-h-[550px] md:h-[700px]"
+		>
+			{/*
+				Lớp watermark: logo công ty rộng 85vw, căn giữa tuyệt đối bằng
+				top/left 1/2 + translate -1/2, opacity-20 để chỉ như hoạ tiết nền.
+				`pointer-events-none` + `select-none` để không chặn click/chọn chữ;
+				`z-0` nằm dưới nội dung (z-10); `alt=""` vì ảnh thuần trang trí.
+				`max-w-none` ghi đè giới hạn max-width mặc định của thẻ img trong preflight Tailwind.
+			*/}
+			<div class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+				<img
+					src={company.logo}
+					alt=""
+					class="pointer-events-none absolute top-1/2 left-1/2 h-auto w-[85vw] max-w-none -translate-x-1/2 -translate-y-1/2 select-none object-contain opacity-20"
+				/>
+			</div>
+			{/* Lớp nội dung: `relative z-10` để nằm trên watermark. */}
+			<div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+				{/* Eyebrow chỉ hiện khi editor có nhập; nền sky-500/80 + backdrop-blur cho cảm giác kính mờ. */}
+				{value.eyebrow && (
+					<span class="mb-6 inline-block rounded-full border border-white/20 bg-sky-500/80 px-4 py-1.5 text-xs font-bold tracking-widest uppercase backdrop-blur-md">
+						{value.eyebrow}
+					</span>
+				)}
+				{/*
+					h1 dùng `font-display` (Playfair Display, theo thiết kế chỉ hero trang chủ dùng).
+					`reveal` = hiệu ứng hiện dần khi cuộn (global.css + IntersectionObserver trong Base.astro;
+					không có JS thì nội dung vẫn hiện vì CSS chỉ ẩn dưới `.js`).
+					drop-shadow đậm giúp chữ đọc được trên ảnh/gradient sáng.
+					headline_accent (nếu có) xuống dòng bằng thẻ br trong cùng h1 để vẫn là MỘT heading.
+				*/}
+				<h1 class="reveal mb-8 font-display text-5xl leading-[1.1] font-bold drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] md:text-7xl">
+					{value.headline}
+					{value.headline_accent && (
+						<>
+							<br />
+							{value.headline_accent}
+						</>
+					)}
+				</h1>
+				{value.subheadline && (
+					<p class="reveal mx-auto mb-12 max-w-3xl text-xl font-light text-sky-50/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] md:text-2xl">
+						{value.subheadline}
+					</p>
+				)}
+				{/* Hàng nút: xếp dọc trên mobile (flex-col), ngang từ sm trở lên. */}
+				<div class="flex flex-col justify-center gap-6 sm:flex-row">
+					{/*
+						Nút chính: chỉ render khi `primary` đã qua `resolveHref` (an toàn) VÀ có label.
+						`group` + `group-hover:translate-x-1` làm mũi tên trượt phải khi hover.
+						`material-symbols-outlined` là icon font (tên icon là text "arrow_forward"),
+						nên `aria-hidden` để screen reader không đọc tên icon.
+					*/}
+					{primary && value.primary_cta_label && (
+						<a
+							href={primary}
+							class="group flex items-center justify-center rounded-full bg-sky-600 px-10 py-4 font-bold text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-sky-700"
+						>
+							{value.primary_cta_label}
+							<span
+								class="material-symbols-outlined ml-2 text-xl transition-transform group-hover:translate-x-1"
+								aria-hidden="true"
+							>
+								arrow_forward
+							</span>
+						</a>
+					)}
+					{/* Nút phụ: kiểu "glass" (nền trắng 10% + viền mờ + blur) để lép vế so với nút chính. */}
+					{secondary && value.secondary_cta_label && (
+						<a
+							href={secondary}
+							class="flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-10 py-4 font-bold text-white shadow-lg backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/20"
+						>
+							{value.secondary_cta_label}
+						</a>
+					)}
+				</div>
+			</div>
+		</section>
+	)
+}
+
+{/*
+	LAYOUT "split" (About, Infrastructure):
+	- `bg-navy-sweep` (global.css): gradient 160deg navy → navy-2 → navy.
+	- Chiều cao nhỏ hơn "center" (380/440px min) và để padding quyết định chiều cao thực.
+*/}
+{
+	layout === "split" && (
+		<section
+			id={value.anchor_id || undefined}
+			class="bg-navy-sweep relative flex min-h-[380px] items-center overflow-hidden sm:min-h-[440px]"
+		>
+			{/* Họa tiết chấm (`bg-dots`) rất mờ (4%) tạo texture; không tương tác. */}
+			<div class="bg-dots pointer-events-none absolute inset-0 opacity-[0.04]" />
+			{/* Watermark logo ở nửa phải: cao 100% khung, căn phải (`object-right`), opacity-10. */}
+			<div class="pointer-events-none absolute top-0 right-0 flex h-full w-1/2 items-center justify-end overflow-hidden opacity-10">
+				<img src={company.logo} alt="" class="h-full w-auto select-none object-contain object-right" />
+			</div>
+			<div class="relative z-10 mx-auto w-full max-w-7xl px-4 py-14 sm:px-8 md:py-20 lg:px-12">
+				{value.eyebrow && (
+					<span class="reveal mb-6 inline-block rounded-full border border-sky-500/30 bg-sky-500/20 px-4 py-1.5 text-xs font-bold tracking-widest text-sky-300 uppercase">
+						{value.eyebrow}
+					</span>
+				)}
+				{/* Layout này dùng `font-jakarta` (không phải Playfair) và KHÔNG render headline_accent. */}
+				<h1 class="mb-6 font-jakarta text-3xl leading-tight font-black tracking-tighter text-white sm:text-5xl md:text-6xl lg:text-7xl">
+					{value.headline}
+				</h1>
+				{value.subheadline && (
+					<p class="mb-10 max-w-xl text-base leading-relaxed font-light text-sky-100/60 sm:text-xl">
+						{value.subheadline}
+					</p>
+				)}
+				{/*
+					Lưới số liệu: 2 cột trên mobile, 4 cột từ sm (schema giới hạn tối đa 4 stats).
+					Mỗi ô có đường kẻ trái màu sky-500 làm điểm nhấn. `unit` (tuỳ chọn) là
+					chữ nhỏ ngay sau value (vd "tons", "+"), có khoảng trắng đầu để tách khỏi số.
+				*/}
+				{stats.length > 0 && (
+					<div class="grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+						{stats.map((stat) => (
+							<div class="border-l-2 border-sky-500 pl-3">
+								<div class="text-xl font-black text-white sm:text-2xl">
+									{stat.value}
+									{stat.unit && <span class="text-xs text-sky-400"> {stat.unit}</span>}
+								</div>
+								<div class="mt-0.5 text-xs tracking-wide text-sky-100/40 uppercase">{stat.label}</div>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+		</section>
+	)
+}
+
+{/*
+	LAYOUT "glow" (Certifications): hero "động" nhất.
+	- Nền gradient viết inline (style) vì là giá trị màu đúng của thiết kế, không phải token Tailwind.
+	- Các lớp trang trí tuyệt đối (grid trôi, vầng sáng nhịp, 2 orb) đều `pointer-events-none`;
+	  animation định nghĩa trong global.css và bị tắt khi `prefers-reduced-motion`.
+*/}
+{
+	layout === "glow" && (
+		<section
+			id={value.anchor_id || undefined}
+			class="relative flex min-h-[420px] items-center justify-center overflow-hidden pt-10 pb-16 sm:min-h-[520px]"
+			style="background:linear-gradient(135deg,#071525 0%,#0c2340 40%,#0e3560 70%,#071525 100%)"
+		>
+			{/* Lưới kẻ sky mờ (bg-grid) trôi chéo liên tục (animate-grid: grid-drift 10s). */}
+			<div class="bg-grid animate-grid pointer-events-none absolute inset-0" />
+			{/* Vầng sáng radial màu sky phía dưới, "thở" 5s (animate-glow đổi opacity từ 0.55 lên 1 rồi quay lại). */}
+			<div
+				class="animate-glow pointer-events-none absolute inset-0"
+				style="background:radial-gradient(ellipse 70% 50% at 50% 90%,rgba(56,189,248,0.14) 0%,transparent 70%)"
+			/>
+			{/* Hai orb mờ (blur) trôi chậm ở góc; span rỗng thuần trang trí nên aria-hidden. */}
+			<span class="orb orb-a" aria-hidden="true"></span>
+			<span class="orb orb-b" aria-hidden="true"></span>
+			<div class="relative z-10 mx-auto max-w-5xl px-6 text-center">
+				{/*
+					Hiệu ứng vào trang "rise" lệch pha nhau bằng biến CSS `--d` (độ trễ):
+					eyebrow 0.1s → h1 0.25s → p 0.45s → các stat từ 0.65s, tạo cảm giác xuất hiện lần lượt.
+					Đây là animation CSS khi load (không phụ thuộc cuộn như `reveal`).
+				*/}
+				{value.eyebrow && (
+					<div
+						class="rise mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-widest text-sky-300 uppercase backdrop-blur-sm"
+						style="--d:0.1s"
+					>
+						{/* Ký tự ✦ chỉ là trang trí, nhấp nháy (twinkle). */}
+						<span class="twinkle" aria-hidden="true">✦</span>
+						<span>{value.eyebrow}</span>
+					</div>
+				)}
+				<h1
+					class="rise mb-5 text-3xl leading-tight font-extrabold text-white sm:text-5xl md:text-6xl"
+					style="--d:0.25s"
+				>
+					{value.headline}
+					{/* headline_accent: dòng thứ 2 với hiệu ứng gradient chạy (`shimmer-text`: text trong suốt + background-clip). */}
+					{value.headline_accent && (
+						<>
+							<br />
+							<span class="shimmer-text">{value.headline_accent}</span>
+						</>
+					)}
+				</h1>
+				{value.subheadline && (
+					<p
+						class="rise mx-auto max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg"
+						style="--d:0.45s"
+					>
+						{value.subheadline}
+					</p>
+				)}
+				{/*
+					Thẻ số liệu dạng kính. Lưới cố định 3 cột (max-w-lg) — thiết kế dành cho 3 stats.
+					Độ trễ `--d` tăng dần theo `index` (0.65s + 0.12s mỗi thẻ) để các thẻ nổi lên lần lượt.
+					Lưu ý: `unit` không được hiển thị ở layout này.
+				*/}
+				{stats.length > 0 && (
+					<div class="mx-auto mt-10 grid max-w-lg grid-cols-3 gap-4">
+						{stats.map((stat, index) => (
+							<div
+								class="rise stat-tile rounded-2xl border border-white/10 bg-white/5 px-2 py-4 text-center backdrop-blur-sm"
+								style={`--d:${0.65 + index * 0.12}s`}
+							>
+								{/*
+									`data-count` chứa chuỗi gốc (vd "1,200+", "$50M"); script cuối file đọc
+									nó để đếm từ 0 lên. Nội dung text vẫn là `stat.value` để SSR / no-JS /
+									reduced-motion đều hiện đúng số cuối.
+								*/}
+								<div
+									class="text-2xl font-extrabold text-sky-400 sm:text-3xl"
+									data-count={stat.value}
+								>
+									{stat.value}
+								</div>
+								<div class="mt-1 text-xs text-slate-400">{stat.label}</div>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+		</section>
+	)
+}
+
+{/*
+	LAYOUT "banner" (Products): băng bo góc nằm TRONG nền slate-50 của trang (padding 4/8),
+	để liền mạch với khối Catalog bên dưới (cũng bg-slate-50). Chiều cao cố định 260 / 320px.
+*/}
+{
+	layout === "banner" && (
+		<section id={value.anchor_id || undefined} class="bg-slate-50 px-4 pt-12 sm:px-8">
+			<div
+				class="relative mx-auto flex h-[260px] max-w-screen-2xl items-center overflow-hidden rounded-2xl sm:h-[320px]"
+				style="background:linear-gradient(120deg,#071525 60%,#0369a1 100%)"
+			>
+				{/* Ánh sáng radial sky bên phải (opacity-20) cho banner bớt phẳng. */}
+				<div
+					class="absolute inset-0 opacity-20"
+					style="background:radial-gradient(ellipse at 75% 50%,#38bdf8 0%,transparent 65%)"
+				/>
+				<div class="relative z-10 max-w-3xl px-8 sm:px-16">
+					{value.eyebrow && (
+						<span class="mb-5 inline-block rounded-full border border-sky-400/30 bg-sky-600/70 px-3 py-1 text-[10px] font-bold tracking-[.25em] text-white uppercase">
+							{value.eyebrow}
+						</span>
+					)}
+					{/* `font-headline` cùng họ Plus Jakarta Sans với `font-jakarta` (alias trong global.css). */}
+					<h1 class="mb-4 font-headline text-4xl leading-tight font-black tracking-tight text-white sm:text-5xl">
+						{value.headline}
+						{value.headline_accent && (
+							<>
+								<br />
+								<span class="text-sky-400">{value.headline_accent}</span>
+							</>
+						)}
+					</h1>
+					{value.subheadline && <p class="text-sm font-light text-slate-300">{value.subheadline}</p>}
+				</div>
+			</div>
+		</section>
+	)
+}
+
+<script>
+	// Đếm các con số nổi bật từ 0 lên giá trị đích khi chúng lần đầu xuất hiện trong viewport.
+	// Chỉ các phần tử có `data-count` (hiện chỉ layout "glow") bị ảnh hưởng. Astro hoist
+	// script này thành module, chỉ nạp MỘT lần dù trang có bao nhiêu hero.
+	const counters = document.querySelectorAll<HTMLElement>("[data-count]");
+	// Tôn trọng người dùng bật "giảm chuyển động": khi đó giữ nguyên số cuối đã SSR.
+	const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	// Chỉ chạy khi có counter, không reduce-motion và trình duyệt hỗ trợ IntersectionObserver.
+	if (counters.length > 0 && !reduce && "IntersectionObserver" in window) {
+		const run = (el: HTMLElement) => {
+			// Tách chuỗi thành 3 phần: prefix không-số (vd "$"), phần số (có thể có , và .),
+			// và suffix (vd "+", "M", " tons"). Ví dụ "1,200+" -> ["", "1,200", "+"].
+			// Nếu không có chữ số nào thì không đếm (giữ nguyên text).
+			const match = /^([^\d]*)([\d][\d,.]*)(.*)$/.exec(el.dataset.count ?? "");
+			if (!match) return;
+			const [, prefix, digits, suffix] = match;
+			// Bỏ dấu phẩy ngăn cách nghìn rồi ép sang số; nếu vẫn không hợp lệ (vd "1.2.3") thì bỏ qua.
+			const target = Number(digits.replace(/,/g, ""));
+			if (!Number.isFinite(target)) return;
+			// Cộng 650ms để animation đếm bắt đầu sau khi các thẻ `rise` đã hiện ra (khớp --d của thẻ).
+			const start = performance.now() + 650;
+			const duration = 1400;
+			const tick = (now: number) => {
+				// t: tiến độ 0..1, kẹp lại để không âm trong khoảng trễ 650ms và không vượt 1.
+				const t = Math.min(Math.max((now - start) / duration, 0), 1);
+				// Easing ease-out cubic: nhanh lúc đầu, chậm dần khi gần đích.
+				const eased = 1 - Math.pow(1 - t, 3);
+				// Ghép lại prefix + số đã làm tròn (định dạng có dấu phẩy kiểu en-US) + suffix.
+				el.textContent = `${prefix}${Math.round(target * eased).toLocaleString("en-US")}${suffix}`;
+				if (t < 1) requestAnimationFrame(tick);
+			};
+			// Đặt ngay về 0 để không "nháy" số cuối trong lúc chờ 650ms rồi mới đếm.
+			el.textContent = `${prefix}0${suffix}`;
+			requestAnimationFrame(tick);
+		};
+		// Mỗi counter chỉ chạy một lần: khi vào viewport thì chạy rồi `unobserve`.
+		const observer = new IntersectionObserver((entries) => {
+			for (const entry of entries) {
+				if (!entry.isIntersecting) continue;
+				run(entry.target as HTMLElement);
+				observer.unobserve(entry.target);
+			}
+		});
+		counters.forEach((el) => observer.observe(el));
+	}
+</script>

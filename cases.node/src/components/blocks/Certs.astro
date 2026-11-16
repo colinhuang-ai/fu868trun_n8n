@@ -1,0 +1,134 @@
+---
+/**
+ * Certs.astro — block `cases_certs` (một nhóm thẻ chứng nhận).
+ *
+ * ĐƯỢC ĐĂNG KÝ Ở ĐÂU
+ *   `src/components/CasesBlocks.astro` -> `cases_certs: Certs`. Trang `certifications`
+ *   dùng block này nhiều lần liên tiếp, mỗi lần một nhóm (seed: food-safety,
+ *   aquaculture, specialist), xen kẽ với block `cases_spotlight` (FDA) và
+ *   `cases_cert_table` (bảng tổng hợp).
+ *
+ * DỮ LIỆU
+ *   1) Từ block (props `value`, schema trong `scripts/build-seed.mjs`):
+ *      - headline  (string, bắt buộc) tiêu đề h2 của nhóm
+ *      - eyebrow   (string)           nhãn nhỏ phía trên tiêu đề
+ *      - group     (select, bắt buộc) nhóm cần hiển thị: food_safety | aquaculture | specialist
+ *                  (nhóm "other" bị loại khỏi lựa chọn vì chỉ dành cho bảng tổng hợp)
+ *      - anchor_id (string)           id của section (link kiểu /certifications#fda)
+ *   2) Từ collection `certifications` (đọc LÚC REQUEST theo `locale`): editor thêm/sửa/xoá
+ *      chứng nhận trong admin, KHÔNG sửa trang. Trường dùng: title, group, icon (emoji),
+ *      tone (màu ô icon), badge + badge_tone, description, note, sort_order.
+ *
+ * Bố cục: lưới thẻ 1 cột mobile / 2 cột sm / 3 cột lg; riêng nhóm có đúng 2 thẻ thì
+ * thu hẹp và căn giữa để không bị trống một cột. CSS của thẻ (`cert-card`, `cert-badge`,
+ * `icon-tile-*`, `badge-*`, `float-el`, `check-pop`, `section-line`) nằm trong
+ * `src/styles/global.css`.
+ */
+
+// API đọc collection của EmDash (server-rendered, chạy mỗi request).
+import { getEmDashCollection } from "emdash";
+import { type BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+import { toLocale } from "../../i18n/ui";
+
+// Thu hẹp union về đúng block `cases_certs`.
+type CertsBlock = Extract<PageContentBlock, { _type: "cases_certs" }>;
+type Props = BlockComponentProps<CertsBlock>;
+
+const { value } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+
+// Chỉ lấy chứng nhận thuộc nhóm của block, đúng locale (EN và VI là hai entry riêng),
+// sắp xếp theo `sort_order` tăng dần (thứ tự do editor quản lý). limit 50 rất dư cho 9 chứng nhận.
+// `where.group` lọc ngay ở truy vấn, không lọc phía client.
+const { entries: certs } = await getEmDashCollection("certifications", {
+	locale,
+	where: { group: value.group },
+	orderBy: { sort_order: "asc" },
+	limit: 50,
+});
+// Nhóm có đúng 2 thẻ -> dùng bố cục hẹp 2 cột căn giữa (xem `class:list` của lưới bên dưới).
+const narrow = certs.length === 2;
+---
+
+{/*
+	Section nền navy (`bg-navy` = token --color-navy #071525), chữ trắng, giới hạn rộng
+	`max-w-7xl` và căn giữa. `id` rỗng → `undefined` để Astro bỏ attribute.
+*/}
+<section
+	id={value.anchor_id || undefined}
+	class="mx-auto max-w-7xl bg-navy px-4 py-20 text-white sm:px-8"
+>
+	{/* Khối tiêu đề: `reveal` = hiện dần khi cuộn; `section-line` là đường kẻ gradient trang trí dưới h2. */}
+	<div class="reveal mb-14 text-center">
+		{/* Eyebrow chỉ render khi editor có nhập. */}
+		{
+			value.eyebrow && (
+				<p class="mb-2 text-xs font-bold tracking-widest text-sky-500 uppercase">{value.eyebrow}</p>
+			)
+		}
+		<h2 class="text-3xl font-extrabold text-white sm:text-4xl">{value.headline}</h2>
+		<div class="section-line"></div>
+	</div>
+	{/*
+		Lưới thẻ. `class:list` gộp class cố định với class theo điều kiện `narrow`:
+		- narrow (đúng 2 thẻ): `mx-auto max-w-3xl sm:grid-cols-2` — hẹp, căn giữa, 2 cột.
+		- còn lại: `sm:grid-cols-2 lg:grid-cols-3` — 2 cột rồi 3 cột trên màn lớn.
+		Cả hai nhánh viết literal đầy đủ để Tailwind quét được.
+		Mỗi chứng nhận bên trong là một thẻ `article`; `--i` (chỉ số thẻ) là biến CSS để global.css
+		làm hiệu ứng hiện dần so le giữa các thẻ (cert-card.reveal dùng nó cho transition-delay).
+	*/}
+	<div
+		class:list={[
+			"grid grid-cols-1 gap-6",
+			narrow ? "mx-auto max-w-3xl sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3",
+		]}
+	>
+		{
+			certs.map((cert, index) => (
+				<article class="cert-card reveal p-7" style={`--i:${index}`}>
+					<div class="mb-4 flex items-start gap-4">
+						{/*
+							Ô icon emoji: màu nền theo `tone` (blue | green | amber | purple; mặc định blue) qua
+							lớp `icon-tile-tone` định nghĩa sẵn trong global.css (class ghép từ biến ở đây là
+							class CSS viết tay chứ không phải utility Tailwind nên vẫn hợp lệ).
+							`float-el` = hiệu ứng nổi lên xuống; `animation-delay` lệch 0.4s mỗi thẻ để không
+							nhấp nhô đồng loạt. `aria-hidden` vì emoji chỉ trang trí (tiêu đề đã nói rõ).
+						*/}
+						<div
+							class:list={[
+								"float-el flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl",
+								`icon-tile-${cert.data.tone ?? "blue"}`,
+							]}
+							style={`animation-delay:${index * 0.4}s`}
+							aria-hidden="true"
+						>
+							{cert.data.icon}
+						</div>
+						<div>
+							<h3 class="text-xl font-extrabold text-white">{cert.data.title}</h3>
+							{/* Badge (vd trạng thái/loại) tuỳ chọn; màu theo `badge_tone` (mặc định blue) qua `badge-tone`. */}
+							{cert.data.badge && (
+								<span class:list={["cert-badge mt-1", `badge-${cert.data.badge_tone ?? "blue"}`]}>
+									{cert.data.badge}
+								</span>
+							)}
+						</div>
+					</div>
+					{cert.data.description && (
+						<p class="text-sm leading-relaxed text-slate-400">{cert.data.description}</p>
+					)}
+					{/* Chú thích chân thẻ: ngăn cách bằng đường kẻ mảnh + dấu ✓ xanh (`check-pop` hiện bật lên khi thẻ được reveal). */}
+					{cert.data.note && (
+						<div class="mt-4 flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-500">
+							<span class="check-pop inline-block text-green-400" aria-hidden="true">
+								✓
+							</span>
+							<span>{cert.data.note}</span>
+						</div>
+					)}
+				</article>
+			))
+		}
+	</div>
+</section>

@@ -1,0 +1,22 @@
+---
+/**
+ * Route: GET /home  ->  301 về "/".
+ *
+ * Vì sao cần file này: trang Home là một entry bình thường của collection
+ * `pages` (slug "home"). Collection đó dùng mẫu URL "/{slug}" nên các liên
+ * kết do EmDash sinh ra theo mẫu này (ví dụ link xem/preview của entry) trỏ
+ * tới "/home". Nhưng trang này thực ra được render ở "/"
+ * bởi src/pages/index.astro. Để tránh hai URL cho cùng một nội dung (trùng lặp
+ * SEO) và tránh việc [slug].astro render nó ở /home, route tĩnh này chặn
+ * trước: Astro ưu tiên route tĩnh (home.astro) hơn route động ([slug].astro).
+ *
+ * `return` ở cấp cao nhất của frontmatter là hợp lệ trong Astro: trả về
+ * Response sẽ dừng render và gửi thẳng phản hồi đó (không chạy template).
+ */
+// The pages collection's "/{slug}" pattern gives the Home page this URL, but it
+// renders at "/". Keep the query string so signed preview links still work.
+// 301 = chuyển hướng vĩnh viễn để công cụ tìm kiếm dồn về "/" (Astro.redirect trả Response).
+// Astro.url.search (gồm cả dấu "?") được giữ lại để các liên kết preview có chữ
+// ký (token trong query string) vẫn hoạt động sau khi chuyển hướng.
+return Astro.redirect(`/${Astro.url.search}`, 301);
+---

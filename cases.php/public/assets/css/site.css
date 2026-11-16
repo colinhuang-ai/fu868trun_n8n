@@ -1,0 +1,733 @@
+/* =========================================================================
+   CASES – STYLESHEET CHO WEBSITE (phía khách xem)
+   Dựng theo prototype "Trang chủ CASES@2x.png" (thiết kế rộng 1440px,
+   nội dung nằm trong khung ~1136px ở giữa).
+
+   Cách tổ chức file (đọc từ trên xuống):
+     1. :root            – biến CSS (màu, font, bo góc, bóng) dùng chung
+     2. Reset & nền tảng – box-sizing, font chữ, link, ảnh, heading…
+     3. Tiện ích chung   – .container, .icon, skip-link, honeypot
+     4. Nút & chip       – .btn, .chip, .link-arrow, .eyebrow (dòng chữ nhỏ trên tiêu đề)
+     5. Thanh xem trước  – hiện khi admin xem bản nháp
+     6. Header           – logo + menu chính (dính trên cùng khi cuộn)
+     7. Các section của TRANG CHỦ, đúng thứ tự trên trang:
+          Hero → Marquee (dải chữ chạy) → Sản phẩm → Vì sao chọn CASES
+          → Chất lượng ISO → Quy trình 6 bước + 3 ảnh → Liên hệ → Footer
+     8. Trang con        – page-hero, tab chuyên mục, phân trang, bài viết, .prose
+     9. Chuyển động      – hiệu ứng hiện dần khi cuộn + các @keyframes
+    10. Responsive       – các breakpoint 1180 / 1080 / 780 / 560px
+
+   Quy ước đặt tên: class viết thường, nối bằng gạch ngang, theo khối
+   (vd. .product-card, .product-media, .product-body là các phần của một card).
+   ========================================================================= */
+/*
+ * Biến CSS toàn cục – đổi màu/thương hiệu chỉ cần sửa ở đây.
+ * Gọi biến bằng var(--ten-bien), ví dụ: color: var(--blue);
+ */
+:root {
+    /* Xanh navy chủ đạo: nền hero, section ISO, footer, page-hero của trang con */
+    --navy: #1f3d73;
+    /* Navy đậm hơn một bậc (nền card minh hoạ sản phẩm thứ nhất) */
+    --navy-800: #1b3566;
+    /* Navy đậm: nền khung minh hoạ con tôm ở hero */
+    --navy-900: #17305e;
+    /* Navy đậm nhất (dự phòng cho nền tối) */
+    --navy-950: #132a54;
+    /* Màu chữ tiêu đề (xanh mực) – h1..h4, tên sản phẩm, chữ trên nền trắng */
+    --ink: #1e3a6e;
+    /* Xanh dương: nút chính, link, icon, đường nối các bước quy trình */
+    --blue: #2f6bdb;
+    /* Xanh dương đậm: trạng thái hover của nút chính */
+    --blue-600: #2559c0;
+    /* Xanh rất nhạt: nền ô icon, chip mềm */
+    --blue-100: #eaf1fd;
+    /* Xanh nhạt nhất: nền section Liên hệ, hover card tính năng */
+    --blue-50: #eef3fb;
+    /* Đỏ nhấn: vạch ngang trước .eyebrow, chấm tròn ở marquee, số thứ tự bước */
+    --red: #b5403f;
+    /* Xanh cyan: chữ “ISO.” trên hero, chữ eyebrow trên nền tối, tiêu đề cột footer */
+    --cyan: #86cdea;
+    /* Vàng: gạch chân dưới chữ “ISO.” ở hero */
+    --gold: #d9a441;
+    /* Màu chữ nội dung chính (xám đậm) */
+    --text: #4b5263;
+    /* Màu chữ phụ/mô tả (xám nhạt hơn) */
+    --muted: #6b7280;
+    /* Màu đường viền, đường kẻ mảnh */
+    --line: #e6e8ec;
+    /* Nền xám nhạt: section Sản phẩm, card tính năng */
+    --gray-bg: #f5f5f5;
+    --white: #fff;
+    /* Bo góc mặc định cho các khối lớn */
+    --radius: 18px;
+    /* Font tiêu đề (Plus Jakarta Sans – nạp từ Google Fonts trong layout); các font sau là dự phòng */
+    --font-head: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* Font nội dung (Source Sans 3 – hỗ trợ tốt tiếng Việt) */
+    --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* Bóng đổ cho các “viên thuốc” nổi (pill) ở hero và sơ đồ ISO */
+    --shadow-pill: 0 10px 30px rgba(10, 24, 54, .18);
+}
+
+/*
+ * ---------- RESET & NỀN TẢNG ----------
+ * border-box: width/height đã bao gồm padding + border → tính kích thước dễ hơn
+ */
+*, *::before, *::after { box-sizing: border-box; }
+/*
+ * scroll-behavior: smooth  → bấm link #san-pham sẽ cuộn mượt.
+ * scroll-padding-top: 88px → khi cuộn tới anchor, chừa chỗ cho header dính (cao 72px) để tiêu đề không bị che.
+ */
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
+/* Thân trang: font, cỡ chữ gốc 17px, màu chữ. overflow-x: hidden chặn thanh cuộn ngang do các hình trang trí tràn ra. */
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--white);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+/* Ảnh không bao giờ rộng hơn khung chứa */
+img { max-width: 100%; height: auto; display: block; }
+/* Link kế thừa màu chữ của phần tử cha, bỏ gạch chân mặc định */
+a { color: inherit; text-decoration: none; }
+/* Style chung cho tiêu đề: font tiêu đề, màu mực, khoảng cách chữ hơi khít lại cho đẹp */
+h1, h2, h3, h4 {
+    font-family: var(--font-head);
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -.015em;
+}
+/* Bỏ margin mặc định của trình duyệt – khoảng cách sẽ đặt rõ ràng ở từng component */
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+/* Viền focus khi dùng bàn phím (Tab) – quan trọng cho khả năng truy cập; chuột click sẽ không hiện */
+:focus-visible { outline: 3px solid rgba(47, 107, 219, .45); outline-offset: 2px; border-radius: 6px; }
+
+/*
+ * ---------- TIỆN ÍCH CHUNG ----------
+ * Khung nội dung giữa trang: tối đa 1184px (= 1136px nội dung + 2 × 24px padding)
+ */
+.container { width: 100%; max-width: 1184px; margin: 0 auto; padding: 0 24px; }
+/* Icon SVG inline: mặc định to bằng cỡ chữ (1em), không bị co lại trong flexbox */
+.icon { width: 1em; height: 1em; flex: none; }
+/* Link “Bỏ qua tới nội dung” cho người dùng bàn phím/trình đọc màn hình: ẩn ra ngoài màn hình, hiện khi được focus */
+.skip-link { position: absolute; left: -999px; top: 8px; background: var(--blue); color: #fff; padding: 8px 14px; border-radius: 8px; z-index: 100; }
+.skip-link:focus { left: 8px; }
+/* Honeypot chống spam: ô input ẩn hoàn toàn với người thật, bot tự động điền vào sẽ bị bỏ qua phía server */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ---------- Buttons & chips ---------- */
+/*
+ * Nút cơ bản: cao 48px, bo 10px, icon và chữ nằm ngang cách nhau 10px.
+ * white-space: nowrap → chữ trên nút không bị xuống dòng.
+ */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    height: 48px; padding: 0 24px; border-radius: 10px;
+    font: 500 15px/1 var(--font-head);
+    border: 1.5px solid transparent; cursor: pointer;
+    transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
+    white-space: nowrap;
+}
+/* Icon mũi tên trong nút trượt sang phải 3px khi hover */
+.btn .icon { width: 16px; height: 16px; transition: transform .2s; }
+.btn:hover .icon { transform: translateX(3px); }
+/* Nút chính (nền xanh) – “Nhận báo giá”, “Gửi yêu cầu” */
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-600); box-shadow: 0 8px 20px rgba(47, 107, 219, .3); }
+/* Nút viền trắng trên nền tối – “Xem quy trình” ở hero */
+.btn-outline-light { border-color: rgba(255, 255, 255, .75); color: #fff; }
+.btn-outline-light:hover { background: rgba(255, 255, 255, .1); border-color: #fff; }
+
+/* Chip/nhãn bo tròn: “Tươi sống”, “Cấp đông”… đặt trên ảnh sản phẩm, nhãn ảnh nhà xưởng */
+.chip {
+    display: inline-flex; align-items: center;
+    background: #fff; color: var(--ink);
+    font: 500 13px/1 var(--font-head);
+    padding: 9px 14px; border-radius: 999px;
+}
+/* Biến thể chip nền xanh nhạt (dùng ở trang chi tiết bài viết) */
+.chip-soft { background: var(--blue-100); color: var(--blue); }
+
+/* Link chữ xanh kèm mũi tên – “Xem chi tiết →” */
+.link-arrow { display: inline-flex; align-items: center; gap: 8px; color: var(--blue); font: 500 15px var(--font-head); }
+.link-arrow .icon { width: 15px; height: 15px; transition: transform .2s; }
+.link-arrow:hover .icon { transform: translateX(4px); }
+
+/*
+ * Dòng chữ nhỏ phía trên tiêu đề section (vd. “—— Sản phẩm”).
+ * ::before vẽ vạch đỏ ngang 28px ở đầu dòng, không cần thêm thẻ HTML.
+ */
+.eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    font: 500 14px/1.3 var(--font-head); color: var(--blue);
+    margin-bottom: 18px;
+}
+.eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--red); flex: none; }
+/* Biến thể cho nền tối (hero, ISO): chữ màu cyan */
+.eyebrow-light { color: var(--cyan); }
+/* Chấm tròn cyan sau vạch đỏ – chỉ có ở eyebrow của hero */
+.eyebrow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); flex: none; margin-left: 4px; }
+
+/* ---------- Preview bar ---------- */
+/*
+ * Thanh màu vàng trên cùng: báo admin đang xem bản nháp chưa công khai.
+ * .preview-bar-soft (xanh nhạt) hiện link “Sửa nội dung này” khi admin xem trang đã xuất bản.
+ */
+.preview-bar { background: #fff4d6; color: #7a5a0b; text-align: center; font-size: 14px; padding: 8px 16px; }
+.preview-bar a { text-decoration: underline; font-weight: 600; }
+.preview-bar-soft { background: var(--blue-50); color: var(--ink); }
+.preview-bar-soft a { display: inline-flex; gap: 6px; align-items: center; text-decoration: none; }
+
+/* ---------- Header ---------- */
+/*
+ * Header dính trên cùng khi cuộn (position: sticky).
+ * Nền trắng hơi trong + backdrop-filter làm mờ nội dung chạy phía sau.
+ */
+.site-header { position: sticky; top: 0; z-index: 50; background: rgba(255, 255, 255, .97); backdrop-filter: saturate(1.6) blur(8px); box-shadow: 0 1px 0 rgba(15, 23, 42, .07); }
+/* Hàng ngang: logo | menu | nút “Nhận báo giá”, cao 72px */
+.site-header .container { display: flex; align-items: center; height: 72px; gap: 24px; }
+/* Logo: biểu tượng chữ C (SVG) + chữ CASES giãn rộng (letter-spacing) */
+.logo { display: flex; align-items: center; gap: 12px; font: 600 22px/1 var(--font-head); letter-spacing: .08em; color: var(--ink); }
+.logo-mark { width: 34px; height: 34px; }
+/* Menu chính: margin-left: auto đẩy menu sang phải logo */
+.main-nav { margin-left: auto; display: flex; align-items: center; gap: 30px; font: 400 15px var(--font-head); color: #1f2937; }
+.main-nav a { position: relative; padding: 6px 0; transition: color .2s; }
+.main-nav a:not(.btn):hover, .main-nav a.active { color: var(--blue); }
+/* Gạch chân xanh dưới mục menu đang active (trang hiện tại) */
+.main-nav a.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--blue); border-radius: 2px; }
+.header-cta { margin-left: 28px; }
+/* Mặc định ẩn: nút hamburger và nút CTA trong menu – chỉ hiện ở màn hình nhỏ (xem phần Responsive) */
+.nav-cta-mobile, .nav-toggle { display: none; }
+.nav-toggle { margin-left: auto; width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 10px; color: var(--ink); cursor: pointer; align-items: center; justify-content: center; }
+.nav-toggle .icon { width: 22px; height: 22px; }
+/* Đổi icon hamburger ↔ dấu X khi body có class .nav-open (JS bật/tắt) */
+.nav-toggle .icon-close { display: none; }
+.nav-open .nav-toggle .icon-open { display: none; }
+.nav-open .nav-toggle .icon-close { display: block; }
+
+/* ---------- Hero ---------- */
+/*
+ * ====================== HERO (banner đầu trang chủ) ======================
+ * Nền navy, padding dưới lớn (190px) để chừa chỗ cho sóng nước SVG ở đáy.
+ * overflow: hidden cắt các vòng tròn trang trí tràn ra ngoài.
+ */
+.hero { position: relative; background: var(--navy); color: #fff; padding: 110px 0 190px; overflow: hidden; }
+/*
+ * Lưới 2 cột: cột chữ co giãn (minmax(0,1fr) cho phép co nhỏ không tràn) + cột minh hoạ cố định 520px.
+ * z-index: 1 để nội dung nằm trên lớp bong bóng trang trí.
+ */
+.hero-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 64px; align-items: center; z-index: 1; }
+/*
+ * Tiêu đề lớn. clamp(40px, 5.2vw, 66px) = cỡ chữ co giãn theo bề rộng màn hình,
+ * nhưng không nhỏ hơn 40px và không lớn hơn 66px.
+ */
+.hero h1 { color: #fff; font-size: clamp(40px, 5.2vw, 66px); line-height: 1.08; font-weight: 500; letter-spacing: -.02em; max-width: 520px; }
+/* Chữ nhấn “ISO.”: màu cyan, gạch chân vàng dày 4px cách chữ 8px */
+.hero h1 .hl { color: var(--cyan); text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 4px; text-underline-offset: 8px; }
+/* Đoạn mô tả dưới tiêu đề */
+.hero-desc { margin-top: 32px; max-width: 490px; font-size: 18px; line-height: 1.65; color: rgba(255, 255, 255, .88); }
+/* Hàng 2 nút; flex-wrap cho phép xuống dòng khi màn hình hẹp */
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+/* Danh sách 3 dấu tích nhỏ (Nguồn gốc rõ ràng, Kiểm tra từng lô, Giao hàng chuỗi lạnh) */
+.hero-checks { display: flex; flex-wrap: wrap; gap: 10px 30px; margin-top: 30px; font: 400 14px var(--font-head); color: rgba(255, 255, 255, .85); }
+.hero-checks li { display: flex; align-items: center; gap: 8px; }
+.hero-checks .icon { width: 15px; height: 15px; color: var(--cyan); }
+
+/*
+ * Bong bóng trang trí: vòng tròn viền mờ, vị trí đặt bằng style inline trong HTML.
+ * pointer-events: none → không cản click vào nội dung bên dưới.
+ */
+.bubble, .hero-bubble { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .18); pointer-events: none; }
+/* Bong bóng trong khung minh hoạ: nổi lên/xuống nhẹ (keyframes rise) */
+.hero-bubble { border-color: rgba(255, 255, 255, .25); animation: rise 6s ease-in-out infinite; }
+
+/* Khối minh hoạ bên phải – làm mốc định vị cho các pill nổi */
+.hero-visual { position: relative; }
+/* Vòng tròn mờ rất lớn phía sau khung minh hoạ (inset âm = tràn ra ngoài khung) */
+.hero-orbit { position: absolute; inset: -70px -60px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .08); pointer-events: none; }
+/* Khung bo góc chứa con tôm. aspect-ratio: 520/620 giữ đúng tỉ lệ prototype khi co giãn */
+.hero-card { position: relative; aspect-ratio: 520 / 620; border-radius: 30px; background: var(--navy-900); border: 1px solid rgba(255, 255, 255, .12); overflow: hidden; }
+/* SVG con tôm: nổi bồng bềnh (keyframes float), rộng hơn khung một chút cho giống thiết kế */
+.hero-shrimp { position: absolute; left: -2%; top: 11%; width: 104%; animation: float 7s ease-in-out infinite; }
+/* Sóng nước SVG ở đáy khung minh hoạ */
+.hero-card-waves { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 22%; }
+/*
+ * Các “viên thuốc” nổi: Chứng nhận ISO / Truy xuất nguồn gốc / Chuỗi lạnh liên tục.
+ * Vị trí top/left/right đặt inline trong HTML; animation bob làm chúng nhấp nhô.
+ */
+.float-pill {
+    position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 12px;
+    background: #fff; color: var(--ink); border-radius: 999px;
+    padding: 9px 22px 9px 10px; font: 500 14px var(--font-head);
+    box-shadow: var(--shadow-pill); white-space: nowrap;
+    animation: bob 5s ease-in-out infinite;
+}
+/* Lệch pha animation để 3 pill không nhấp nhô cùng lúc (delay âm = bắt đầu giữa chu kỳ) */
+.float-pill:nth-of-type(2) { animation-delay: -1.6s; }
+.float-pill:nth-of-type(3) { animation-delay: -3.2s; }
+/* Vòng tròn chứa icon ở đầu mỗi pill */
+.float-pill i { width: 34px; height: 34px; border-radius: 50%; background: var(--blue-100); color: var(--blue); display: grid; place-items: center; }
+.float-pill .icon { width: 16px; height: 16px; }
+/* Sóng nước 2 lớp ở đáy hero – lớp trắng nối liền với dải marquee bên dưới */
+.hero-wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: 120px; }
+
+/* ---------- Marquee ---------- */
+/*
+ * ====================== MARQUEE (dải chữ chạy ngang) ======================
+ * Kỹ thuật: HTML lặp danh sách 2 lần, track dịch sang trái đúng 50% rồi lặp lại
+ * → tạo cảm giác chạy vô tận, không bị giật.
+ */
+.marquee { overflow: hidden; border-bottom: 1px solid var(--line); background: #fff; padding: 20px 0; }
+/* width: max-content → track rộng bằng toàn bộ nội dung (không xuống dòng) */
+.marquee-track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+/* Rê chuột vào thì dừng chạy để dễ đọc */
+.marquee:hover .marquee-track { animation-play-state: paused; }
+.marquee ul { display: flex; }
+.marquee li { display: flex; align-items: center; font: 400 20px var(--font-head); color: var(--ink); white-space: nowrap; }
+/* Chấm đỏ ngăn cách giữa các cụm chữ (vẽ bằng ::after) */
+.marquee li::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--red); margin: 0 24px; }
+
+/* ---------- Sections ---------- */
+/*
+ * ====================== KHUNG SECTION DÙNG CHUNG ======================
+ * Mỗi section cách trên/dưới 120px; các biến thể đổi màu nền.
+ */
+.section { padding: 120px 0; }
+/* Section ngắn hơn (trang con, tin tức) */
+.section-tight { padding: 80px 0; }
+/* Nền xám – section Sản phẩm, Tin tức */
+.section-gray { background: var(--gray-bg); }
+/* Nền xanh nhạt – section Liên hệ */
+.section-blue { background: var(--blue-50); }
+/* Nền navy – section Chất lượng ISO */
+.section-navy { background: var(--navy); color: rgba(255, 255, 255, .88); }
+.section-navy h2, .section-navy h3 { color: #fff; }
+/* Cụm eyebrow + tiêu đề + mô tả ở đầu mỗi section */
+.section-head { max-width: 800px; margin-bottom: 60px; }
+/* Cỡ tiêu đề section co giãn 30–40px */
+.section-head h2, .iso-grid h2, .contact-copy h2 { font-size: clamp(30px, 3.4vw, 40px); line-height: 1.18; }
+/* Đoạn mô tả dưới tiêu đề section, giới hạn 520px cho dễ đọc */
+.lead { margin-top: 20px; max-width: 520px; color: var(--muted); font-size: 17px; line-height: 1.65; }
+.section-navy .lead { color: rgba(255, 255, 255, .85); }
+/* Biến thể: tiêu đề bên trái, link “Xem tất cả” bên phải (section Tin tức) */
+.section-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; max-width: none; margin-bottom: 40px; }
+/* Khung báo “chưa có dữ liệu” viền đứt (vd. chưa có sản phẩm nào) */
+.empty-note { padding: 32px; border: 1.5px dashed #cfd6e3; border-radius: var(--radius); text-align: center; color: var(--muted); background: #fff; }
+
+/* ---------- Product / post cards ---------- */
+/*
+ * ====================== SẢN PHẨM / THẺ BÀI VIẾT ======================
+ * Lưới 4 cột bằng nhau. minmax(0, 1fr) thay vì 1fr để cột có thể co nhỏ hơn nội dung (tránh tràn).
+ */
+.product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+/* Biến thể 3 cột cho trang danh sách bài viết và section Tin tức */
+.product-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Card: flex dọc để phần thân giãn hết chiều cao (các card cùng hàng cao bằng nhau) */
+.product-card { height: 100%; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 12px; transition: transform .25s, box-shadow .25s; }
+/* Hover: card nhấc lên 4px + bóng đổ */
+.product-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(31, 61, 115, .1); }
+/* Khung ảnh/minh hoạ trên card, giữ tỉ lệ 241×194 như prototype */
+.product-media { position: relative; display: block; aspect-ratio: 241 / 194; border-radius: 14px; overflow: hidden; }
+/* SVG con tôm căn giữa khung bằng kỹ thuật left/top 50% + translate(-50%) */
+.product-media .shrimp { position: absolute; left: 50%; top: 50%; width: 100%; transform: translate(-50%, -47%); transition: transform .5s; }
+/* Hover: con tôm xoay nhẹ và phóng to */
+.product-card:hover .product-media .shrimp { transform: translate(-50%, -47%) rotate(-4deg) scale(1.04); }
+/* Ảnh thật (nếu bài viết có ảnh đại diện): object-fit: cover lấp đầy khung, không méo */
+.product-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.product-card:hover .product-media img { transform: scale(1.05); }
+/* Chip nhãn (Tươi sống…) ghim góc dưới-trái khung ảnh */
+.product-media .chip { position: absolute; left: 14px; bottom: 12px; }
+/* Phần chữ của card; flex: 1 chiếm phần còn lại của chiều cao card */
+.product-body { display: flex; flex-direction: column; flex: 1; padding: 22px 12px 18px; }
+.product-body h3 { font-size: 22px; line-height: 1.25; }
+.product-body h3 a:hover { color: var(--blue); }
+.product-body p { margin-top: 10px; font-size: 16px; color: var(--muted); }
+/* Dòng ngày đăng (chỉ hiện ở danh sách bài viết) */
+.product-body .card-meta { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.product-body .link-arrow { margin-top: 14px; }
+/* Ở lưới 3 cột: margin-top: auto đẩy link “Xem chi tiết” xuống đáy card cho thẳng hàng */
+.product-grid-3 .product-body .link-arrow { margin-top: auto; padding-top: 14px; }
+
+/* ---------- Features ---------- */
+/*
+ * ====================== VÌ SAO CHỌN CASES (6 cam kết) ======================
+ * Lưới 3 cột × 2 hàng
+ */
+.feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+/* Card nền xám; position: relative để đặt số thứ tự 01–06 ở góc */
+.feature-card { position: relative; background: var(--gray-bg); border-radius: 20px; padding: 32px 28px 34px; transition: background .25s, transform .25s; }
+/* Hover: đổi nền xanh nhạt + nhấc lên */
+.feature-card:hover { background: var(--blue-50); transform: translateY(-3px); }
+/* Số thứ tự lớn màu xanh rất nhạt ở góc trên-phải */
+.feature-num { position: absolute; top: 22px; right: 22px; font: 500 46px/1 var(--font-head); color: #dbe7f7; letter-spacing: -.02em; }
+/* Ô vuông bo góc chứa icon (dùng display: grid + place-items: center để căn giữa icon) */
+.feature-icon { width: 56px; height: 56px; border-radius: 14px; background: var(--blue-100); color: var(--blue); display: grid; place-items: center; }
+.feature-icon .icon { width: 24px; height: 24px; }
+.feature-card h3 { margin-top: 24px; font-size: 23px; }
+.feature-card p { margin-top: 12px; font-size: 16px; color: var(--muted); }
+
+/* ---------- ISO ---------- */
+/*
+ * ====================== CHẤT LƯỢNG ISO ======================
+ * 2 cột: chữ bên trái, sơ đồ vòng tròn PDCA (460px) bên phải
+ */
+.iso-grid { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 64px; align-items: center; }
+.iso-grid h2 { max-width: 560px; }
+/* Danh sách 3 ý có dấu tích tròn */
+.iso-list { margin-top: 36px; display: grid; gap: 18px; max-width: 540px; }
+.iso-list li { display: flex; gap: 14px; align-items: flex-start; }
+.iso-list p { font-size: 17px; }
+.iso-list strong { color: #fff; font-weight: 600; }
+/* Vòng tròn chứa dấu tích, nền cyan trong suốt 18% */
+.iso-check { width: 28px; height: 28px; border-radius: 50%; background: rgba(134, 205, 234, .18); color: var(--cyan); display: grid; place-items: center; flex: none; margin-top: 1px; }
+.iso-check .icon { width: 14px; height: 14px; }
+/* Khung sơ đồ: vuông (aspect-ratio: 1), làm mốc cho 4 pill Hoạch định/Thực hiện/Kiểm tra/Cải tiến */
+.iso-diagram { position: relative; width: 100%; max-width: 440px; margin-left: auto; aspect-ratio: 1; }
+/* overflow: visible để nét SVG sát mép không bị cắt */
+.iso-diagram svg { width: 100%; height: 100%; overflow: visible; }
+/*
+ * Vòng chấm đứt quay chậm 60s/vòng. transform-origin = tâm SVG (220,220) để quay quanh tâm
+ * (viewBox của SVG là 440×440).
+ */
+.iso-spin { transform-origin: 220px 220px; animation: spin 60s linear infinite; }
+/* Vòng gạch đứt bên trong quay ngược chiều, chậm hơn (80s) */
+.iso-spin-rev { transform-origin: 220px 220px; animation: spin 80s linear infinite reverse; }
+/* Chữ “ISO” giữa sơ đồ (fill = màu chữ trong SVG) */
+.iso-text { font: 600 64px var(--font-head); fill: #fff; letter-spacing: .02em; }
+/* Dòng chữ nhỏ “Quản lý chất lượng” */
+.iso-sub { font: 400 15px var(--font-body); fill: var(--cyan); }
+/* Pill nhãn bước, vị trí đặt inline trong HTML (top/right/bottom/left) */
+.iso-pill { position: absolute; display: inline-flex; align-items: center; gap: 10px; background: #fff; color: var(--ink); padding: 8px 18px 8px 9px; border-radius: 999px; font: 500 15px var(--font-head); box-shadow: var(--shadow-pill); white-space: nowrap; }
+/* Vòng tròn số 1–4 trong pill */
+.iso-pill b { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+/* Tiêu đề “Giấy chứng nhận và hồ sơ chất lượng” */
+.cert-heading { margin-top: 110px; font-size: 24px; }
+/* Lưới 3 ô giấy chứng nhận */
+.cert-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 30px; }
+/* Ô placeholder giấy chứng nhận: viền trắng mờ, nền trắng 7%, nội dung căn giữa */
+.cert-card { min-height: 270px; border-radius: 20px; border: 1.5px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 24px; transition: background .25s, border-color .25s; }
+.cert-card:hover { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .45); }
+.cert-icon { width: 28px; height: 28px; color: #fff; margin-bottom: 6px; }
+.cert-card strong { font: 500 16px var(--font-head); color: #fff; }
+.cert-card span { font-size: 14px; color: var(--cyan); }
+
+/* ---------- Steps ---------- */
+/*
+ * ====================== QUY TRÌNH 6 BƯỚC ======================
+ * Lưới 6 cột, mỗi bước 1 cột. Đường nối giữa các vòng tròn vẽ bằng ::before của từng bước.
+ */
+.steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 28px; counter-reset: step; }
+.step { position: relative; }
+/*
+ * Đường nối: bắt đầu từ mép phải vòng tròn (left: 66px), kéo sang tận bước kế (right âm = gap 28px).
+ * top: 32px = giữa vòng tròn cao 66px.
+ */
+.step::before { content: ""; position: absolute; top: 32px; left: 66px; right: -28px; height: 3px; background: var(--blue); border-radius: 2px; }
+/* Từ bước 4 trở đi đường nối màu xanh nhạt (giống prototype: 3 bước đầu “đã hoàn thành”) */
+.step:nth-child(n+4)::before { background: #b9d3f2; }
+/* Bước cuối: chỉ vẽ một đoạn ngắn */
+.step:last-child::before { right: 16%; }
+/* Vòng tròn icon, z-index: 1 để nằm đè lên đường nối */
+.step-icon { position: relative; z-index: 1; width: 66px; height: 66px; border-radius: 50%; border: 3px solid var(--blue); background: #fff; color: var(--ink); display: grid; place-items: center; }
+.step-icon .icon { width: 26px; height: 26px; }
+/* Huy hiệu số thứ tự màu đỏ ở góc trên-phải vòng tròn */
+.step-icon b { position: absolute; top: -10px; right: -12px; width: 28px; height: 28px; border-radius: 50%; background: var(--red); color: #fff; display: grid; place-items: center; font: 500 13px var(--font-head); border: 2px solid #fff; }
+.step h3 { margin-top: 26px; font-size: 20px; line-height: 1.28; }
+.step p { margin-top: 12px; font-size: 15.5px; line-height: 1.62; color: var(--muted); }
+
+/* 3 ô minh hoạ Nhà xưởng / Khu sơ chế / Đóng gói bên dưới các bước */
+.gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 70px; }
+.gallery-card { position: relative; margin: 0; height: 250px; border-radius: 20px; overflow: hidden; display: grid; place-items: center; }
+/* Vòng tròn viền mảnh lớn phía sau (trang trí) */
+.gallery-ring { position: absolute; width: 270px; height: 270px; border-radius: 50%; border: 1.5px solid rgba(30, 58, 110, .22); }
+/* Vòng tròn trắng chứa icon; hover phóng to nhẹ */
+.gallery-circle { position: relative; width: 166px; height: 166px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: var(--ink); transition: transform .35s; }
+.gallery-card:hover .gallery-circle { transform: scale(1.06); }
+.gallery-circle .icon { width: 54px; height: 54px; }
+/* Nhãn tên ô (chip) ở góc dưới-trái */
+.gallery-card .chip { position: absolute; left: 16px; bottom: 16px; }
+
+/* ---------- Contact ---------- */
+/*
+ * ====================== LIÊN HỆ / FORM BÁO GIÁ ======================
+ * 2 cột: chữ bên trái, card form cố định 535px bên phải
+ */
+.contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) 535px; gap: 80px; align-items: center; }
+/* Ở trang /lien-he: căn đỉnh thay vì căn giữa theo chiều dọc */
+.contact-grid-page { align-items: start; }
+/* Card trắng chứa form, bo 28px, bóng đổ mềm */
+.contact-card { background: #fff; border-radius: 28px; padding: 36px; box-shadow: 0 24px 60px rgba(31, 61, 115, .09); border: 1px solid #e7ecf4; }
+/* Form xếp các trường theo chiều dọc, cách nhau 18px */
+.quote-form { display: grid; gap: 18px; }
+/* Một trường = label + input + (thông báo lỗi) */
+.field { display: grid; gap: 8px; }
+.field label { font: 500 14px var(--font-head); color: var(--ink); }
+/* Ô nhập liệu: viền xám, bo 12px */
+.field input, .field textarea {
+    width: 100%; font: 400 16px var(--font-body); color: #1f2937;
+    border: 1px solid #dfe3ea; border-radius: 12px; background: #fff;
+    padding: 13px 15px; transition: border-color .2s, box-shadow .2s;
+}
+/* Textarea chỉ cho kéo giãn theo chiều dọc */
+.field textarea { min-height: 100px; resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: #9aa1ad; }
+/* Khi focus: viền xanh + quầng sáng xanh mờ (box-shadow) thay cho outline mặc định */
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(47, 107, 219, .12); }
+/* Trường bị lỗi (server trả về): viền đỏ; .field small là dòng thông báo lỗi */
+.field.has-error input { border-color: #d14343; }
+.field small { color: #c03636; font-size: 14px; }
+/* Nút gửi nằm bên trái (không kéo giãn hết chiều ngang) */
+.quote-form .btn { justify-self: start; margin-top: 2px; }
+/* Hộp thông báo sau khi gửi form: thành công (xanh lá) hoặc lỗi (đỏ) */
+.form-alert { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; font-size: 15px; }
+.form-alert .icon { width: 20px; height: 20px; margin-top: 1px; }
+.form-alert-success { background: #e8f6ee; color: #17663a; }
+.form-alert-error { background: #fdecec; color: #a32b2b; }
+/* Danh sách địa chỉ/điện thoại/email ở trang Liên hệ (icon trong ô vuông xanh nhạt) */
+.contact-info { margin-top: 28px; display: grid; gap: 14px; }
+.contact-info li { display: flex; align-items: center; gap: 14px; color: var(--ink); font-weight: 600; }
+.contact-info span { width: 42px; height: 42px; border-radius: 12px; background: var(--blue-100); color: var(--blue); display: grid; place-items: center; }
+
+/* ---------- Footer ---------- */
+/*
+ * ====================== FOOTER ======================
+ * Nền navy, 3 cột: logo + khẩu hiệu | Khám phá | Thông tin liên hệ
+ */
+.site-footer { background: var(--navy); color: rgba(255, 255, 255, .88); padding: 80px 0 32px; }
+.footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 48px; }
+.footer-logo { font: 600 28px var(--font-head); letter-spacing: .08em; color: #fff; }
+.footer-tagline { margin-top: 18px; max-width: 260px; }
+/* Tiêu đề cột màu cyan */
+.site-footer h4 { color: var(--cyan); font-size: 17px; margin-bottom: 18px; }
+.footer-links { display: grid; gap: 12px; }
+.footer-links a { color: #fff; transition: color .2s; }
+.footer-links a:hover { color: var(--cyan); }
+.footer-contact { display: grid; gap: 14px; }
+.footer-contact li { display: flex; gap: 12px; align-items: center; }
+.footer-contact .icon { width: 18px; height: 18px; }
+/* Dòng bản quyền dưới cùng, có đường kẻ mờ phía trên */
+.footer-bottom { margin-top: 56px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .15); font-size: 14px; }
+
+/* ---------- Inner pages ---------- */
+/*
+ * ====================== TRANG CON (trang tĩnh, danh sách & chi tiết bài viết) ======================
+ * .page-hero: dải navy ở đầu trang con, có breadcrumb + tiêu đề + sóng nước ở đáy
+ */
+.page-hero { position: relative; background: var(--navy); color: #fff; padding: 70px 0 120px; overflow: hidden; }
+/* Tiêu đề trang con co giãn 30–46px */
+.page-hero h1 { color: #fff; font-size: clamp(30px, 4vw, 46px); max-width: 820px; margin-top: 14px; }
+.page-hero-lead { margin-top: 16px; max-width: 680px; color: rgba(255, 255, 255, .85); font-size: 18px; }
+.page-hero-wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: 80px; }
+/* Breadcrumb: Trang chủ / Bài viết / … ; mục hiện tại (aria-current) màu cyan */
+.breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; font: 400 14px var(--font-head); color: rgba(255, 255, 255, .7); }
+.breadcrumb a:hover { color: #fff; }
+.breadcrumb [aria-current] { color: var(--cyan); }
+
+/* Tab lọc chuyên mục ở trang /bai-viet (Tất cả, Sản phẩm, Tin tức…); tab đang chọn nền navy */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; }
+.tabs a { padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line); font: 500 14px var(--font-head); color: var(--ink); transition: .2s; }
+.tabs a:hover { border-color: var(--blue); color: var(--blue); }
+.tabs a.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+/* Phân trang: các ô số vuông bo góc, trang hiện tại nền xanh */
+.pagination { display: flex; justify-content: center; gap: 6px; margin-top: 48px; }
+.pagination a, .pagination span { min-width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); font: 500 15px var(--font-head); color: var(--ink); }
+.pagination a:hover { border-color: var(--blue); color: var(--blue); }
+.pagination .current { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* Trang chi tiết bài viết: nội dung bên trái + cột phụ 320px bên phải */
+.article-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 56px; align-items: start; }
+/* Trang tĩnh: một cột hẹp 780px ở giữa cho dễ đọc */
+.article-narrow { max-width: 780px; margin: 0 auto; }
+/* Dòng meta: chip chuyên mục + ngày đăng */
+.article-meta { display: flex; align-items: center; gap: 16px; font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+.article-meta span:not(.chip) { display: inline-flex; align-items: center; gap: 6px; }
+/* Ảnh đại diện lớn đầu bài */
+.article-cover { width: 100%; border-radius: 20px; margin-bottom: 36px; }
+/* Cột phụ dính (sticky) khi cuộn, cách đỉnh 96px để không bị header che */
+.article-aside { position: sticky; top: 96px; display: grid; gap: 20px; }
+.aside-card { border: 1px solid var(--line); border-radius: 20px; padding: 26px; background: #fff; }
+.aside-card h3 { font-size: 19px; }
+.aside-card p { margin-top: 10px; font-size: 15.5px; color: var(--muted); }
+/* Hộp kêu gọi “Nhận báo giá” trong cột phụ */
+.aside-cta { background: var(--blue-50); border-color: #dde7f6; }
+.aside-cta .btn { margin-top: 18px; width: 100%; }
+/* Danh sách bài cùng chuyên mục */
+.aside-list { margin-top: 14px; display: grid; gap: 12px; }
+.aside-list a { color: var(--ink); font-weight: 600; line-height: 1.4; }
+.aside-list a:hover { color: var(--blue); }
+
+/*
+ * .prose = định dạng nội dung HTML do admin soạn trong trình soạn thảo (Quill).
+ * Vì nội dung là HTML tự do nên style theo thẻ: h2, h3, a, ul, ol, blockquote, img…
+ */
+.prose { font-size: 18px; line-height: 1.75; color: #3c4352; }
+/* “Owl selector” (> * + *): mọi phần tử con (trừ cái đầu) cách phần tử trước 1.1em */
+.prose > * + * { margin-top: 1.1em; }
+.prose h2 { font-size: 28px; margin-top: 1.6em; }
+.prose h3 { font-size: 22px; margin-top: 1.4em; }
+.prose a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.prose ul, .prose ol { padding-left: 1.4em; }
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li + li { margin-top: .4em; }
+/* Đổi màu dấu đầu dòng/số thứ tự sang xanh */
+.prose li::marker { color: var(--blue); }
+/* Trích dẫn: vạch đỏ bên trái, nền xám, chữ nghiêng */
+.prose blockquote { margin: 1.4em 0; padding: 18px 24px; border-left: 4px solid var(--red); background: var(--gray-bg); border-radius: 0 14px 14px 0; font-style: italic; color: var(--ink); }
+.prose img { border-radius: 14px; margin: 1.4em 0; }
+.prose strong { color: #1f2937; }
+/*
+ * Các class do Quill sinh ra khi căn lề (ql-align-*) và khi lưu danh sách kiểu cũ
+ * (li[data-list], .ql-ui) – giữ để nội dung cũ vẫn hiển thị đúng.
+ */
+.prose .ql-align-center { text-align: center; }
+.prose .ql-align-right { text-align: right; }
+.prose .ql-align-justify { text-align: justify; }
+.prose li[data-list="bullet"] { list-style-type: disc; }
+.prose li[data-list="ordered"] { list-style-type: decimal; }
+.prose .ql-ui { display: none; }
+
+/* Trang lỗi 404/500: số mã lỗi to màu nhạt + thông báo + nút về trang chủ */
+.error-page { padding: 140px 0; text-align: center; }
+.error-code { font: 600 110px/1 var(--font-head); color: #dbe7f7; }
+.error-page h1 { font-size: 34px; margin-top: 8px; }
+.error-page p { margin: 14px auto 32px; max-width: 460px; color: var(--muted); }
+
+/* ---------- Motion ---------- */
+/*
+ * ====================== CHUYỂN ĐỘNG ======================
+ * .reveal: phần tử ẩn (mờ + lệch xuống 18px) cho tới khi cuộn tới.
+ * JS (site.js) dùng IntersectionObserver để thêm class .is-visible → hiện dần trong 0.7s.
+ * --d là độ trễ đặt inline trong HTML (vd. style="--d:80ms") để các card hiện lần lượt.
+ */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; transition-delay: var(--d, 0ms); }
+.reveal.is-visible { opacity: 1; transform: none; }
+/* Dự phòng khi không có JS (class .no-js trên thẻ html) – hiện ngay */
+.no-js .reveal { opacity: 1; transform: none; }
+/* Marquee: dịch track sang trái 50% (đúng bằng 1 bản sao danh sách) rồi lặp */
+@keyframes marquee { to { transform: translateX(-50%); } }
+/* Con tôm hero: nổi lên 10px và nghiêng nhẹ */
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-10px) rotate(-1.5deg); } }
+/* Pill nổi: nhấp nhô 6px */
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+/* Bong bóng: nổi lên và mờ dần */
+@keyframes rise { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-12px); opacity: .5; } }
+/* Quay tròn 360° (vòng sơ đồ ISO) */
+@keyframes spin { to { transform: rotate(360deg); } }
+/*
+ * Tôn trọng cài đặt hệ điều hành “Giảm chuyển động” (người dễ chóng mặt):
+ * tắt mọi animation/transition, hiện ngay nội dung .reveal, cuộn không mượt.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+}
+
+/* ---------- Responsive ---------- */
+/*
+ * ====================== RESPONSIVE ======================
+ * Thiết kế desktop-first: style ở trên cho màn hình lớn, các @media max-width bên dưới
+ * ghi đè dần cho màn hình nhỏ hơn.
+ *
+ * ≤ 1180px (laptop nhỏ): thu hẹp khoảng cách menu để vừa 1 hàng
+ */
+@media (max-width: 1180px) {
+    .main-nav { gap: 22px; font-size: 14.5px; }
+    .header-cta { margin-left: 8px; }
+}
+/*
+ * ≤ 1080px (tablet): menu chuyển thành hamburger; hero, ISO, liên hệ, bài viết
+ * thành 1 cột; sản phẩm còn 2 cột; quy trình 3 cột × 2 hàng
+ */
+@media (max-width: 1080px) {
+    /* Hiện nút hamburger, ẩn nút CTA trên header */
+    .nav-toggle { display: inline-flex; }
+    .header-cta { display: none; }
+    /* Menu thành danh sách dọc xổ xuống dưới header (ẩn mặc định) */
+    .main-nav {
+        position: absolute; left: 0; right: 0; top: 72px;
+        flex-direction: column; align-items: stretch; gap: 0;
+        background: #fff; padding: 8px 24px 20px;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, .1);
+        display: none;
+    }
+    /* Khi JS thêm .nav-open vào body → hiện menu */
+    .nav-open .main-nav { display: flex; }
+    .main-nav a:not(.btn) { padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .main-nav a.active::after { display: none; }
+    /* Nút “Nhận báo giá” hiện ở cuối menu xổ xuống */
+    .nav-cta-mobile { display: inline-flex; margin-top: 16px; }
+
+    /* Hero: 1 cột, minh hoạ nằm dưới chữ, rộng tối đa 460px */
+    .hero { padding: 72px 0 170px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 72px; }
+    .hero-visual { width: 100%; max-width: 460px; margin: 0 auto; }
+    .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .iso-grid { grid-template-columns: 1fr; gap: 72px; }
+    .iso-diagram { margin: 0 auto; max-width: 400px; }
+    /* Quy trình 3 cột; bước 3 và 6 (cuối hàng) không vẽ đường nối sang phải */
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 48px; }
+    .step:nth-child(3n)::before { display: none; }
+    .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+    .article-layout { grid-template-columns: 1fr; }
+    .article-aside { position: static; }
+}
+/*
+ * ≤ 780px (điện thoại ngang / tablet nhỏ): hầu hết lưới thành 1 cột;
+ * quy trình chuyển thành dòng thời gian dọc (đường nối dọc bên trái)
+ */
+@media (max-width: 780px) {
+    body { font-size: 16px; }
+    .section { padding: 84px 0; }
+    .section-tight { padding: 60px 0; }
+    .section-head { margin-bottom: 40px; }
+    .feature-grid, .cert-grid, .gallery-grid, .product-grid-3 { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr; gap: 36px; }
+    .cert-heading { margin-top: 72px; }
+    .cert-card { min-height: 180px; }
+    /* Quy trình dọc: mỗi bước là lưới 2 cột (vòng tròn 66px | chữ) */
+    .steps { grid-template-columns: 1fr; row-gap: 0; }
+    .step { display: grid; grid-template-columns: 66px 1fr; column-gap: 20px; padding-bottom: 32px; }
+    /* Đường nối dọc: từ đáy vòng tròn xuống bước kế (left: 31px = giữa vòng tròn) */
+    .step::before, .step:nth-child(3n)::before { display: block; top: 66px; bottom: 0; left: 31px; right: auto; width: 3px; height: auto; }
+    .step:last-child::before { display: none; }
+    .step-icon { grid-row: span 2; }
+    .step h3 { margin-top: 4px; }
+    /* Bỏ ngắt dòng cứng <br> trong tiêu đề bước vì đã đủ rộng */
+    .step h3 br { display: none; }
+    .section-head-row { flex-direction: column; align-items: flex-start; }
+    /*
+     * Pill sơ đồ ISO nhỏ lại và kéo sát vào trong để không tràn màn hình.
+     * [style*="right"] = chọn phần tử có style inline chứa chữ "right" (pill bên phải).
+     */
+    .iso-pill { font-size: 13px; padding: 6px 14px 6px 7px; }
+    .iso-pill[style*="right"] { right: -8px !important; }
+    .iso-pill[style*="left:-"] { left: -8px !important; }
+}
+/*
+ * ≤ 560px (điện thoại dọc): padding 16px, sản phẩm 1 cột, chữ hero nhỏ lại,
+ * 2 nút hero chia đều chiều ngang, pill nổi kéo sát vào trong
+ */
+@media (max-width: 560px) {
+    .container { padding: 0 16px; }
+    .product-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 38px; }
+    .hero-desc { font-size: 17px; }
+    .hero-actions .btn { flex: 1; }
+    .float-pill { font-size: 13px; padding: 7px 16px 7px 8px; }
+    .float-pill i { width: 28px; height: 28px; }
+    .float-pill[style*="left:-28px"] { left: -6px !important; }
+    .float-pill[style*="right:-22px"] { right: -6px !important; }
+    .hero-orbit { inset: -30px -20px; }
+    .contact-card { padding: 24px 20px; border-radius: 22px; }
+    .quote-form .btn { width: 100%; }
+    .marquee li { font-size: 17px; }
+}

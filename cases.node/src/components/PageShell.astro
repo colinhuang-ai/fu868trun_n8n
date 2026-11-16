@@ -1,0 +1,46 @@
+---
+/**
+ * PageShell: "vỏ" của một trang CMS = layout Base (header, footer, <head> SEO,
+ * khung liên hệ, nút EN | VI) bao quanh nội dung trang (PageView).
+ *
+ * Được dùng bởi cả 4 route trang: index.astro, [slug].astro và hai bản vi/.
+ * Chúng spread kết quả của loadPage() (src/utils/load-page.ts) vào component
+ * này: <PageShell {...result} />. Tách PageShell khỏi PageView để phần "meta
+ * của layout" (title, canonical, robots, alternates...) tách bạch khỏi phần
+ * "nội dung trang" (các block).
+ */
+import type { ContentEntry } from "emdash";
+import type { Page } from "../../emdash-env";
+import Base from "../layouts/Base.astro";
+import PageView from "./PageView.astro";
+import type { Locale } from "../i18n/ui";
+
+// Props khớp đúng hình dạng giá trị mà loadPage() trả về.
+interface Props {
+	// Entry của collection `pages` (đã gắn proxy `edit` để chỉnh sửa trực quan).
+	page: ContentEntry<Page>;
+	// Tiêu đề thẻ <title> tính từ SEO panel (undefined => Base dùng tiêu đề mặc định của site).
+	title?: string;
+	// Tiêu đề thân trang dùng cho ngữ cảnh trang của EmDash (xem pageCtx trong Base).
+	pageTitle?: string;
+	description?: string | null;
+	// URL ảnh Open Graph (từ SEO panel).
+	image?: string | null;
+	canonical?: string | null;
+	// Ví dụ "noindex, nofollow" khi editor bật noIndex trong SEO panel.
+	robots?: string | null;
+	// URL của chính trang này ở từng locale, để nút EN | VI nhảy đúng bản dịch.
+	alternates?: Partial<Record<Locale, string>>;
+}
+
+// Tách `page` ra; mọi prop còn lại (title, description, canonical, ...) gom vào
+// `meta` rồi chuyển nguyên xi cho Base, nên thêm trường SEO mới không cần sửa file này.
+const { page, ...meta } = Astro.props;
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - content={{ collection, id, slug }} cho EmDash biết trang này tương ứng entry nào: id là ULID trong DB (page.data.id), slug là page.id (có tiền tố locale với "vi"). Nhờ đó toolbar chỉnh sửa/preview của EmDash gắn đúng entry.
+---
+
+<Base {...meta} content={{ collection: "pages", id: page.data.id, slug: page.id }}>
+	{/* Phần thân trang: hero + các block, hoặc trạng thái rỗng, xem PageView. */}
+	<PageView page={page} />
+</Base>

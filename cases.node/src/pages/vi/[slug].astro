@@ -1,0 +1,27 @@
+---
+/**
+ * Route: GET /vi/{slug}  (mọi trang CMS tiếng Việt: /vi/about, /vi/products, ...).
+ *
+ * Bản "vi" của src/pages/[slug].astro (xem giải thích đầy đủ ở đó). Khác biệt
+ * duy nhất: locale truyền cho loadPage là "vi", đường dẫn import có thêm "../",
+ * và trang 404 rewrite tới "/vi/404" để khách thấy thông báo tiếng Việt.
+ *
+ * Route tĩnh cụ thể hơn luôn thắng: /vi/ (vi/index.astro), /vi/home
+ * (redirect), /vi/404, /vi/news, /vi/news/{slug}.
+ * Không dùng getStaticPaths vì output là "server" (đọc D1 lúc request).
+ */
+import { decodeSlug } from "emdash";
+import PageShell from "../../components/PageShell.astro";
+import { loadPage } from "../../utils/load-page";
+
+// Giải mã percent-encoding của slug (slug tiếng Việt có dấu); undefined nếu hỏng.
+// Với locale "vi", getEmDashEntry nhận slug trần ("about"), không có "vi/".
+const result = await loadPage(Astro, decodeSlug(Astro.params.slug), "vi");
+// Thiếu trang (ở cả "vi" lẫn fallback "en"): rewrite sang /vi/404 để giữ URL và ngôn ngữ.
+// Status 404 do vi/404.astro tự đặt, không phải 200.
+if (!result) return Astro.rewrite("/vi/404");
+// Template (ghi chú đặt ở đây vì comment {/* */} ở gốc template sẽ chèn thêm khoảng trắng/xuống dòng trước <!doctype> của layout):
+// - Rải { page, title, description, canonical, robots, alternates, ... } vào PageShell.
+---
+
+<PageShell {...result} />

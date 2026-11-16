@@ -1,0 +1,156 @@
+---
+/**
+ * Timeline.astro - render block `cases_timeline` (tên trong admin: "Timeline"): các cột mốc lịch sử xếp so le hai bên
+ * một đường dọc ở giữa (desktop) hoặc xếp dọc một cột (mobile). Seed dùng cho "story" ở trang About.
+ *
+ * Nguồn dữ liệu: hoàn toàn trong block (field `content` của entry `pages`), không đọc collection. Dữ liệu mẫu:
+ * block("cases_timeline", "story", {...}) trong scripts/build-seed.mjs. Mỗi locale có entry trang riêng (translationOf)
+ * nên chữ đã đúng ngôn ngữ; không có link CMS nên không cần locale.
+ *
+ * Schema (blockType("cases_timeline") trong build-seed.mjs):
+ * - headline : string, bắt buộc.   - eyebrow : string, tùy chọn.   - anchor_id : id section.
+ * - milestones[] : repeater bắt buộc, tối đa 10: year (bắt buộc, chuỗi chứ không phải số), title (bắt buộc),
+ *                  body (tùy chọn), icon (tên icon Material Symbols, tùy chọn), note (ghi chú bên cạnh, tùy chọn),
+ *                  highlight (boolean: cột mốc quan trọng, tô đậm).
+ *
+ * Bố cục desktop (md trở lên): mỗi cột mốc là một hàng flex chia đôi 50/50. Cột mốc chỉ số chẵn: chữ (năm, tiêu đề, nội dung) ở
+ * BÊN TRÁI canh phải, thẻ note/icon ở BÊN PHẢI. Chỉ số lẻ: đảo chiều bằng flex-row-reverse. Ở giữa là đường dọc và chấm tròn.
+ * Mobile: không có đường/chấm, mỗi cột mốc là một cột dọc (chữ rồi thẻ note).
+ */
+// Type-only: kiểu props (value, index, blockKey) do <Blocks> truyền vào.
+import { type BlockComponentProps } from "emdash/ui";
+// Union kiểu mọi block (sinh vào emdash-env.d.ts).
+import type { PageContentBlock } from "../../../emdash-env";
+
+// Thu hẹp union xuống block có _type = "cases_timeline".
+type TimelineBlock = Extract<PageContentBlock, { _type: "cases_timeline" }>;
+// Props chuẩn của component block.
+type Props = BlockComponentProps<TimelineBlock>;
+
+// Chỉ cần `value`; `milestones` bắt buộc nên không cần giá trị mặc định.
+const { value } = Astro.props;
+---
+
+{/*
+	Section nền trắng; id từ anchor_id (|| undefined để không in id rỗng). Container max-w-7xl với đệm ngang px-4 / sm:px-8.
+*/}
+<section id={value.anchor_id || undefined} class="bg-white py-14 md:py-24">
+	<div class="mx-auto max-w-7xl px-4 sm:px-8">
+		{/*
+			Khối tiêu đề canh giữa, hiện dần nhờ reveal (xem CSS .js .reveal và script IntersectionObserver trong layouts/Base.astro).
+			mb-16 rộng hơn các block khác để tách khỏi dòng thời gian. Tiêu đề dùng font-jakarta; eyebrow và gạch bg-linear-to-r
+			(tên gradient của Tailwind v4) theo bộ nhận diện sky.
+		*/}
+		<div class="reveal mb-16 text-center">
+			{
+				value.eyebrow && (
+					<span class="mb-3 block text-sm font-bold tracking-[0.3em] text-sky-600 uppercase">
+						{value.eyebrow}
+					</span>
+				)
+			}
+			<h2 class="mb-4 font-jakarta text-4xl font-bold text-slate-900 md:text-5xl">
+				{value.headline}
+			</h2>
+			<div class="mx-auto h-1 w-20 rounded-full bg-linear-to-r from-sky-500 to-sky-700"></div>
+		</div>
+		{/*
+			Danh sách có thứ tự (ol) vì các cột mốc theo thứ tự thời gian; relative làm mốc định vị cho đường dọc absolute.
+			Lưu ý về HTML: bên trong ol đang có thẻ div (đường dọc và khung space-y-12 bọc các li) chứ không phải chỉ li; trình duyệt vẫn
+			hiển thị đúng nhưng không đúng chuẩn nội dung của ol.
+		*/}
+		<ol class="relative">
+			{/*
+				Đường dọc ở giữa: chỉ hiện từ md (hidden md:block), kéo kín chiều cao ol (top-0 bottom-0) tại left-1/2 và lùi nửa bề rộng
+				bằng -translate-x-1/2 để đúng tâm; w-0.5 bg-sky-100 nhạt vì chỉ là đường dẫn mắt. aria-hidden vì trang trí.
+			*/}
+			<div
+				class="absolute top-0 bottom-0 left-1/2 hidden w-0.5 -translate-x-1/2 bg-sky-100 md:block"
+				aria-hidden="true"
+			>
+			</div>
+			{/*
+				Khoảng cách giữa các cột mốc space-y-12.
+			*/}
+			<div class="space-y-12">
+				{/*
+					Duyệt từng cột mốc. Mỗi li là một hàng: class reveal để từng cột mốc hiện dần riêng khi cuộn tới; flex-col (mobile) → md:flex-row hoặc
+					md:flex-row-reverse tùy reversed. Có ba thành phần con theo thứ tự DOM: (1) khối chữ md:w-1/2: năm text-4xl font-black
+					text-sky-600, tiêu đề, body tùy chọn; ở desktop canh phải + md:pr-16 khi nằm bên trái, canh trái + md:pl-16 khi
+					bị đảo sang bên phải; (2) chấm tròn trên đường dọc; (3) khối note/icon md:w-1/2 với padding và canh chữ đối xứng.
+					Chấm: absolute left-1/2 -translate-x-1/2 (đúng tâm đường dọc), chỉ hiện ở md (hidden md:flex); vì không đặt top nên vị
+					trí dọc theo items-center của li nên nằm giữa chiều cao hàng; border-4 border-white tạo viền cắt đường dọc cho đẹp.
+					highlight=true thì chấm đậm hơn (bg-sky-700 ring-4 ring-sky-200) và thẻ note chuyển sang gradient sky-600 → sky-800, chữ trắng,
+					ngược lại thẻ nhạt (bg-sky-50 viền sky-100). Thẻ note chỉ render khi có note hoặc icon; icon là tên Material Symbols
+					(.material-symbols-outlined trong global.css), aria-hidden vì chỉ trang trí.
+				*/}
+				{
+					value.milestones.map((item, index) => {
+						// Cột mốc lẻ (chỉ số 1, 3, 5...) bị đảo bên trái - phải để tạo bố cục so le.
+						const reversed = index % 2 === 1;
+						return (
+							<li
+								class:list={[
+									"reveal relative flex flex-col items-center gap-8",
+									reversed ? "md:flex-row-reverse" : "md:flex-row",
+								]}
+							>
+								<div
+									class:list={[
+										"md:w-1/2",
+										reversed ? "md:pl-16 md:text-left" : "md:pr-16 md:text-right",
+									]}
+								>
+									<span class="mb-2 block text-4xl font-black text-sky-600">{item.year}</span>
+									<h3 class="mb-2 text-xl font-bold text-slate-900">{item.title}</h3>
+									{item.body && <p class="leading-relaxed text-slate-500">{item.body}</p>}
+								</div>
+								<div
+									class:list={[
+										"absolute left-1/2 hidden h-5 w-5 -translate-x-1/2 rounded-full border-4 border-white shadow-lg md:flex",
+										item.highlight ? "bg-sky-700 ring-4 ring-sky-200" : "bg-sky-600",
+									]}
+									aria-hidden="true"
+								/>
+								<div class:list={["md:w-1/2", reversed ? "md:pr-16 md:text-right" : "md:pl-16"]}>
+									{(item.note || item.icon) && (
+										<div
+											class:list={[
+												"rounded-2xl p-5",
+												item.highlight
+													? "bg-linear-to-br from-sky-600 to-sky-800"
+													: "border border-sky-100 bg-sky-50",
+											]}
+										>
+											{item.icon && (
+												<span
+													class:list={[
+														"material-symbols-outlined text-3xl",
+														item.highlight ? "text-white" : "text-sky-600",
+													]}
+													aria-hidden="true"
+												>
+													{item.icon}
+												</span>
+											)}
+											{item.note && (
+												<p
+													class:list={[
+														"mt-2 text-sm font-medium",
+														item.highlight ? "text-sky-100" : "text-sky-700",
+													]}
+												>
+													{item.note}
+												</p>
+											)}
+										</div>
+									)}
+								</div>
+							</li>
+						);
+					})
+				}
+			</div>
+		</ol>
+	</div>
+</section>

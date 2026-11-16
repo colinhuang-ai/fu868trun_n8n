@@ -1,0 +1,519 @@
+---
+/**
+ * Catalog.astro — block `cases_catalog` (danh mục sản phẩm của trang Products).
+ *
+ * ĐƯỢC ĐĂNG KÝ Ở ĐÂU
+ *   `src/components/CasesBlocks.astro` -> `cases_catalog: Catalog`. Trang
+ *   `products` đặt block này ngay dưới hero layout "banner" và trước `cases_cta`.
+ *
+ * DỮ LIỆU
+ *   1) Từ block (props `value`, schema trong `scripts/build-seed.mjs`):
+ *      - categories (repeater, tối đa 12), mỗi phần tử gồm:
+ *          key      (select, bắt buộc) khoá nhóm: btp | van | vap_btp | vap_van | surimi | cephalopod;
+ *                   PHẢI khớp `category` của entry trong collection `products`
+ *          code     (bắt buộc) mã ngắn chữ to trên thẻ, vd "BTP"
+ *          subtitle dòng nhỏ dưới mã
+ *          name     (bắt buộc) tên nhóm
+ *          caption  dòng chú thích dưới tên
+ *          emoji    emoji hiển thị trong popup sản phẩm (khi sản phẩm chưa có ảnh)
+ *          color    (bắt buộc) sky | cyan | red | orange | teal | slate -> màu gradient thẻ
+ *      - hint     (string) có trong schema nhưng component này KHÔNG render.
+ *      - anchor_id id của section (link kiểu /products#catalog).
+ *   2) Từ collection `products` (đọc LÚC REQUEST, theo `locale`): 68 sản phẩm / 6 nhóm.
+ *      Editor sửa sản phẩm trong admin, không sửa trang. Trường dùng: title, category,
+ *      image ({ src, alt }), size, packing, origin, glaze, description, sort_order.
+ *
+ * CÁCH HOẠT ĐỘNG (UX)
+ *   - Các thẻ nhóm được xếp thành HÀNG 3 thẻ. Bấm một thẻ sẽ mở panel trắng ngay dưới
+ *     hàng chứa thẻ đó (giống thiết kế gốc), liệt kê sản phẩm của nhóm.
+ *   - Bấm một sản phẩm mở lightbox (modal) có thể duyệt trước/sau bằng nút, phím mũi tên,
+ *     chấm điều hướng; Esc / bấm nền / nút ✕ để đóng.
+ *   - Toàn bộ HTML (mọi nhóm, mọi sản phẩm) được render sẵn ở server, panel/lightbox chỉ
+ *     bị ẩn bằng thuộc tính `hidden`/CSS; <script> cuối file chỉ bật/tắt chúng và đổ dữ liệu
+ *     từ các attribute `data-*` vào lightbox. Nhờ vậy nội dung vẫn có trong HTML cho SEO.
+ *
+ * Chuỗi giao diện (catalog.*) lấy từ `src/i18n/ui.ts` qua `t(...)` ở cả hai ngôn ngữ.
+ * Các class `editorial-shadow`, `hover-lift`, `expand-panel`, `lightbox`, `lb-*` là CSS
+ * viết tay trong `src/styles/global.css`.
+ */
+
+// API đọc collection của EmDash (chạy trên server mỗi request vì site `output: "server"`).
+import { getEmDashCollection } from "emdash";
+// `Image` render ảnh từ field kiểu image ({ src, alt }); BlockComponentProps là kiểu props của block.
+import { Image, type BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+// `useTranslations(locale)` trả hàm `t(key)` cho chuỗi UI (nhãn nút, tiêu đề tiếng Anh/Việt).
+import { toLocale, useTranslations } from "../../i18n/ui";
+
+// Thu hẹp union về đúng block `cases_catalog`.
+type CatalogBlock = Extract<PageContentBlock, { _type: "cases_catalog" }>;
+type Props = BlockComponentProps<CatalogBlock>;
+
+// `blockKey` là khoá duy nhất của block trong trang (có thể undefined) — dùng để tạo id không trùng.
+const { value, blockKey } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+
+// Lấy toàn bộ sản phẩm theo ĐÚNG locale (entry EN và VI là hai hàng riêng liên kết bằng
+// `translationOf`). Sắp theo `sort_order` tăng dần (editor điều khiển thứ tự trong admin).
+// limit 200 để thoải mái cao hơn 68 sản phẩm hiện có (nếu vượt 200 sẽ bị cắt).
+const { entries: products } = await getEmDashCollection("products", {
+	locale,
+	orderBy: { sort_order: "asc" },
+	limit: 200,
+});
+
+// Bản đồ màu CMS -> lớp gradient Tailwind. Phải viết đầy đủ từng class dạng literal
+// (AGENTS.md: Tailwind không build được class ghép từ biến), nếu không bundler sẽ
+// không sinh ra CSS cho chúng.
+const COLORS: Record<string, string> = {
+	sky: "from-sky-900 to-sky-700",
+	cyan: "from-sky-800 to-cyan-600",
+	red: "from-red-950 to-red-800",
+	orange: "from-orange-950 to-orange-700",
+	teal: "from-teal-900 to-teal-600",
+	slate: "from-slate-800 to-slate-600",
+};
+
+// Gắn danh sách sản phẩm vào từng nhóm: lọc theo `product.data.category === category.key`.
+// Giữ nguyên thứ tự `sort_order` vì `products` đã được sắp xếp ở truy vấn.
+// (`value.categories` là repeater required nên luôn là mảng.)
+const categories = value.categories.map((category) => ({
+	...category,
+	items: products.filter((product) => product.data.category === category.key),
+}));
+
+// Thiết kế gốc mở danh sách sản phẩm NGAY DƯỚI hàng 3 thẻ vừa được bấm, nên chia nhóm
+// thành các hàng 3 (khớp `lg:grid-cols-3`). Mỗi hàng có một panel riêng bên dưới.
+const rows: (typeof categories)[] = [];
+for (let i = 0; i < categories.length; i += 3) rows.push(categories.slice(i, i + 3));
+// Tiền tố id cho `aria-controls` <-> panel; nếu có nhiều catalog thì `blockKey` giúp id khác nhau.
+const uid = `catalog-${blockKey ?? "main"}`;
+---
+
+<section id={value.anchor_id || undefined} class="bg-slate-50 px-4 pt-10 pb-10 sm:px-8">
+	{/*
+		`data-catalog` là "gốc" mà script cuối file bám vào (event delegation: một listener
+		click duy nhất trên phần tử này cho mọi thẻ/sản phẩm/nút).
+	*/}
+	<div class="mx-auto max-w-screen-2xl" data-catalog>
+		{/*
+			Với mỗi hàng: (1) lưới các thẻ nhóm, (2) panel mở rộng chứa sản phẩm của các nhóm
+			trong hàng. Dùng fragment để hai phần là anh em trực tiếp trong container.
+		*/}
+		{
+			rows.map((row, rowIndex) => (
+				<>
+					{/*
+						(1) Lưới thẻ nhóm: 1 cột mobile, 2 cột sm, 3 cột lg. `reveal` = hiện dần khi cuộn.
+						Mỗi thẻ là một phần tử button (dùng được bằng bàn phím/screen reader). Các attribute:
+						- data-card = key nhóm, data-row = chỉ số hàng → script tìm đúng panel.
+						- aria-expanded: trạng thái mở/đóng (script cập nhật).
+						- aria-controls trỏ tới id panel của hàng.
+						Bên trong button chỉ dùng span (phrasing content) vì HTML hợp lệ không cho button
+						chứa div; các span được đặt display flex/block bằng class.
+					*/}
+					<div class="reveal mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+						{row.map((category) => (
+							<button
+								type="button"
+								class="group block h-full w-full text-left"
+								data-card={category.key}
+								data-row={rowIndex}
+								aria-expanded="false"
+								aria-controls={`${uid}-row-${rowIndex}`}
+							>
+								{/*
+									Khung thẻ: gradient lấy từ COLORS (rơi về "sky" nếu màu lạ). `class:list` của
+									Astro gộp chuỗi cố định + chuỗi theo màu. `bg-linear-to-br` là cú pháp
+									Tailwind v4 (thay cho bg-gradient-to-br).
+								*/}
+								<span
+									class:list={[
+										"editorial-shadow hover-lift flex h-full flex-col overflow-hidden rounded-2xl bg-linear-to-br",
+										COLORS[category.color] ?? COLORS.sky,
+									]}
+								>
+									{/* Vùng trên (flex-1 để các thẻ cùng hàng bằng chiều cao): mã chữ to làm "hình". */}
+									<span class="relative flex min-h-[11rem] flex-1 items-center justify-center overflow-hidden">
+										{/* Vầng sáng radial trắng rất mờ (opacity-10) tạo chiều sâu. */}
+										<span
+											class="absolute inset-0 opacity-10"
+											style="background:radial-gradient(circle at 60% 40%,white 0%,transparent 70%)"
+										/>
+										{/* Mã (code) và subtitle mờ (white/25, /15) → sáng lên khi hover thẻ (`group-hover`). */}
+										<span class="flex flex-col items-center justify-center select-none">
+											<span class="font-headline text-7xl leading-none font-black tracking-tighter text-white/25 transition-all duration-500 group-hover:text-white/40 sm:text-8xl">
+												{category.code}
+											</span>
+											{category.subtitle && (
+												<span class="mt-1 font-headline text-xs font-bold tracking-[0.3em] text-white/15 uppercase transition-all duration-500 group-hover:text-white/30">
+													{category.subtitle}
+												</span>
+											)}
+										</span>
+									</span>
+									{/* Thanh giữa: tên + caption bên trái; số SKU (số sản phẩm của nhóm) bên phải. */}
+									<span class="flex items-center justify-between bg-black/20 px-5 py-4">
+										<span>
+											<span class="block font-headline text-sm leading-tight font-black tracking-tight text-white uppercase sm:text-base">
+												{category.name}
+											</span>
+											{category.caption && (
+												<span class="mt-0.5 block text-[11px] text-white/60">{category.caption}</span>
+											)}
+										</span>
+										<span class="flex flex-col items-end gap-0.5">
+											<span class="font-headline text-2xl leading-none font-black text-white">
+												{category.items.length}
+											</span>
+											<span class="text-[9px] tracking-widest text-white/60 uppercase">{t("catalog.skus")}</span>
+										</span>
+									</span>
+									{/*
+										Thanh dưới: gợi ý "Xem sản phẩm" / "Thu gọn" + mũi tên. Hai chuỗi cho
+										trạng thái đóng/mở được lưu sẵn ở `data-open` / `data-closed` (đã dịch theo
+										locale) để script đổi chữ mà không cần biết ngôn ngữ. `data-hint` và
+										`data-icon` là điểm bám của `setCardState`; mũi tên xoay 180° khi mở.
+									*/}
+									<span class="flex items-center justify-between bg-black/30 px-5 py-2.5">
+										<span
+											class="text-[10px] tracking-widest text-white/50 uppercase"
+											data-hint
+											data-open={t("catalog.collapse")}
+											data-closed={t("catalog.viewProducts")}
+										>
+											{t("catalog.viewProducts")}
+										</span>
+										<span
+											class="material-symbols-outlined text-base text-white/50 transition-transform duration-300"
+											data-icon
+											aria-hidden="true"
+										>
+											expand_more
+										</span>
+									</span>
+								</span>
+							</button>
+						))}
+					</div>
+					{/*
+						(2) Panel của hàng — ẩn mặc định bằng `hidden` (script bỏ `hidden` khi mở).
+						`id` khớp `aria-controls` của các thẻ; `data-row-panel` để script tìm theo chỉ số
+						hàng. `expand-panel` (global.css) = nền trắng, bo góc, đổ bóng, animation slideDown.
+						Bên trong có một khối con `data-panel` cho TỪNG nhóm của hàng; chỉ khối của nhóm
+						đang chọn được hiện. `data-cat-name` / `data-emoji` của khối con được lightbox
+						dùng để hiện tag "emoji + tên nhóm".
+					*/}
+					<div class="expand-panel mb-5" id={`${uid}-row-${rowIndex}`} data-row-panel={rowIndex} hidden>
+						{row.map((category) => (
+							<div data-panel={category.key} data-cat-name={category.name} data-emoji={category.emoji} hidden>
+								{/* Tiêu đề panel: tên nhóm + "— N SKU" + nút đóng tròn. */}
+								<div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+									<h2 class="font-headline text-xl font-black text-slate-900 uppercase">
+										{category.name}{" "}
+										<span class="text-sm font-semibold text-sky-600 normal-case">
+											— {category.items.length} {t("catalog.skus")}
+										</span>
+									</h2>
+									<button
+										type="button"
+										data-panel-close
+										aria-label={t("catalog.close")}
+										class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 transition-colors hover:bg-slate-200"
+									>
+										<span class="material-symbols-outlined text-slate-500" aria-hidden="true">close</span>
+									</button>
+								</div>
+								<div class="p-6">
+									{/*
+										Nhóm chưa có sản phẩm → thông báo rỗng. Ngược lại là lưới 2/5/10 cột
+										(rất dày vì mỗi ô chỉ là thumbnail + tên).
+									*/}
+									{category.items.length === 0 ? (
+										<p class="text-sm text-slate-500">{t("catalog.empty")}</p>
+									) : (
+										<ul class="grid grid-cols-2 gap-4 sm:grid-cols-5 lg:grid-cols-10">
+											{category.items.map((item, itemIndex) => (
+												<li>
+													{/*
+														Mỗi sản phẩm là một button mang toàn bộ dữ liệu cho lightbox trong
+														`data-*` (script đọc `dataset`, không cần gọi API). Trường thiếu →
+														chuỗi rỗng để dataset luôn là string; lightbox hiển thị "—" khi rỗng.
+														`data-sku` = vị trí trong nhóm, `data-image` = URL ảnh (rỗng nếu chưa có).
+													*/}
+													<button
+														type="button"
+														class="group block w-full text-center transition-transform duration-200 hover:scale-105"
+														data-sku={itemIndex}
+														data-name={item.data.title}
+														data-size={item.data.size ?? ""}
+														data-pack={item.data.packing ?? ""}
+														data-origin={item.data.origin ?? ""}
+														data-glaze={item.data.glaze ?? ""}
+														data-desc={item.data.description ?? ""}
+														data-image={item.data.image?.src ?? ""}
+													>
+														{/*
+															Có ảnh → `Image` của EmDash (field image là object (src, alt);
+															`sizes="160px"` giúp trình duyệt chọn kích thước srcset phù hợp thumbnail).
+															Chưa có ảnh → ô viền đứt "Photo soon" (placeholder; AGENTS.md: dashed
+															"photo" placeholder cho tới khi upload ảnh trong admin).
+														*/}
+														{item.data.image ? (
+															<Image image={item.data.image} class="h-28 w-full rounded-xl object-cover" sizes="160px" />
+														) : (
+															<span class="flex h-28 w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-all duration-300 group-hover:border-sky-400 group-hover:bg-sky-50">
+																<span class="material-symbols-outlined text-3xl text-slate-300 transition-colors group-hover:text-sky-400" aria-hidden="true">
+																	image
+																</span>
+																<span class="text-[8px] font-bold tracking-wider text-slate-300 uppercase group-hover:text-sky-400">
+																	{t("catalog.addImage")}
+																</span>
+															</span>
+														)}
+														<span class="mt-2 block px-1 font-headline text-xs leading-snug font-bold text-slate-700 uppercase">
+															{item.data.title}
+														</span>
+													</button>
+												</li>
+											))}
+										</ul>
+									)}
+								</div>
+							</div>
+						))}
+					</div>
+				</>
+			))
+		}
+
+		{/*
+			LIGHTBOX (modal xem sản phẩm) — chỉ MỘT cho cả block, đặt cuối container. Ẩn mặc định bằng CSS
+			(class `.lightbox` có display none); script thêm class `active` để hiện (fixed, phủ toàn màn hình).
+			`role="dialog" aria-modal="true"` + aria-label cho trình đọc màn hình. Các lớp `lb-*`
+			(card, img-side, nav-btn, dot...) nằm trong global.css; phần còn lại là Tailwind.
+			Mọi chỗ có `data-lb-*` là ô mà `render()` trong script sẽ điền nội dung.
+		*/}
+		<div
+			class="lightbox"
+			data-lightbox
+			role="dialog"
+			aria-modal="true"
+			aria-label={t("catalog.viewProducts")}
+		>
+			<div class="lb-card">
+				<div class="lb-top flex">
+					{/*
+						Cột ảnh bên trái: nút ← →, ảnh sản phẩm (`data-lb-img`, ẩn nếu không có ảnh) và
+						emoji dự phòng (`data-lb-emoji`; 🦐 là nội dung mặc định trước khi script ghi
+						emoji của nhóm). Script chỉ hiện một trong hai (ảnh hoặc emoji).
+					*/}
+					<div class="lb-img-side">
+						<button type="button" class="lb-nav-btn left-2.5" data-lb-prev aria-label={t("catalog.previous")}>←</button>
+						<img alt="" data-lb-img hidden />
+						<span data-lb-emoji aria-hidden="true" class="transition-all duration-200">🦐</span>
+						<button type="button" class="lb-nav-btn right-2.5" data-lb-next aria-label={t("catalog.next")}>→</button>
+					</div>
+					{/* Cột thông tin bên phải: tag nhóm, tên, lưới 4 thông số, mô tả. */}
+					<div class="flex flex-1 flex-col gap-2.5 px-5 py-[22px]">
+						<div
+							class="inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-500/25 bg-sky-500/10 px-2.5 py-[3px] text-[0.6rem] font-bold tracking-[0.06em] text-sky-400 uppercase"
+							data-lb-tag
+						>
+						</div>
+						<div class="font-jakarta text-[1.1rem] leading-tight font-black text-white" data-lb-name></div>
+						{/*
+							4 ô thông số được sinh từ mảng cố định: nhãn lấy từ `catalog.size|pack|origin|glaze`
+							(i18n), giá trị điền vào `data-lb-field` theo cùng tên. `as const` giữ kiểu literal
+							để lời gọi t() với key ghép từ `field` vẫn đúng kiểu key của hàm dịch.
+						*/}
+						<div class="grid grid-cols-2 gap-[7px]">
+							{
+								(["size", "pack", "origin", "glaze"] as const).map((field) => (
+									<div class="rounded-[10px] border border-white/5 bg-white/5 px-[11px] py-2">
+										<div class="mb-[3px] text-[0.55rem] font-bold tracking-[0.08em] text-slate-400 uppercase">
+											{t(`catalog.${field}`)}
+										</div>
+										<div class="text-[0.78rem] font-bold text-white" data-lb-field={field}></div>
+									</div>
+								))
+							}
+						</div>
+						<p class="flex-1 text-[0.68rem] leading-relaxed text-slate-400" data-lb-desc></p>
+					</div>
+				</div>
+				{/* Chân lightbox: bộ đếm "i / n", các chấm điều hướng (script tạo động) và nút đóng ✕. */}
+				<div class="flex items-center justify-between border-t border-white/10 bg-black/20 px-5 py-[11px]">
+					<span class="text-[0.68rem] font-semibold text-slate-400" data-lb-counter></span>
+					<div class="flex gap-[5px]" data-lb-dots></div>
+					<button
+						type="button"
+						data-lb-close
+						aria-label={t("catalog.close")}
+						class="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[0.8rem] text-slate-400 transition-all hover:border-red-500 hover:bg-red-500/20 hover:text-red-400"
+					>
+						✕
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	// Logic tương tác của catalog (script phía client, Astro hoist thành module).
+	// Toàn bộ DOM đã có sẵn từ SSR; script chỉ đổi trạng thái hiện/ẩn và đổ dữ liệu vào lightbox.
+	// LƯU Ý: dùng `document.querySelector` (phần tử ĐẦU TIÊN) nên chỉ một catalog đầu tiên
+	// trên trang được nối sự kiện — đủ cho thiết kế hiện tại (mỗi trang chỉ có 1 catalog).
+	const root = document.querySelector<HTMLElement>("[data-catalog]");
+	if (root) {
+		// Trạng thái cục bộ:
+		// - openKey  : key nhóm đang mở (null = không mở gì) để bấm lại thẻ đó thì đóng (toggle).
+		// - skus     : danh sách nút sản phẩm của nhóm đang xem trong lightbox (để duyệt trước/sau).
+		// - index    : vị trí sản phẩm hiện tại trong `skus`.
+		// - category : tên + emoji nhóm hiện tại (hiện ở tag của lightbox).
+		// - lastFocus: phần tử đã mở lightbox, để trả focus khi đóng (trợ năng).
+		let openKey: string | null = null;
+		let skus: HTMLElement[] = [];
+		let index = 0;
+		let category = { name: "", emoji: "🦐" };
+		let lastFocus: HTMLElement | null = null;
+		const lightbox = root.querySelector<HTMLElement>("[data-lightbox]")!;
+		// Helper `$`: tìm phần tử BÊN TRONG lightbox theo selector (non-null assertion vì markup cố định).
+		const $ = <T extends HTMLElement = HTMLElement>(selector: string) =>
+			lightbox.querySelector<T>(selector)!;
+
+		// Đồng bộ giao diện một thẻ nhóm với trạng thái mở/đóng:
+		// aria-expanded, đổi chữ gợi ý (dùng chuỗi đã dịch từ data-open/data-closed) và xoay mũi tên.
+		const setCardState = (card: Element, open: boolean) => {
+			card.setAttribute("aria-expanded", String(open));
+			const hint = card.querySelector<HTMLElement>("[data-hint]");
+			if (hint) hint.textContent = (open ? hint.dataset.open : hint.dataset.closed) ?? "";
+			card.querySelector<HTMLElement>("[data-icon]")?.style.setProperty(
+				"transform",
+				open ? "rotate(180deg)" : "",
+			);
+		};
+
+		// Đóng mọi thứ: đưa tất cả thẻ về trạng thái đóng và ẩn mọi panel (cả panel hàng lẫn panel nhóm).
+		const closePanels = () => {
+			root.querySelectorAll("[data-card]").forEach((card) => setCardState(card, false));
+			root.querySelectorAll<HTMLElement>("[data-row-panel]").forEach((p) => (p.hidden = true));
+			root.querySelectorAll<HTMLElement>("[data-panel]").forEach((p) => (p.hidden = true));
+			openKey = null;
+		};
+
+		// Mở panel cho một thẻ: nếu thẻ đó đang mở thì đóng (toggle); nếu không thì đóng cái khác
+		// rồi mở panel của hàng chứa thẻ + khối nhóm tương ứng. Chỉ một nhóm mở tại một thời điểm.
+		const openPanel = (card: HTMLElement) => {
+			const key = card.dataset.card!;
+			if (openKey === key) return closePanels();
+			closePanels();
+			const row = root.querySelector<HTMLElement>(`[data-row-panel="${card.dataset.row}"]`)!;
+			const panel = row.querySelector<HTMLElement>(`[data-panel="${key}"]`)!;
+			row.hidden = false;
+			panel.hidden = false;
+			setCardState(card, true);
+			openKey = key;
+			// Trễ 60ms để panel đã hiển thị (và animation slideDown bắt đầu) rồi mới cuộn; `nearest`
+			// chỉ cuộn khi cần, tránh giật trang nếu panel đã nằm trong khung nhìn.
+			setTimeout(() => row.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+		};
+
+		// Đổ dữ liệu sản phẩm hiện tại (`skus[index]`) vào lightbox. Dùng `textContent` (không phải
+		// innerHTML) nên dữ liệu CMS không thể chèn HTML/XSS.
+		const render = () => {
+			const el = skus[index];
+			if (!el) return;
+			// `d` = dataset của nút sản phẩm (xem các attribute data-* ở markup phía trên).
+			const d = el.dataset;
+			$("[data-lb-name]").textContent = d.name ?? "";
+			$("[data-lb-tag]").textContent = `${category.emoji} ${category.name}`;
+			$("[data-lb-desc]").textContent = d.desc ?? "";
+			$("[data-lb-counter]").textContent = `${index + 1} / ${skus.length}`;
+			// 4 thông số; giá trị rỗng hiển thị "—". (dataset dùng `d[field]`: size/pack/origin/glaze
+			// khớp tên `data-size`, `data-pack`, `data-origin`, `data-glaze`.)
+			for (const field of ["size", "pack", "origin", "glaze"]) {
+				$(`[data-lb-field="${field}"]`).textContent = d[field] || "—";
+			}
+			// Ảnh hay emoji: có `data-image` thì hiện ảnh và ẩn emoji; ngược lại hiện emoji của nhóm.
+			const img = $<HTMLImageElement>("[data-lb-img]");
+			const emoji = $("[data-lb-emoji]");
+			img.hidden = !d.image;
+			if (d.image) img.src = d.image;
+			emoji.hidden = Boolean(d.image);
+			emoji.textContent = category.emoji;
+			// Dựng lại các chấm điều hướng mỗi lần render (một chấm / sản phẩm, chấm hiện tại có
+			// class `active`); `replaceChildren` thay toàn bộ con cũ. aria-label là số thứ tự.
+			const dots = $("[data-lb-dots]");
+			dots.replaceChildren(
+				...skus.map((_, i) => {
+					const dot = document.createElement("button");
+					dot.type = "button";
+					dot.className = `lb-dot${i === index ? " active" : ""}`;
+					dot.setAttribute("aria-label", String(i + 1));
+					dot.addEventListener("click", () => {
+						index = i;
+						render();
+					});
+					return dot;
+				}),
+			);
+		};
+
+		// Đóng lightbox: bỏ `active`, trả cuộn trang (đã khoá khi mở) và trả focus cho nút đã mở nó.
+		// Thoát sớm nếu đang đóng để phím Esc không làm gì thừa.
+		const closeLightbox = () => {
+			if (!lightbox.classList.contains("active")) return;
+			lightbox.classList.remove("active");
+			document.body.style.overflow = "";
+			lastFocus?.focus();
+		};
+
+		// Chuyển sản phẩm trước/sau. Công thức `(index + delta + n) % n` cho vòng lặp hai chiều
+		// (từ đầu lùi lại sẽ về cuối, và ngược lại) mà không bao giờ ra số âm.
+		const step = (delta: number) => {
+			index = (index + delta + skus.length) % skus.length;
+			render();
+		};
+
+		// Event delegation: MỘT listener click cho cả block, xác định mục tiêu bằng `closest`.
+		// Thứ tự kiểm tra quan trọng: thẻ nhóm -> nút đóng panel -> sản phẩm -> các điều khiển lightbox.
+		root.addEventListener("click", (event) => {
+			const target = event.target as HTMLElement;
+			const card = target.closest<HTMLElement>("[data-card]");
+			if (card) return openPanel(card);
+			if (target.closest("[data-panel-close]")) return closePanels();
+			const sku = target.closest<HTMLElement>("[data-sku]");
+			if (sku) {
+				// Mở lightbox: gom các sản phẩm CÙNG nhóm (cùng panel) để duyệt trước/sau trong nhóm,
+				// xác định vị trí sản phẩm vừa bấm, lấy tên/emoji nhóm từ attribute của panel.
+				// Emoji thiếu -> 🦐 (lưu ý: nếu attribute tồn tại nhưng rỗng thì `??` không thay thế).
+				const panel = sku.closest<HTMLElement>("[data-panel]")!;
+				skus = [...panel.querySelectorAll<HTMLElement>("[data-sku]")];
+				index = skus.indexOf(sku);
+				category = { name: panel.dataset.catName ?? "", emoji: panel.dataset.emoji ?? "🦐" };
+				lastFocus = sku;
+				render();
+				lightbox.classList.add("active");
+				// Khoá cuộn nền khi modal mở, và chuyển focus vào nút đóng để dùng được bằng bàn phím.
+				document.body.style.overflow = "hidden";
+				$("[data-lb-close]").focus();
+				return;
+			}
+			// Bấm đúng lớp nền mờ (target === lightbox, không phải thẻ bên trong) hoặc nút ✕ -> đóng.
+			if (target === lightbox || target.closest("[data-lb-close]")) return closeLightbox();
+			if (target.closest("[data-lb-prev]")) return step(-1);
+			if (target.closest("[data-lb-next]")) return step(1);
+		});
+
+		// Phím tắt chỉ có hiệu lực khi lightbox đang mở: ← → duyệt, Esc đóng.
+		document.addEventListener("keydown", (event) => {
+			if (!lightbox.classList.contains("active")) return;
+			if (event.key === "ArrowLeft") step(-1);
+			if (event.key === "ArrowRight") step(1);
+			if (event.key === "Escape") closeLightbox();
+		});
+	}
+</script>

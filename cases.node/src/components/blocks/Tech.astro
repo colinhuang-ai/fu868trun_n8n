@@ -1,0 +1,91 @@
+---
+/**
+ * Tech.astro - render block `cases_tech` (tên trong admin: "Technology"): lưới thẻ ảnh giới thiệu công nghệ
+ * chế biến (IQF, Blast Freezer...) trên nền navy.
+ *
+ * Nguồn dữ liệu: hoàn toàn trong block (field `content` của entry `pages`), không đọc collection. Dữ liệu mẫu:
+ * block("cases_tech", "technology", {...}) trong scripts/build-seed.mjs. Mỗi locale có entry trang riêng
+ * (translationOf) nên không cần locale ở đây (không có link CMS).
+ *
+ * Schema (blockType("cases_tech") trong build-seed.mjs):
+ * - headline : string, bắt buộc.   - eyebrow : string, tùy chọn.   - anchor_id : id section (vd "technology").
+ * - items[] : repeater bắt buộc, tối đa 8 thẻ: title (bắt buộc), description (tùy chọn),
+ *              image (field kiểu `image`: object { id, src, alt,... } hoặc không có).
+ *
+ * Ảnh: seed không kèm ảnh nên mỗi thẻ hiện khung nét đứt (PhotoSlot) cho đến khi editor upload ảnh cho item đó trong
+ * admin (quy tắc dự án: technology cards hiện placeholder khi chưa có ảnh). PhotoSlot lo cả hai trường hợp.
+ * Bố cục: nền gradient navy + họa tiết chấm, 1 cột (mobile) -> 2 cột (sm trở lên).
+ */
+// Type-only: kiểu props (value, index, blockKey) do <Blocks> truyền vào.
+import { type BlockComponentProps } from "emdash/ui";
+// Union kiểu mọi block (sinh vào emdash-env.d.ts).
+import type { PageContentBlock } from "../../../emdash-env";
+// Ô ảnh dùng chung: render <Image> của emdash/ui khi có ảnh, ngược lại placeholder nét đứt.
+import PhotoSlot from "../PhotoSlot.astro";
+
+// Thu hẹp union xuống block có _type = "cases_tech".
+type TechBlock = Extract<PageContentBlock, { _type: "cases_tech" }>;
+// Props chuẩn của component block.
+type Props = BlockComponentProps<TechBlock>;
+
+// Chỉ cần `value`; `items` là bắt buộc (tối thiểu 1) nên không cần giá trị mặc định ở dưới.
+const { value } = Astro.props;
+---
+
+{/*
+	Section gốc, nền bg-navy-fade (global.css: gradient dọc navy đậm - nhạt - đậm). relative + overflow-hidden để lớp
+	chấm absolute không tràn. id từ anchor_id (|| undefined để không in id rỗng).
+*/}
+<section
+	id={value.anchor_id || undefined}
+	class="bg-navy-fade relative overflow-hidden py-12 sm:py-16 md:py-20"
+>
+	{/*
+		Họa tiết chấm trang trí (class bg-dots trong global.css) ở độ mờ 4%, pointer-events-none để không chặn thao tác.
+	*/}
+	<div class="bg-dots pointer-events-none absolute inset-0 opacity-[0.04]"></div>
+	{/*
+		Lớp nội dung relative z-10 nằm trên lớp họa tiết.
+	*/}
+	<div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
+		{/*
+			Khối tiêu đề căn trái: eyebrow tùy chọn màu sky-400 (sáng hơn sky-600 của nền trắng để đủ tương phản trên nền tối),
+			h2 trắng dùng font-jakarta (Plus Jakarta Sans), gạch ngắn bg-sky-500 bên dưới.
+		*/}
+		<div class="mb-10">
+			{
+				value.eyebrow && (
+					<span class="mb-2 block text-xs font-bold tracking-[0.3em] text-sky-400 uppercase">
+						{value.eyebrow}
+					</span>
+				)
+			}
+			<h2 class="font-jakarta text-2xl font-bold text-white sm:text-3xl">{value.headline}</h2>
+			<div class="mt-3 h-0.5 w-12 rounded-full bg-sky-500"></div>
+		</div>
+		{/*
+			Lưới thẻ, class reveal để hiện dần khi cuộn tới.
+		*/}
+		<div class="reveal grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5">
+			{/*
+				Mỗi item thành một thẻ kính mờ (bg-white/5, viền white/10, hover viền sky-400/30) gồm PhotoSlot ở trên và phần chữ ở dưới.
+				PhotoSlot: ảnh item.image (nếu có), label là title (dạng template literal chỉ để ép thành chuỗi) dùng làm chữ placeholder + aria-label,
+				class h-44 cho chiều cao cố định, dark vì nền tối (placeholder trong suốt thay vì xám sáng).
+				description tùy chọn dùng text-sky-100/50 (sky nhạt 50%) để dịu hơn tiêu đề trắng.
+			*/}
+			{
+				value.items.map((item) => (
+					<article class="overflow-hidden rounded-xl border border-white/10 bg-white/5 transition-all hover:border-sky-400/30">
+						<PhotoSlot image={item.image} label={`${item.title}`} class="h-44" dark />
+						<div class="p-6">
+							<h3 class="mb-2 text-lg font-bold text-white">{item.title}</h3>
+							{item.description && (
+								<p class="text-sm leading-relaxed text-sky-100/50">{item.description}</p>
+							)}
+						</div>
+					</article>
+				))
+			}
+		</div>
+	</div>
+</section>

@@ -1,0 +1,106 @@
+---
+/**
+ * CertTable.astro — block `cases_cert_table` (bảng tổng hợp mọi chứng nhận).
+ *
+ * ĐƯỢC ĐĂNG KÝ Ở ĐÂU
+ *   `src/components/CasesBlocks.astro` -> `cases_cert_table: CertTable`. Trang
+ *   `certifications` đặt block này ở cuối (anchor `overview`), sau các block `cases_certs`.
+ *
+ * DỮ LIỆU
+ *   1) Từ block (props `value`, schema trong `scripts/build-seed.mjs`):
+ *      - headline  (string, bắt buộc) tiêu đề h2 phía trên bảng
+ *      - anchor_id (string)           id của section
+ *   2) Từ collection `certifications` (đọc LÚC REQUEST theo `locale`; editor sửa trong admin):
+ *      title, issuer (tổ chức cấp), scope (phạm vi), cert_status (trạng thái),
+ *      show_in_table (boolean, mặc định true), sort_order.
+ *      Khác với `Certs.astro`, block này lấy TẤT CẢ các nhóm (kể cả nhóm "other" —
+ *      chứng nhận chỉ hiện trong bảng, không có thẻ riêng).
+ *
+ * Tiêu đề cột (certs.certification / issuer / scope / status) là chuỗi giao diện lấy từ
+ * `src/i18n/ui.ts` (EN + VI), còn nội dung hàng là dữ liệu CMS.
+ */
+
+import { getEmDashCollection } from "emdash";
+import { type BlockComponentProps } from "emdash/ui";
+import type { PageContentBlock } from "../../../emdash-env";
+// `useTranslations(locale)` trả hàm `t(key)` cho nhãn cột của bảng.
+import { toLocale, useTranslations } from "../../i18n/ui";
+
+// Thu hẹp union về đúng block `cases_cert_table`.
+type CertTableBlock = Extract<PageContentBlock, { _type: "cases_cert_table" }>;
+type Props = BlockComponentProps<CertTableBlock>;
+
+const { value } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+
+// Lấy toàn bộ chứng nhận của locale hiện tại, sắp theo `sort_order`. Không lọc `group`
+// ở truy vấn vì bảng muốn hiện mọi nhóm; việc loại bớt làm ở bước dưới. limit 100 là dư (hiện có 9).
+const { entries: allCerts } = await getEmDashCollection("certifications", {
+	locale,
+	orderBy: { sort_order: "asc" },
+	limit: 100,
+});
+// Chỉ bỏ những chứng nhận editor TẮT rõ ràng `show_in_table` (=== false). So sánh `!== false`
+// (thay vì truthy) để entry cũ chưa có giá trị (null/undefined) vẫn được coi là hiển thị — khớp
+// với defaultValue true của field.
+const certs = allCerts.filter((cert) => cert.data.show_in_table !== false);
+---
+
+{/*
+	Section nền navy. `style` thêm một lớp phủ trắng 2% (gradient 2 đầu cùng màu = phẳng) đè lên
+	nền để bảng tách nhẹ khỏi các section navy ngay phía trên mà không cần màu mới.
+*/}
+<section
+	id={value.anchor_id || undefined}
+	class="bg-navy px-4 py-20 text-white sm:px-8"
+	style="background-image:linear-gradient(rgba(255,255,255,0.02),rgba(255,255,255,0.02))"
+>
+	<div class="mx-auto max-w-5xl">
+		{/* Tiêu đề + đường kẻ trang trí `section-line`; `reveal` = hiện dần khi cuộn. */}
+		<div class="reveal mb-12 text-center">
+			<h2 class="text-2xl font-extrabold text-white sm:text-3xl">{value.headline}</h2>
+			<div class="section-line"></div>
+		</div>
+		{/*
+			Khung bảng: `overflow-x-auto` cho phép cuộn ngang nếu bảng rộng hơn màn hình nhỏ;
+			`rounded-2xl` + viền mờ tạo thẻ bo góc. `cert-table` (global.css) style th/td/hàng và
+			hiệu ứng hiện từng hàng khi khung được reveal.
+		*/}
+		<div class="reveal cert-table overflow-x-auto rounded-2xl border border-white/10">
+			<table class="w-full text-sm">
+				<thead>
+					{/*
+						Responsive: cột "Issuer" chỉ hiện từ sm, cột "Scope" chỉ hiện từ md
+						(`hidden` + `sm:table-cell` / `md:table-cell`); hai cột bắt buộc là tên và trạng thái.
+						`rounded-tl-2xl` / `rounded-tr-2xl` bo hai góc trên của hàng tiêu đề cho khớp khung ngoài
+						(vì phần tử table không tự cắt theo `overflow`/bo góc của khung).
+					*/}
+					<tr>
+						<th class="rounded-tl-2xl text-left">{t("certs.certification")}</th>
+						<th class="hidden text-left sm:table-cell">{t("certs.issuer")}</th>
+						<th class="hidden text-left md:table-cell">{t("certs.scope")}</th>
+						<th class="rounded-tr-2xl text-left">{t("certs.status")}</th>
+					</tr>
+				</thead>
+				{/* Mỗi hàng nhận `--i` (chỉ số hàng) để global.css làm hiệu ứng hiện lần lượt (stagger). */}
+				<tbody>
+					{
+						certs.map((cert, index) => (
+							<tr style={`--i:${index}`}>
+								<td class="font-bold text-white">{cert.data.title}</td>
+								{/* Thiếu issuer/scope → hiện "—" thay vì ô trống; cùng quy tắc ẩn theo breakpoint như tiêu đề cột. */}
+								<td class="hidden text-slate-400 sm:table-cell">{cert.data.issuer ?? "—"}</td>
+								<td class="hidden text-slate-400 md:table-cell">{cert.data.scope ?? "—"}</td>
+								{/* Trạng thái luôn dùng badge xanh lá (`badge-green`), không phụ thuộc giá trị cert_status. */}
+								<td>
+									<span class="cert-badge badge-green">{cert.data.cert_status}</span>
+								</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>
